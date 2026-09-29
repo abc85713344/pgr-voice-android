@@ -1,0 +1,14 @@
+[
+  {
+    "fixture": "ch29-real-00030",
+    "engine": "Paddle",
+    "success": true,
+    "phraseFound": true
+  },
+  {
+    "fixture": "ch29-real-00030",
+    "engine": "MlKitChinese",
+    "success": true,
+    "phraseFound": false
+  }
+]

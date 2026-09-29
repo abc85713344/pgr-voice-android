@@ -1,0 +1,9 @@
+--------- beginning of main
+--------- beginning of system
+09-28 03:13:38.947  3672  3672 I ExoPlayerImpl: Init 3844e2e [AndroidXMedia3/1.11.0] [generic_x86_64, Android SDK built for x86_64, unknown, 29]
+09-28 03:13:39.344  3672  4182 D AudioTrack: getTimestamp_l(9): device stall time corrected using current time 225365060300
+09-28 03:13:39.365  3672  4182 W AudioTrack: getTimestamp_l(9): retrograde timestamp time corrected, 225367149400 < 225374921600
+09-28 03:13:46.248  3672  4182 D AudioTrack: stop(9): called with 233600 frames delivered
+09-28 03:16:42.349  3672  4182 D AudioTrack: getTimestamp_l(10): device stall time corrected using current time 408370161000
+09-28 03:16:42.371  3672  4182 W AudioTrack: getTimestamp_l(10): retrograde timestamp time corrected, 408370032200 < 408380552900
+09-28 03:16:49.268  3672  4182 D AudioTrack: stop(10): called with 233600 frames delivered

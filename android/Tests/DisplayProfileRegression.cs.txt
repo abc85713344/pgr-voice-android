@@ -1,0 +1,117 @@
+using System.Text.Json;
+using PgrVoice.AndroidApp;
+
+var tests = new (string Name, Action Body)[]
+{
+    ("同一16:9捕获尺寸下，内外屏按物理尺寸独立", () =>
+    {
+        var outer = new PhysicalDisplayProfile(0, 1080, 2400, 1);
+        var inner = new PhysicalDisplayProfile(0, 2200, 2480, 1);
+        Check(outer.RegionKey != inner.RegionKey);
+        var captureOuter = new RegionSelectionContext(new(outer, 1), 5, 1920, 1080);
+        Check(!captureOuter.Matches(new(inner, 2), 5, 1920, 1080));
+    }),
+    ("相同分辨率的不同显示标识不共用", () =>
+        Check(new PhysicalDisplayProfile(0, 1080, 2400, 1).RegionKey !=
+              new PhysicalDisplayProfile(1, 1080, 2400, 1).RegionKey)),
+    ("横竖分开，180度旋转复用相对区域", () =>
+    {
+        var natural = new PhysicalDisplayProfile(0, 1080, 2400, 0);
+        Check(natural.RegionKey != (natural with { Rotation = 1 }).RegionKey);
+        Check(natural.RegionKey == (natural with { Rotation = 2 }).RegionKey);
+    }),
+    ("不改变物理尺寸和方向的刷新率事件不产生新状态", () =>
+    {
+        var current = new ScreenDisplayState(new(0, 1080, 2400, 1), 7);
+        Check(ReferenceEquals(current, current.WithProfile(new(0, 1080, 2400, 1))));
+    }),
+    ("切换并返回同一屏幕，旧预览和旧帧仍已过期", () =>
+    {
+        var outer = new PhysicalDisplayProfile(0, 1080, 2400, 1);
+        var first = ScreenDisplayState.Unavailable.WithProfile(outer);
+        var inner = first.WithProfile(new(0, 2200, 2480, 1));
+        var returned = inner.WithProfile(outer);
+        Check(first.RegionKey == returned.RegionKey && first.Revision < inner.Revision && inner.Revision < returned.Revision);
+        Check(!new RegionSelectionContext(first, 10, 1920, 1080).Matches(returned, 10, 1920, 1080));
+    }),
+    ("旧四类字幕框不静默迁移到新物理屏幕", () =>
+    {
+        var settings = JsonSerializer.Deserialize<AppSettings>("""{"Regions":{"横屏·窄屏":{"Left":0.4,"Top":0.2,"Width":0.3,"Height":0.1}}}""")!;
+        string key = new PhysicalDisplayProfile(0, 1080, 2400, 1).RegionKey!;
+        Check(settings.Regions.Count == 1 && !settings.HasRegion(key));
+        Check(settings.RegionFor(key) == new ScreenRegion());
+    }),
+    ("内外屏分别保存，进程恢复后返回原屏幕找回原区域", () =>
+    {
+        string outer = new PhysicalDisplayProfile(0, 1080, 2400, 1).RegionKey!;
+        string inner = new PhysicalDisplayProfile(0, 2200, 2480, 1).RegionKey!;
+        var outerRegion = new ScreenRegion(.12f, .65f, .7f, .2f);
+        var innerRegion = new ScreenRegion(.22f, .72f, .6f, .15f);
+        var settings = new AppSettings();
+        settings.DisplayRegions[outer] = outerRegion;
+        settings.DisplayRegions[inner] = innerRegion;
+        var restored = JsonSerializer.Deserialize<AppSettings>(JsonSerializer.Serialize(settings))!;
+        Check(restored.HasRegion(outer) && restored.HasRegion(inner));
+        Check(restored.RegionFor(outer) == outerRegion && restored.RegionFor(inner) == innerRegion);
+    }),
+    ("物理屏幕不变时，相对区域不依赖捕获缩放分辨率", () =>
+    {
+        var state = new ScreenDisplayState(new(0, 1080, 2400, 1), 2);
+        var settings = new AppSettings();
+        settings.DisplayRegions[state.RegionKey!] = new(.1f, .7f, .8f, .2f);
+        Check(settings.HasRegion(state.RegionKey));
+        // 相对区域仍可用，但已经打开的旧尺寸截图不能直接保存。
+        Check(!new RegionSelectionContext(state, 9, 1920, 1080).Matches(state, 9, 1280, 720));
+    }),
+    ("重新授权后拒绝旧会话的框选结果", () =>
+    {
+        var state = new ScreenDisplayState(new(0, 1080, 2400, 1), 1);
+        var selection = new RegionSelectionContext(state, 21, 1920, 1080);
+        Check(selection.Matches(state, 21, 1920, 1080));
+        Check(!selection.Matches(state, 22, 1920, 1080));
+    }),
+    ("缺失或无效物理显示信息不能获得可确认区域", () =>
+    {
+        var state = ScreenDisplayState.Unavailable;
+        Check(new PhysicalDisplayProfile(0, 0, 2400, 1).RegionKey == null);
+        Check(new PhysicalDisplayProfile(-1, 1080, 2400, 1).RegionKey == null);
+        Check(new PhysicalDisplayProfile(0, 1080, 2400, 4).RegionKey == null);
+        Check(!new RegionSelectionContext(state, 1, 1920, 1080).Matches(state, 1, 1920, 1080));
+        Check(!new AppSettings().HasRegion(null));
+        var valid = new ScreenDisplayState(new(0, 1080, 2400, 1), 1);
+        Check(!new RegionSelectionContext(valid, 1, 0, 0).Matches(valid, 1, 0, 0));
+    }),
+    ("物理模式像素变化独立保存且使旧选择过期", () =>
+    {
+        var a = new ScreenDisplayState(new(0, 1080, 2400, 1), 1);
+        var b = a.WithProfile(new(0, 1440, 3200, 1));
+        Check(a.RegionKey != b.RegionKey && b.Revision > a.Revision);
+    }),
+    ("物理信息暂时不可用也会使旧观察过期", () =>
+    {
+        var current = new ScreenDisplayState(new(0, 1080, 2400, 1), 5);
+        var unavailable = current.WithProfile(null);
+        Check(unavailable.RegionKey == null && unavailable.Revision == 6);
+        var recovered = unavailable.WithProfile(current.Profile);
+        Check(recovered.RegionKey == current.RegionKey && recovered.Revision == 7);
+    })
+};
+
+var results = new List<object>();
+foreach (var test in tests)
+{
+    try { test.Body(); results.Add(new { test.Name, passed = true }); }
+    catch (Exception ex) { results.Add(new { test.Name, passed = false, error = ex.Message }); }
+}
+string report = JsonSerializer.Serialize(new
+{
+    scope = "直接编译生产显示形态、配置和框选上下文逻辑；不模拟 Android 回调，不代表折叠真机通过。",
+    results
+}, new JsonSerializerOptions { WriteIndented = true });
+Console.WriteLine(report);
+if (report.Contains("\"passed\": false", StringComparison.Ordinal)) Environment.ExitCode = 1;
+
+static void Check(bool condition)
+{
+    if (!condition) throw new InvalidOperationException("断言失败。");
+}

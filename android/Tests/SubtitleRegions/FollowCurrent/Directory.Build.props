@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <BaseIntermediateOutputPath>../../../../scratch/follow-current-tests-obj/</BaseIntermediateOutputPath>
+    <BaseOutputPath>../../../../scratch/follow-current-tests-bin/</BaseOutputPath>
+  </PropertyGroup>
+</Project>

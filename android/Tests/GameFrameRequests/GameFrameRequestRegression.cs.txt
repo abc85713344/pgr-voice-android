@@ -1,0 +1,215 @@
+using PgrVoice.AndroidApp;
+
+var portrait = new ScreenDisplayState(new(0, 2200, 2480, 0), 1);
+var landscape = new ScreenDisplayState(new(0, 2200, 2480, 1), 2);
+int passed = 0;
+void Test(string name, Action body)
+{
+    try { body(); passed++; Console.WriteLine("PASS " + name); }
+    catch (Exception ex) { Console.Error.WriteLine("FAIL " + name + ": " + ex.Message); Environment.ExitCode = 1; }
+}
+void Equal<T>(T expected, T actual)
+{
+    if (!EqualityComparer<T>.Default.Equals(expected, actual))
+        throw new Exception($"expected {expected}, got {actual}");
+}
+PendingGameFrameRequest<string> New(long at = 0, string value = "request", long session = 1)
+{
+    var pending = new PendingGameFrameRequest<string>();
+    pending.Set(session, at, value);
+    return pending;
+}
+GameFrameRequestResult Poll(PendingGameFrameRequest<string> pending, long at,
+    ScreenDisplayState? display = null, bool ui = false, int width = 2480, int height = 2200, long session = 1)
+{
+    var result = pending.Poll(at, session, display ?? landscape, width, height, ui, out var value);
+    if (result != GameFrameRequestResult.Ready && value != null) throw new Exception("non-ready request leaked");
+    return result;
+}
+void Waiting(PendingGameFrameRequest<string> pending, long at, ScreenDisplayState? display = null,
+    bool ui = false, int width = 2480, int height = 2200, long session = 1) =>
+    Equal(GameFrameRequestResult.Waiting, Poll(pending, at, display, ui, width, height, session));
+
+Test("空请求不取图", () =>
+{
+    var pending = new PendingGameFrameRequest<string>();
+    Equal(GameFrameRequestResult.None, Poll(pending, 1000));
+    Equal(false, pending.IsPendingFor(1));
+});
+Test("捕获初始化后才开始后台稳定计时", () =>
+{
+    var pending = New();
+    Waiting(pending, 100, ScreenDisplayState.Unavailable);
+    Waiting(pending, 900);
+    Waiting(pending, 1599);
+    Equal(GameFrameRequestResult.Ready, Poll(pending, 1600));
+});
+Test("前台等待不计入后台700毫秒", () =>
+{
+    var pending = New();
+    Waiting(pending, 0, portrait, ui: true);
+    Waiting(pending, 2000, portrait, ui: true);
+    Waiting(pending, 2500);
+    Waiting(pending, 3199);
+    Equal(GameFrameRequestResult.Ready, Poll(pending, 3200));
+});
+Test("即使发起很久首个后台帧仍不能立即完成", () =>
+{
+    var pending = New();
+    Waiting(pending, 6000);
+    Equal(GameFrameRequestResult.Ready, Poll(pending, 6700));
+});
+Test("静态画面两次采样可完成", () =>
+{
+    var pending = New();
+    Waiting(pending, 0);
+    Equal(GameFrameRequestResult.Ready, Poll(pending, 700));
+});
+Test("后台旋转重新等待稳定不取消请求", () =>
+{
+    var pending = New();
+    Waiting(pending, 0, portrait, width: 2200, height: 2480);
+    Waiting(pending, 500, landscape);
+    Waiting(pending, 1199, landscape);
+    Equal(true, pending.IsPendingFor(1));
+    Equal(GameFrameRequestResult.Ready, Poll(pending, 1200, landscape));
+});
+Test("相同物理屏幕新显示版本也重新计时", () =>
+{
+    var pending = New();
+    Waiting(pending, 0);
+    var refreshed = landscape with { Revision = 3 };
+    Waiting(pending, 600, refreshed);
+    Waiting(pending, 1299, refreshed);
+    Equal(GameFrameRequestResult.Ready, Poll(pending, 1300, refreshed));
+});
+Test("捕获尺寸变化重新计时", () =>
+{
+    var pending = New();
+    Waiting(pending, 0);
+    Waiting(pending, 600, width: 1920, height: 1080);
+    Waiting(pending, 1299, width: 1920, height: 1080);
+    Equal(GameFrameRequestResult.Ready, Poll(pending, 1300, width: 1920, height: 1080));
+});
+Test("显示信息临时不可用后重新计时", () =>
+{
+    var pending = New();
+    Waiting(pending, 0);
+    Waiting(pending, 600, ScreenDisplayState.Unavailable);
+    Waiting(pending, 700);
+    Waiting(pending, 1399);
+    Equal(GameFrameRequestResult.Ready, Poll(pending, 1400));
+});
+Test("零尺寸和负尺寸不能取图", () =>
+{
+    var pending = New();
+    Waiting(pending, 0);
+    Waiting(pending, 1000, width: 0);
+    Waiting(pending, 1100, height: -1);
+    Waiting(pending, 1200);
+    Equal(GameFrameRequestResult.Ready, Poll(pending, 1900));
+});
+Test("重新进入前台会清除后台稳定累计", () =>
+{
+    var pending = New();
+    Waiting(pending, 0);
+    Waiting(pending, 650, ui: true);
+    Waiting(pending, 1000);
+    Waiting(pending, 1699);
+    Equal(GameFrameRequestResult.Ready, Poll(pending, 1700));
+});
+Test("总超时10秒优先于就绪且只报告一次", () =>
+{
+    var pending = New();
+    Waiting(pending, 9300);
+    Equal(GameFrameRequestResult.Expired, Poll(pending, 10000));
+    Equal(false, pending.IsPendingFor(1));
+    Equal(GameFrameRequestResult.None, Poll(pending, 11000));
+});
+Test("持续旋转不能延长总期限", () =>
+{
+    var pending = New();
+    for (int at = 0; at < 10000; at += 500)
+        Waiting(pending, at, at % 1000 == 0 ? portrait : landscape);
+    Equal(GameFrameRequestResult.Expired, Poll(pending, 10000));
+});
+Test("始终前台也会超时", () =>
+{
+    var pending = New();
+    Waiting(pending, 9999, ui: true);
+    Equal(GameFrameRequestResult.Expired, Poll(pending, 10000, ui: true));
+});
+Test("显式Clear后不会晚到取图", () =>
+{
+    var pending = New();
+    Waiting(pending, 0);
+    pending.Clear();
+    Equal(false, pending.IsPendingFor(1));
+    Equal(GameFrameRequestResult.None, Poll(pending, 700));
+});
+Test("授权会话变化取消且返回旧会话也不恢复", () =>
+{
+    var pending = New();
+    Waiting(pending, 0);
+    Equal(false, pending.IsPendingFor(2));
+    Equal(GameFrameRequestResult.None, Poll(pending, 700, session: 2));
+    Equal(GameFrameRequestResult.None, Poll(pending, 800));
+});
+Test("只有Ready交付原请求且只消费一次", () =>
+{
+    var value = new object();
+    var pending = new PendingGameFrameRequest<object>();
+    pending.Set(1, 0, value);
+    Equal(GameFrameRequestResult.Waiting, pending.Poll(0, 1, landscape, 2480, 2200, false, out var before));
+    Equal<object?>(null, before);
+    Equal(GameFrameRequestResult.Ready, pending.Poll(700, 1, landscape, 2480, 2200, false, out var ready));
+    Equal(true, ReferenceEquals(value, ready));
+    Equal(false, pending.IsPendingFor(1));
+    Equal(GameFrameRequestResult.None, pending.Poll(900, 1, landscape, 2480, 2200, false, out var after));
+    Equal<object?>(null, after);
+});
+Test("新请求替换旧值且重新累计稳定时间", () =>
+{
+    var pending = New();
+    Waiting(pending, 0);
+    pending.Set(1, 650, "new request");
+    Waiting(pending, 700);
+    Waiting(pending, 1399);
+    Equal(GameFrameRequestResult.Ready, pending.Poll(1400, 1, landscape, 2480, 2200, false, out var request));
+    Equal("new request", request);
+});
+Test("非零发起时刻和10秒边界", () =>
+{
+    var pending = New(50000);
+    Waiting(pending, 59299);
+    Equal(GameFrameRequestResult.Ready, Poll(pending, 59999));
+    pending.Set(1, 50000, "next");
+    Equal(GameFrameRequestResult.Expired, Poll(pending, 60000));
+});
+
+Test("整段没有捕获帧时到期检查仍取消请求", () =>
+{
+    var pending = New(1000);
+    Equal(GameFrameRequestResult.Expired,
+        Poll(pending, 11050, ScreenDisplayState.Unavailable, ui: true, width: 0, height: 0));
+    Equal(false, pending.IsPendingFor(1));
+    Equal(GameFrameRequestResult.None, Poll(pending, 12000));
+});
+Test("等待期间可换显示而交付后的框选上下文仍严格绑定", () =>
+{
+    var pending = New();
+    Waiting(pending, 0, portrait, ui: true, width: 2200, height: 2480);
+    Waiting(pending, 100, landscape);
+    Equal(GameFrameRequestResult.Ready, Poll(pending, 800, landscape));
+    var selection = new RegionSelectionContext(landscape, 1, 2480, 2200);
+    Equal(true, selection.Matches(landscape, 1, 2480, 2200));
+    Equal(false, selection.Matches(portrait, 1, 2200, 2480));
+    // 即使后来回到同一横屏、相同捕获尺寸，新显示版本仍不接受旧截图。
+    Equal(false, selection.Matches(landscape with { Revision = 4 }, 1, 2480, 2200));
+    Equal(false, selection.Matches(landscape, 2, 2480, 2200));
+    Equal(false, selection.Matches(landscape, 1, 1920, 1080));
+    Equal(GameFrameRequestResult.None, Poll(pending, 1000, portrait));
+});
+
+Console.WriteLine($"RESULT {passed}/21 passed");
+if (passed != 21) Environment.ExitCode = 1;

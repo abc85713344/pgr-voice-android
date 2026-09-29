@@ -1,0 +1,14 @@
+{
+  "generatedAt": "2026-09-28T03:19:02.1822168+08:00",
+  "frames": 61,
+  "ocrRuns": 1,
+  "advances": 0,
+  "errors": 0,
+  "discarded": 0,
+  "ocrMeanMs": 243.6882,
+  "ocrMaxMs": 243.6882,
+  "managedBytes": 26387784,
+  "device": "Android SDK built for x86_64",
+  "android": "10",
+  "warning": "\u8FD9\u662F\u5F53\u524D\u8BBE\u5907\u6570\u636E\uFF1B\u6A21\u62DF\u5668\u4E0D\u80FD\u4EE3\u8868\u624B\u673A\u6E38\u620F\u6027\u80FD\u3002\u4EBA\u5DE5\u8BEF\u64AD/\u6F0F\u64AD\u53CA\u6E38\u620F\u6DF7\u97F3\u9700\u53E6\u8BB0\u3002"
+}

@@ -1,0 +1,62 @@
+using System.Text.Json;
+using PgrVoice.AndroidApp;
+
+var root = Path.Combine(Path.GetTempPath(), "pgr-diagnostics-audit-" + Guid.NewGuid().ToString("N"));
+Directory.CreateDirectory(root);
+try
+{
+    var blockedDirectory = Path.Combine(root, "diagnostics");
+    File.WriteAllText(blockedDirectory, "occupied");
+    var diagnostics = new SessionDiagnostics(blockedDirectory);
+    // The application's error handler calls Error(). It must not throw a second
+    // exception when the very storage failure being reported also prevents logging.
+    diagnostics.Error("保存存档失败");
+    using (var report = JsonDocument.Parse(diagnostics.Export()))
+    {
+        Check(report.RootElement.GetProperty("errors").GetInt64() == 1, "保留原始错误计数");
+        Check(report.RootElement.GetProperty("logWriteFailures").GetInt64() == 1, "记录写日志失败");
+        Check(report.RootElement.GetProperty("lastLogWriteError").GetString()?.Length > 0, "保留日志失败原因");
+    }
+    Console.WriteLine("PASS diagnostic storage failure does not escape application error handler");
+    Check(diagnostics.Summary.Contains("日志保存失败"), "界面摘要说明诊断未写入");
+    File.Delete(blockedDirectory);
+    diagnostics.Log("恢复", "可以继续写入");
+    Check(File.ReadAllText(Path.Combine(blockedDirectory, "events.log")).Contains("可以继续写入"), "存储恢复后继续写日志");
+    Console.WriteLine("PASS logging recovers after storage becomes writable");
+
+    File.WriteAllText(Path.Combine(blockedDirectory, "events.log"), new string('x', 512_001));
+    Directory.CreateDirectory(Path.Combine(blockedDirectory, "events.log.previous"));
+    diagnostics.Log("回归", "轮转失败");
+    using var rotation = JsonDocument.Parse(diagnostics.Export());
+    Check(rotation.RootElement.GetProperty("logWriteFailures").GetInt64() == 2, "轮转失败也隔离");
+    Check(rotation.RootElement.GetProperty("errors").GetInt64() == 1, "不递归上报自身失败");
+    Console.WriteLine("PASS log rotation failure stays isolated without recursive error reporting");
+}
+finally
+{
+    string resolved = Path.GetFullPath(root);
+    string expectedParent = Path.GetFullPath(Path.GetTempPath()).TrimEnd(Path.DirectorySeparatorChar);
+    if (!string.Equals(Path.GetDirectoryName(resolved), expectedParent, StringComparison.OrdinalIgnoreCase)
+        || !Path.GetFileName(resolved).StartsWith("pgr-diagnostics-audit-", StringComparison.Ordinal))
+        throw new InvalidOperationException("Refusing to clean outside this regression's temporary directory.");
+    Directory.Delete(resolved, true);
+}
+
+static void Check(bool value, string message)
+{
+    if (!value) throw new InvalidOperationException(message);
+}
+
+// Device metadata and the shared JSON formatting are the only platform dependencies.
+namespace Android.OS
+{
+    static class Build
+    {
+        public static string Model => "host-regression";
+        public static class VERSION { public static string Release => "not-an-android-run"; }
+    }
+}
+namespace PgrVoice
+{
+    static class Json { public static readonly JsonSerializerOptions Options = new() { WriteIndented = true }; }
+}

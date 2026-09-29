@@ -1,0 +1,131 @@
+using PgrVoice.AndroidApp;
+
+int passed = 0;
+void Test(string name, Action test)
+{
+    try { test(); passed++; Console.WriteLine("PASS " + name); }
+    catch (Exception ex) { Console.Error.WriteLine("FAIL " + name + ": " + ex.Message); Environment.Exit(1); }
+}
+void Assert(bool condition) { if (!condition) throw new InvalidOperationException("assertion failed"); }
+(CaptureCancelGestureGate Gate, long Round) Ready(long shownAt = 100)
+{
+    var gate = new CaptureCancelGestureGate(); long round = gate.Begin();
+    Assert(gate.MarkShown(round, shownAt)); return (gate, round);
+}
+bool Send(CaptureCancelGestureGate gate, long round, CaptureCancelGestureAction action,
+    long down = 110, long time = 120, int pointer = 3, int count = 1, bool inside = true) =>
+    gate.Handle(round, action, pointer, count, down, time, inside, out _);
+void Down(CaptureCancelGestureGate gate, long round, long time = 110) =>
+    Assert(!Send(gate, round, CaptureCancelGestureAction.Down, time, time));
+
+Test("cannot accept before first draw", () => {
+    var gate = new CaptureCancelGestureGate(); long round = gate.Begin(); Down(gate, round);
+    Assert(!Send(gate, round, CaptureCancelGestureAction.Up));
+});
+Test("one new complete touch accepts once", () => {
+    var (gate, round) = Ready(); Down(gate, round);
+    Assert(Send(gate, round, CaptureCancelGestureAction.Up));
+    Assert(!Send(gate, round, CaptureCancelGestureAction.Up));
+    Down(gate, round, 130); Assert(!Send(gate, round, CaptureCancelGestureAction.Up, 130, 140));
+});
+Test("down exactly at displayed time is valid", () => {
+    var (gate, round) = Ready(); Down(gate, round, 100);
+    Assert(Send(gate, round, CaptureCancelGestureAction.Up, 100, 101));
+});
+Test("queued down before displayed time is rejected", () => {
+    var (gate, round) = Ready(200);
+    Assert(!Send(gate, round, CaptureCancelGestureAction.Down, 190, 210));
+    Assert(!Send(gate, round, CaptureCancelGestureAction.Up, 190, 220));
+});
+Test("old up without down cannot cancel", () => {
+    var (gate, round) = Ready(); Assert(!Send(gate, round, CaptureCancelGestureAction.Up));
+});
+Test("old generation up cannot cancel new round", () => {
+    var (gate, oldRound) = Ready(); Down(gate, oldRound);
+    long round = gate.Begin(); Assert(round != oldRound); Assert(gate.MarkShown(round, 150));
+    Assert(!Send(gate, oldRound, CaptureCancelGestureAction.Up, 110, 160));
+    Down(gate, round, 170); Assert(Send(gate, round, CaptureCancelGestureAction.Up, 170, 180));
+});
+Test("late old event does not destroy a new touch", () => {
+    var (gate, oldRound) = Ready(); long round = gate.Begin(); Assert(gate.MarkShown(round, 150));
+    Down(gate, round, 170); Assert(!Send(gate, oldRound, CaptureCancelGestureAction.Up, 110, 180));
+    Assert(Send(gate, round, CaptureCancelGestureAction.Up, 170, 190));
+});
+Test("end invalidates pending touch", () => {
+    var (gate, round) = Ready(); Down(gate, round); gate.End();
+    Assert(!Send(gate, round, CaptureCancelGestureAction.Up)); Assert(!gate.MarkShown(round, 200));
+});
+Test("rebuild rejects old touch but preserves logical round", () => {
+    var (gate, round) = Ready(); Down(gate, round); gate.ResetPresentation();
+    Assert(gate.Generation == round); Assert(!Send(gate, round, CaptureCancelGestureAction.Up));
+    Assert(gate.MarkShown(round, 200)); Assert(!Send(gate, round, CaptureCancelGestureAction.Up, 110, 210));
+    Down(gate, round, 220); Assert(Send(gate, round, CaptureCancelGestureAction.Up, 220, 230));
+});
+Test("rebuild cannot allow second cancel in consumed round", () => {
+    var (gate, round) = Ready(); Down(gate, round); Assert(Send(gate, round, CaptureCancelGestureAction.Up));
+    gate.ResetPresentation(); Assert(!gate.MarkShown(round, 200));
+    Down(gate, round, 210); Assert(!Send(gate, round, CaptureCancelGestureAction.Up, 210, 220));
+});
+Test("in-bounds move preserves touch", () => {
+    var (gate, round) = Ready(); Down(gate, round);
+    Assert(!Send(gate, round, CaptureCancelGestureAction.Move));
+    Assert(Send(gate, round, CaptureCancelGestureAction.Up, time: 130));
+});
+Test("move outside then back remains rejected", () => {
+    var (gate, round) = Ready(); Down(gate, round);
+    Assert(!Send(gate, round, CaptureCancelGestureAction.Move, inside: false));
+    Assert(!Send(gate, round, CaptureCancelGestureAction.Move, time: 130));
+    Assert(!Send(gate, round, CaptureCancelGestureAction.Up, time: 140));
+});
+Test("up outside is rejected", () => {
+    var (gate, round) = Ready(); Down(gate, round);
+    Assert(!Send(gate, round, CaptureCancelGestureAction.Up, inside: false));
+});
+Test("cancel then up is rejected", () => {
+    var (gate, round) = Ready(); Down(gate, round);
+    Assert(!Send(gate, round, CaptureCancelGestureAction.Cancel));
+    Assert(!Send(gate, round, CaptureCancelGestureAction.Up, time: 130));
+});
+Test("wrong pointer cannot finish original touch", () => {
+    var (gate, round) = Ready(); Down(gate, round);
+    Assert(!Send(gate, round, CaptureCancelGestureAction.Up, pointer: 4));
+    Assert(!Send(gate, round, CaptureCancelGestureAction.Up, time: 130));
+});
+Test("wrong DownTime cannot finish or consume real touch", () => {
+    var (gate, round) = Ready(); Down(gate, round);
+    Assert(!Send(gate, round, CaptureCancelGestureAction.Up, down: 105));
+    Assert(Send(gate, round, CaptureCancelGestureAction.Up, time: 130));
+});
+Test("multi-pointer down is rejected", () => {
+    var (gate, round) = Ready(); Assert(!Send(gate, round, CaptureCancelGestureAction.Down, count: 2));
+    Assert(!Send(gate, round, CaptureCancelGestureAction.Up));
+});
+Test("pointer change invalidates the whole gesture", () => {
+    var (gate, round) = Ready(); Down(gate, round);
+    Assert(!Send(gate, round, CaptureCancelGestureAction.PointerChanged, count: 2));
+    Assert(!Send(gate, round, CaptureCancelGestureAction.Up, time: 130));
+});
+Test("multi-pointer move cannot recover to single up", () => {
+    var (gate, round) = Ready(); Down(gate, round);
+    Assert(!Send(gate, round, CaptureCancelGestureAction.Move, count: 2));
+    Assert(!Send(gate, round, CaptureCancelGestureAction.Up, time: 130));
+});
+Test("direct and delayed Click cannot cancel", () => {
+    var (gate, round) = Ready(); Assert(!Send(gate, round, CaptureCancelGestureAction.DirectClick));
+    Down(gate, round); Assert(!Send(gate, round, CaptureCancelGestureAction.DirectClick));
+    Assert(Send(gate, round, CaptureCancelGestureAction.Up, time: 130));
+});
+Test("duplicate Down cannot arm an orphan Up", () => {
+    var (gate, round) = Ready(); Down(gate, round); Down(gate, round);
+    Assert(!Send(gate, round, CaptureCancelGestureAction.Up));
+});
+Test("out of order event time rejects touch", () => {
+    var (gate, round) = Ready(); Down(gate, round);
+    Assert(!Send(gate, round, CaptureCancelGestureAction.Move, time: 140));
+    Assert(!Send(gate, round, CaptureCancelGestureAction.Up, time: 130));
+});
+Test("repeated draw does not change initial shown time", () => {
+    var (gate, round) = Ready(); Assert(!gate.MarkShown(round, 500));
+    Down(gate, round); Assert(Send(gate, round, CaptureCancelGestureAction.Up));
+});
+Console.WriteLine($"CaptureCancelGesture: {passed}/{passed} passed");

@@ -1,0 +1,82 @@
+using System.Security.Cryptography;
+using System.Text.Json;
+using PgrVoice;
+
+var results=new List<object>();var evidence=new List<object>();int failures=0;
+void Test(string name,Action test)
+{
+    try {test();results.Add(new{name,passed=true});}
+    catch(Exception ex){failures++;results.Add(new{name,passed=false,error=ex.ToString()});}
+}
+Test("复现前三名伪唯一：两个菜单挤掉另一条同文支线，FindAll仍保留两个精确line",()=>
+{
+    var (engine,blocks)=Fixture(true,true);
+    var displayed=Matcher.Find(engine,"s",blocks);var full=Matcher.FindAll(engine,"s",blocks);
+    Require(displayed.Count==3&&displayed.Count(c=>c.Node.Kind=="choice")==2,"未复现两菜单占前三名");
+    Require(ExactLines(displayed).Count==1,"旧路径没有出现伪唯一，样本失效");
+    Require(ExactLines(full).Count==2,"未保留被截断的同文支线");
+    Require(!EligibleInitialPosition(full),"多个同文line仍被判唯一");
+    evidence.Add(new{caseName="ambiguous-lines-hidden-by-menus",oldTop3=displayed.Select(c=>new{id=c.Node.Id,kind=c.Node.Kind,c.Score}),
+        fullExactLines=ExactLines(full).Select(c=>c.Node.Id),fullMenuEvidence=full.Where(c=>c.Node.Kind=="choice").Select(c=>new{id=c.Node.Id,c.Score})});
+});
+Test("明确选项出现且只有一个完整line时仍应拒绝初始自动播放",()=>
+{
+    var(engine,blocks)=Fixture(false,true);var full=Matcher.FindAll(engine,"s",blocks);
+    Require(ExactLines(full).Count==1,"未构造唯一line加菜单的情景");
+    Require(full.Any(c=>c.Node.Kind=="choice"&&c.Score>=.94),"明确菜单证据未返回");
+    Require(!EligibleInitialPosition(full),"忽略菜单而放行当前对白");
+});
+Test("没有菜单的唯一完整共同台词仍能初始定位，不能把功能全禁用",()=>
+{
+    var(engine,blocks)=Fixture(false,false);var full=Matcher.FindAll(engine,"s",blocks);
+    Require(EligibleInitialPosition(full),"唯一共同台词被拒绝");
+    var candidate=ExactLines(full).Single();var probe=new PlaybackEngine(engine.Pack);
+    Require(probe.ImportNavigation(engine.ExportNavigation())&&probe.ConfirmGameLine(candidate.Node.Id)&&probe.EvaluateCommonAutoPlayNext().CurrentIsCommon,"实际共同线预审失败");
+});
+Test("默认Find严格保留FindAll前三条顺序，不改变现有手动候选界面",()=>
+{
+    foreach(bool menus in new[]{false,true})
+    {
+        var(engine,blocks)=Fixture(true,menus);
+        Require(Matcher.Find(engine,"s",blocks).SequenceEqual(Matcher.FindAll(engine,"s",blocks).Take(3)),"旧候选API排序或数量改变");
+    }
+});
+Test("空当前节点导出的导航可在临时引擎定位，不更改真实履历或发声",()=>
+{
+    var(e,blocks)=Fixture(false,false);var engine=new PlaybackEngine(e.Pack);string before=JsonSerializer.Serialize(engine.ExportNavigation(),Json.Options);
+    int plays=0;engine.PlayRequested+=_=>plays++;var candidate=ExactLines(Matcher.FindAll(engine,"s",blocks)).Single();
+    var probe=new PlaybackEngine(engine.Pack);Require(probe.ImportNavigation(engine.ExportNavigation())&&probe.ConfirmGameLine(candidate.Node.Id),"null CurrentId占位前的导航不能预审");
+    Require(probe.EvaluateCommonAutoPlayNext().CurrentIsCommon,"唯一共同句未通过门控");
+    Require(engine.CurrentId==null&&plays==0&&JsonSerializer.Serialize(engine.ExportNavigation(),Json.Options)==before,"临时预审改变真实会话");
+});
+string output=args.ElementAtOrDefault(0)??"reports/android-initial-autolocate-candidates.json";
+var report=new{createdUtc=DateTimeOffset.UtcNow,passed=failures==0,count=results.Count,failures,tests=results,evidence,
+    matcherSha256=Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes("src/Matcher.cs"))),
+    scope="真实Matcher API的纯逻辑回归，复现截断伪唯一并验证完整候选/菜单证据及临时核心预审。EligibleInitialPosition是调用方应遵循的协议断言，不声称安卓AppSession或设备链路已运行。"};
+Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(output))!);File.WriteAllText(output,JsonSerializer.Serialize(report,Json.Options));
+Console.WriteLine(JsonSerializer.Serialize(report,Json.Options));return failures==0?0:1;
+
+static void Require(bool value,string message){if(!value)throw new InvalidOperationException(message);}
+static List<MatchCandidate> ExactLines(IEnumerable<MatchCandidate> candidates)=>candidates.Where(c=>c.Node.Kind=="line"&&Matcher.Normalize(c.Evidence)==Matcher.Normalize(c.Node.Text)).GroupBy(c=>c.Node.Id).Select(g=>g.First()).ToList();
+static bool EligibleInitialPosition(List<MatchCandidate> all)=>!all.Any(c=>c.Node.Kind=="choice"&&c.Score>=.94)&&ExactLines(all).Count==1;
+static(PlaybackEngine,List<OcrBlock>)Fixture(bool duplicate,bool showChoices)
+{
+    var pack=new Pack{Id="initial-locate-ambiguity",SchemaVersion=1,Chapters=new(){new(){Id="c",Sections=new(){new(){Id="s",StartId="common"}}}},Nodes=new()
+    {
+        new(){Id="common",SectionId="s",Text="请沿着道路继续向前行进",Speaker="主角",NextId="next"},
+        new(){Id="next",SectionId="s",Text="远方已经看得到村庄"},
+        new(){Id="branch-duplicate",SectionId="s",PathId="branch",Text=duplicate?"请沿着道路继续向前行进":"我们到另一边探索",Speaker="支线角色"},
+        new(){Id="option-left",SectionId="s",PathId="branch",Text="向左走后的故事"},
+        new(){Id="option-right",SectionId="s",PathId="branch",Text="向右走后的故事"}
+    }};
+    foreach(string menuId in new[]{"menu-a","menu-b"})pack.Nodes.Add(new(){Id=menuId,SectionId="s",Kind="choice",Options=new()
+    {
+        new(){Id=menuId+"1",PathId="branch",TargetId="branch-duplicate",Label="调查左侧建筑"},
+        new(){Id=menuId+"2",PathId="branch",TargetId="option-left",Label="调查右侧道路"},
+        new(){Id=menuId+"3",PathId="branch",TargetId="option-right",Label="留在这里等待"}
+    }});
+    pack.Validate();var engine=new PlaybackEngine(pack);engine.Commit("common");engine.PauseForBrowse();
+    var blocks=new List<OcrBlock>{new(){Text="主角",Score=.99},new(){Text="请沿着道路继续向前行进",Score=.99}};
+    if(showChoices)blocks.AddRange(new[]{"调查左侧建筑","调查右侧道路","留在这里等待"}.Select(text=>new OcrBlock{Text=text,Score=.99}));
+    return(engine,blocks);
+}

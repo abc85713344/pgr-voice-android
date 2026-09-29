@@ -1,0 +1,182 @@
+using PgrVoice;
+using PgrVoice.AndroidApp;
+using PgrVoice.AndroidApp.Ocr;
+using PgrVoice.AndroidApp.Platform;
+using PgrVoice.Following;
+
+namespace Android.OS
+{
+    public static class SystemClock
+    {
+        public static long Now = 1_000;
+        public static long ElapsedRealtime() => Now;
+    }
+    public sealed class Handler
+    {
+        readonly List<(long Due, long Serial, Action Action)> pending = new();
+        long serial;
+        public void PostDelayed(Action action, long delay) => pending.Add((SystemClock.Now + delay, ++serial, action));
+        public void RemoveCallbacks(Action action) => pending.RemoveAll(p => p.Action == action);
+        public void Advance(long milliseconds)
+        {
+            long end = SystemClock.Now + milliseconds;
+            int steps = 0;
+            while (pending.Where(p => p.Due <= end).OrderBy(p => p.Due).ThenBy(p => p.Serial).FirstOrDefault() is { Action: not null } next)
+            {
+                if (++steps > 10_000) throw new Exception("Delayed callback loop did not terminate");
+                pending.Remove(next); SystemClock.Now = next.Due; next.Action();
+            }
+            SystemClock.Now = end;
+        }
+    }
+}
+namespace Android.Widget
+{
+    public enum ToastLength { Short, Long }
+    public sealed class Toast { public static Toast MakeText(object context, string message, ToastLength length) => new(); public void Show() { } }
+}
+namespace PgrVoice.AndroidApp.Ocr { public enum OcrEngineKind { Paddle, MlKit } }
+namespace PgrVoice.AndroidApp.Ui
+{
+    public sealed class AdvanceRegionOverlay(object context, int width, int height, Action<ScreenRegion?> callback) : IDisposable
+    { public void Show() { } public void Dispose() { } }
+}
+namespace PgrVoice.AndroidApp.Platform
+{
+    public sealed record GameAdvanceAvailability(bool Connected, bool TargetForeground, bool ScreenReady,
+        int DisplayWidth, int DisplayHeight, int Rotation, string Reason)
+    { public bool CanTap => Connected && TargetForeground && ScreenReady; public string? DisplayKey { get; init; } }
+    public sealed record GameAdvanceTapResult(bool Completed, string Reason);
+    public static class GameAdvanceAccessibilityService
+    {
+        public const string OfficialGamePackage = "com.kurogame.haru.hero";
+        public static GameAdvanceAvailability Availability = null!;
+        public static string LastFailureReason => "test service unavailable";
+        public static int BeginCount, TapCount, CancelCount;
+        static long nextToken;
+        static readonly Queue<TaskCompletionSource<GameAdvanceTapResult>> gestures = new();
+        public static void Reset(ScreenDisplayState display)
+        {
+            Availability = new(true, true, true, 2400, 1080, 1, "") { DisplayKey = display.RegionKey };
+            BeginCount = TapCount = CancelCount = 0; nextToken = 0; gestures.Clear();
+        }
+        public static GameAdvanceAvailability GetAvailability(string package) => Availability;
+        public static long BeginSession(string package, int width, int height, int rotation)
+        { BeginCount++; return Availability.CanTap ? ++nextToken : 0; }
+        public static void CancelSession() { CancelCount++; }
+        public static Task<GameAdvanceTapResult> TapAsync(long token, float x, float y)
+        {
+            TapCount++;
+            var result = new TaskCompletionSource<GameAdvanceTapResult>(); gestures.Enqueue(result); return result.Task;
+        }
+        public static void CompleteOldestGesture(bool success = true)
+        { gestures.Dequeue().SetResult(new(success, success ? "" : "test gesture failed")); }
+    }
+}
+namespace PgrVoice.AndroidApp
+{
+    public sealed partial class AppSession
+    {
+        readonly object context = new();
+        readonly Android.OS.Handler main = new();
+        readonly AudioStub audio = new();
+        readonly OverlayStub overlay = new();
+        readonly OcrInferenceSchedule ocrSchedule = new();
+        readonly PendingStub pendingFrame = new();
+        readonly SubtitleStability stability = new();
+        long ocrEpoch, playGeneration, captureNotBefore, nextAudioTicket;
+        bool manualOcr, uiVisible;
+        byte[]? lastMask;
+        bool HasConfirmedRegion => true;
+        public PlaybackEngine? Engine { get; private set; }
+        public AppSettings Settings { get; } = new();
+        public ListeningStub Listening { get; } = new();
+        public ScreenStub Screen { get; } = new();
+        public DiagnosticsStub Diagnostics { get; } = new();
+        public string SectionId { get; set; } = "s";
+        public string Status { get; set; } = "";
+        public event Action? ContentChanged;
+        public List<string> PlayedNodes { get; } = new();
+        public int OcrRequests { get; private set; }
+        public OverlayStub Window => overlay;
+        public int GestureRequests => GameAdvanceAccessibilityService.TapCount;
+        public long BoundAudioTicket => autoPlay.AudioTicket;
+        public long AutoEpoch => autoPlay.Epoch;
+        public AppSession(PlaybackEngine engine)
+        {
+            GameAdvanceAccessibilityService.Reset(Screen.DisplayState);
+            var state = GameAdvanceAccessibilityService.Availability;
+            Settings.AdvanceTargets[state.DisplayKey!] = new(GameAdvanceAccessibilityService.OfficialGamePackage,
+                state.DisplayWidth, state.DisplayHeight, state.Rotation, .7f, .7f, .2f, .2f);
+            ReplaceEngine(engine);
+        }
+        public void ReplaceEngine(PlaybackEngine engine)
+        {
+            Invalidate(); Engine = engine; SectionId = engine.Current?.SectionId ?? "s";
+            engine.PlayRequested += node =>
+            {
+                if (!ReferenceEquals(Engine, engine) || node == null) return;
+                PlayedNodes.Add(node.Id);
+                if (autoPlay.Running && !autoPlay.BindAudio(autoPlay.Epoch, node.Id, ++nextAudioTicket, Android.OS.SystemClock.Now))
+                    throw new Exception("Production autoplay did not prepare the emitted audio request");
+            };
+            engine.StopRequested += () => { playGeneration++; audio.Stop(); };
+            engine.Changed += Notify;
+        }
+        public void BeginFromOverlay() => StartAutoPlayback();
+        public void LeaveOverlay(string reason) => PauseAutoPlaybackForOverlayExit(reason);
+        public void AdvanceClock(long milliseconds) => main.Advance(milliseconds);
+        public void CompleteAudio(long? ticket = null) => OnAutoAudioCompleted(ticket ?? autoPlay.AudioTicket);
+        public void SetForeground(bool appVisible) => uiVisible = appVisible;
+        public void CancelForManualOperation() { Invalidate(); Engine?.PauseForBrowse(); }
+        public void MoveCurrent(string node) { Invalidate(); Engine!.Commit(node); Engine.PauseForBrowse(); }
+        public void RequestOcr(bool overlayResult = false)
+        {
+            if (!overlayResult) throw new Exception("Automatic entry must request OCR results in the overlay");
+            OcrRequests++; Invalidate(); Engine?.PauseForBrowse();
+        }
+        string BrowseSectionTitle(PlaybackEngine engine, string section) =>
+            engine.Pack.Chapters.SelectMany(c => c.Sections).First(s => s.Id == section).Title;
+        public void Post(Action action) => action();
+        void Invalidate()
+        { CancelAutoPlayback(); ocrEpoch++; playGeneration++; pendingFrame.Clear(); manualOcr = false; ocrSchedule.Reset(); overlay.SetCaptureHidden(false); }
+        void Notify() { }
+        void SaveSettings() { }
+        public sealed class AudioStub { public void Stop() { } }
+        public sealed class ListeningStub { public bool IsPlaying; public void Pause() => IsPlaying = false; }
+        public sealed class PendingStub { public void Clear() { } }
+        public sealed class ScreenStub
+        {
+            public bool CaptureActive = true;
+            public long SessionId = 1;
+            public ScreenDisplayState DisplayState = new(new PhysicalDisplayProfile(0, 1080, 2400, 1), 1);
+        }
+        public sealed class DiagnosticsStub
+        {
+            public List<string> Entries { get; } = new();
+            public int Advances;
+            public void Log(string kind, string message) => Entries.Add(kind + ": " + message);
+            public void Advance() => Advances++;
+        }
+        public sealed class OverlayStub
+        {
+            public sealed record Confirmation(string Text, Action Confirmed, Action Locate, Action Cancelled);
+            public List<Confirmation> Confirmations { get; } = new();
+            public Confirmation Latest => Confirmations.Last();
+            public bool CanShow = true, Hidden, Expanded, BlocksTarget;
+            public long CurrentCaptureControlGeneration { get; private set; }
+            public string PauseReason = "";
+            public void SetCaptureHidden(bool hidden, bool keepStopControl = false)
+            { Hidden = hidden; if (hidden && keepStopControl) CurrentCaptureControlGeneration++; }
+            public void SetExpanded(bool value) => Expanded = value;
+            public void ClearAutoPlaybackPaused() => PauseReason = "";
+            public void ShowAutoPlaybackPaused(string reason) => PauseReason = reason;
+            public void ShowNotice(string reason) => PauseReason = reason;
+            public void ShowAutoPlaybackStart(string text, Action confirmed, Action locate, Action cancelled) =>
+                Confirmations.Add(new(text, confirmed, locate, cancelled));
+            public void Hide() { }
+            public void Show() { }
+            public bool ContainsPoint(float x, float y) => BlocksTarget;
+        }
+    }
+}

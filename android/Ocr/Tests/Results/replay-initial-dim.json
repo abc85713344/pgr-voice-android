@@ -1,0 +1,18 @@
+{
+  "sourceScreenshot": "<AndroidRoot>\\fixtures\\session-regression\\reports\\replay-current.png",
+  "sourceReportDurationMs": 19300,
+  "sourceReportObservedFrames": 77,
+  "sourceReportOcrRuns": 0,
+  "sourceReportErrors": 0,
+  "visibleSystemOverlay": "目前处于全屏模式 / 知道了",
+  "imageSize": [1920, 1080],
+  "subtitleRoi": [153, 734, 1612, 291],
+  "maximumChannelValueInsideRoi": 127,
+  "productionWhiteMaskMinimumChannelExclusive": 155,
+  "productionMinimumInkPixels": 12,
+  "whitePixelsBeforeScaling": 0,
+  "whitePixelsAfterPillowBilinear384x96": 0,
+  "scalingLimitation": "Pillow 双线性不是 Android Skia 的逐像素替代；原图 ROI 所有通道已不超过 127，因此无需依赖近似缩放即可判定阈值 155 无白点。",
+  "conclusion": "系统全屏首次引导压暗字幕，导致空掩码不进入稳定态，OCR 未启动；此记录不支持降低正式白字或稳定安全阈值。",
+  "followup": "测试者已关闭系统引导；后续自动跟随回归结果以独立最终报告为准。"
+}

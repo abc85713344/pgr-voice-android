@@ -1,0 +1,611 @@
+[
+  {
+    "region": [
+      0.17,
+      0.77,
+      0.92,
+      0.92
+    ],
+    "size": [
+      384,
+      96
+    ],
+    "observations": [
+      {
+        "file": "ch29-sequence-00.png",
+        "seconds": 6998.0,
+        "changedPixelsFromBaseline": 0,
+        "whiteUnionRatio": 0.0,
+        "ink": 843,
+        "changed": true,
+        "stable": false
+      },
+      {
+        "file": "ch29-sequence-01.png",
+        "seconds": 6998.2,
+        "changedPixelsFromBaseline": 0,
+        "whiteUnionRatio": 0.0,
+        "ink": 843,
+        "changed": false,
+        "stable": false
+      },
+      {
+        "file": "ch29-sequence-02.png",
+        "seconds": 6998.4,
+        "changedPixelsFromBaseline": 0,
+        "whiteUnionRatio": 0.0,
+        "ink": 843,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-03.png",
+        "seconds": 6998.6,
+        "changedPixelsFromBaseline": 0,
+        "whiteUnionRatio": 0.0,
+        "ink": 843,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-04.png",
+        "seconds": 6998.8,
+        "changedPixelsFromBaseline": 1216,
+        "whiteUnionRatio": 0.86364,
+        "ink": 757,
+        "changed": true,
+        "stable": false
+      },
+      {
+        "file": "ch29-sequence-05.png",
+        "seconds": 6999.0,
+        "changedPixelsFromBaseline": 443,
+        "whiteUnionRatio": 0.36917,
+        "ink": 1200,
+        "changed": true,
+        "stable": false
+      },
+      {
+        "file": "ch29-sequence-06.png",
+        "seconds": 6999.2,
+        "changedPixelsFromBaseline": 0,
+        "whiteUnionRatio": 0.0,
+        "ink": 1200,
+        "changed": false,
+        "stable": false
+      },
+      {
+        "file": "ch29-sequence-07.png",
+        "seconds": 6999.4,
+        "changedPixelsFromBaseline": 0,
+        "whiteUnionRatio": 0.0,
+        "ink": 1200,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-08.png",
+        "seconds": 6999.6,
+        "changedPixelsFromBaseline": 0,
+        "whiteUnionRatio": 0.0,
+        "ink": 1200,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-09.png",
+        "seconds": 6999.8,
+        "changedPixelsFromBaseline": 3,
+        "whiteUnionRatio": 0.0025,
+        "ink": 1199,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-10.png",
+        "seconds": 7000.0,
+        "changedPixelsFromBaseline": 5,
+        "whiteUnionRatio": 0.00416,
+        "ink": 1197,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-11.png",
+        "seconds": 7000.2,
+        "changedPixelsFromBaseline": 7,
+        "whiteUnionRatio": 0.00583,
+        "ink": 1195,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-12.png",
+        "seconds": 7000.4,
+        "changedPixelsFromBaseline": 7,
+        "whiteUnionRatio": 0.00583,
+        "ink": 1195,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-13.png",
+        "seconds": 7000.6,
+        "changedPixelsFromBaseline": 7,
+        "whiteUnionRatio": 0.00583,
+        "ink": 1195,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-14.png",
+        "seconds": 7000.8,
+        "changedPixelsFromBaseline": 7,
+        "whiteUnionRatio": 0.00583,
+        "ink": 1195,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-15.png",
+        "seconds": 7001.0,
+        "changedPixelsFromBaseline": 7,
+        "whiteUnionRatio": 0.00583,
+        "ink": 1195,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-16.png",
+        "seconds": 7001.2,
+        "changedPixelsFromBaseline": 7,
+        "whiteUnionRatio": 0.00583,
+        "ink": 1195,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-17.png",
+        "seconds": 7001.4,
+        "changedPixelsFromBaseline": 7,
+        "whiteUnionRatio": 0.00583,
+        "ink": 1195,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-18.png",
+        "seconds": 7001.6,
+        "changedPixelsFromBaseline": 7,
+        "whiteUnionRatio": 0.00583,
+        "ink": 1195,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-19.png",
+        "seconds": 7001.8,
+        "changedPixelsFromBaseline": 7,
+        "whiteUnionRatio": 0.00583,
+        "ink": 1195,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-20.png",
+        "seconds": 7002.0,
+        "changedPixelsFromBaseline": 1512,
+        "whiteUnionRatio": 0.91636,
+        "ink": 588,
+        "changed": true,
+        "stable": false
+      }
+    ]
+  },
+  {
+    "region": [
+      0.17,
+      0.77,
+      0.92,
+      0.875
+    ],
+    "size": [
+      384,
+      96
+    ],
+    "observations": [
+      {
+        "file": "ch29-sequence-00.png",
+        "seconds": 6998.0,
+        "changedPixelsFromBaseline": 0,
+        "whiteUnionRatio": 0.0,
+        "ink": 1181,
+        "changed": true,
+        "stable": false
+      },
+      {
+        "file": "ch29-sequence-01.png",
+        "seconds": 6998.2,
+        "changedPixelsFromBaseline": 0,
+        "whiteUnionRatio": 0.0,
+        "ink": 1181,
+        "changed": false,
+        "stable": false
+      },
+      {
+        "file": "ch29-sequence-02.png",
+        "seconds": 6998.4,
+        "changedPixelsFromBaseline": 0,
+        "whiteUnionRatio": 0.0,
+        "ink": 1181,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-03.png",
+        "seconds": 6998.6,
+        "changedPixelsFromBaseline": 0,
+        "whiteUnionRatio": 0.0,
+        "ink": 1181,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-04.png",
+        "seconds": 6998.8,
+        "changedPixelsFromBaseline": 1732,
+        "whiteUnionRatio": 0.8673,
+        "ink": 1081,
+        "changed": true,
+        "stable": false
+      },
+      {
+        "file": "ch29-sequence-05.png",
+        "seconds": 6999.0,
+        "changedPixelsFromBaseline": 614,
+        "whiteUnionRatio": 0.36224,
+        "ink": 1695,
+        "changed": true,
+        "stable": false
+      },
+      {
+        "file": "ch29-sequence-06.png",
+        "seconds": 6999.2,
+        "changedPixelsFromBaseline": 0,
+        "whiteUnionRatio": 0.0,
+        "ink": 1695,
+        "changed": false,
+        "stable": false
+      },
+      {
+        "file": "ch29-sequence-07.png",
+        "seconds": 6999.4,
+        "changedPixelsFromBaseline": 1,
+        "whiteUnionRatio": 0.00059,
+        "ink": 1694,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-08.png",
+        "seconds": 6999.6,
+        "changedPixelsFromBaseline": 1,
+        "whiteUnionRatio": 0.00059,
+        "ink": 1694,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-09.png",
+        "seconds": 6999.8,
+        "changedPixelsFromBaseline": 8,
+        "whiteUnionRatio": 0.00471,
+        "ink": 1695,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-10.png",
+        "seconds": 7000.0,
+        "changedPixelsFromBaseline": 15,
+        "whiteUnionRatio": 0.00882,
+        "ink": 1692,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-11.png",
+        "seconds": 7000.2,
+        "changedPixelsFromBaseline": 17,
+        "whiteUnionRatio": 0.01,
+        "ink": 1688,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-12.png",
+        "seconds": 7000.4,
+        "changedPixelsFromBaseline": 17,
+        "whiteUnionRatio": 0.01,
+        "ink": 1688,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-13.png",
+        "seconds": 7000.6,
+        "changedPixelsFromBaseline": 17,
+        "whiteUnionRatio": 0.01,
+        "ink": 1688,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-14.png",
+        "seconds": 7000.8,
+        "changedPixelsFromBaseline": 17,
+        "whiteUnionRatio": 0.01,
+        "ink": 1688,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-15.png",
+        "seconds": 7001.0,
+        "changedPixelsFromBaseline": 17,
+        "whiteUnionRatio": 0.01,
+        "ink": 1688,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-16.png",
+        "seconds": 7001.2,
+        "changedPixelsFromBaseline": 17,
+        "whiteUnionRatio": 0.01,
+        "ink": 1688,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-17.png",
+        "seconds": 7001.4,
+        "changedPixelsFromBaseline": 17,
+        "whiteUnionRatio": 0.01,
+        "ink": 1688,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-18.png",
+        "seconds": 7001.6,
+        "changedPixelsFromBaseline": 17,
+        "whiteUnionRatio": 0.01,
+        "ink": 1688,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-19.png",
+        "seconds": 7001.8,
+        "changedPixelsFromBaseline": 17,
+        "whiteUnionRatio": 0.01,
+        "ink": 1688,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-20.png",
+        "seconds": 7002.0,
+        "changedPixelsFromBaseline": 2100,
+        "whiteUnionRatio": 0.91027,
+        "ink": 819,
+        "changed": true,
+        "stable": false
+      }
+    ]
+  },
+  {
+    "region": [
+      0.17,
+      0.79,
+      0.92,
+      0.865
+    ],
+    "size": [
+      384,
+      96
+    ],
+    "observations": [
+      {
+        "file": "ch29-sequence-00.png",
+        "seconds": 6998.0,
+        "changedPixelsFromBaseline": 0,
+        "whiteUnionRatio": 0.0,
+        "ink": 1668,
+        "changed": true,
+        "stable": false
+      },
+      {
+        "file": "ch29-sequence-01.png",
+        "seconds": 6998.2,
+        "changedPixelsFromBaseline": 0,
+        "whiteUnionRatio": 0.0,
+        "ink": 1668,
+        "changed": false,
+        "stable": false
+      },
+      {
+        "file": "ch29-sequence-02.png",
+        "seconds": 6998.4,
+        "changedPixelsFromBaseline": 0,
+        "whiteUnionRatio": 0.0,
+        "ink": 1668,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-03.png",
+        "seconds": 6998.6,
+        "changedPixelsFromBaseline": 1,
+        "whiteUnionRatio": 0.0006,
+        "ink": 1667,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-04.png",
+        "seconds": 6998.8,
+        "changedPixelsFromBaseline": 2441,
+        "whiteUnionRatio": 0.86438,
+        "ink": 1539,
+        "changed": true,
+        "stable": false
+      },
+      {
+        "file": "ch29-sequence-05.png",
+        "seconds": 6999.0,
+        "changedPixelsFromBaseline": 892,
+        "whiteUnionRatio": 0.36693,
+        "ink": 2431,
+        "changed": true,
+        "stable": false
+      },
+      {
+        "file": "ch29-sequence-06.png",
+        "seconds": 6999.2,
+        "changedPixelsFromBaseline": 0,
+        "whiteUnionRatio": 0.0,
+        "ink": 2431,
+        "changed": false,
+        "stable": false
+      },
+      {
+        "file": "ch29-sequence-07.png",
+        "seconds": 6999.4,
+        "changedPixelsFromBaseline": 1,
+        "whiteUnionRatio": 0.00041,
+        "ink": 2430,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-08.png",
+        "seconds": 6999.6,
+        "changedPixelsFromBaseline": 1,
+        "whiteUnionRatio": 0.00041,
+        "ink": 2430,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-09.png",
+        "seconds": 6999.8,
+        "changedPixelsFromBaseline": 6,
+        "whiteUnionRatio": 0.00247,
+        "ink": 2429,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-10.png",
+        "seconds": 7000.0,
+        "changedPixelsFromBaseline": 11,
+        "whiteUnionRatio": 0.00452,
+        "ink": 2428,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-11.png",
+        "seconds": 7000.2,
+        "changedPixelsFromBaseline": 12,
+        "whiteUnionRatio": 0.00493,
+        "ink": 2427,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-12.png",
+        "seconds": 7000.4,
+        "changedPixelsFromBaseline": 17,
+        "whiteUnionRatio": 0.00697,
+        "ink": 2430,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-13.png",
+        "seconds": 7000.6,
+        "changedPixelsFromBaseline": 17,
+        "whiteUnionRatio": 0.00697,
+        "ink": 2430,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-14.png",
+        "seconds": 7000.8,
+        "changedPixelsFromBaseline": 17,
+        "whiteUnionRatio": 0.00697,
+        "ink": 2430,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-15.png",
+        "seconds": 7001.0,
+        "changedPixelsFromBaseline": 17,
+        "whiteUnionRatio": 0.00697,
+        "ink": 2430,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-16.png",
+        "seconds": 7001.2,
+        "changedPixelsFromBaseline": 17,
+        "whiteUnionRatio": 0.00697,
+        "ink": 2430,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-17.png",
+        "seconds": 7001.4,
+        "changedPixelsFromBaseline": 17,
+        "whiteUnionRatio": 0.00697,
+        "ink": 2430,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-18.png",
+        "seconds": 7001.6,
+        "changedPixelsFromBaseline": 17,
+        "whiteUnionRatio": 0.00697,
+        "ink": 2430,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-19.png",
+        "seconds": 7001.8,
+        "changedPixelsFromBaseline": 17,
+        "whiteUnionRatio": 0.00697,
+        "ink": 2430,
+        "changed": false,
+        "stable": true
+      },
+      {
+        "file": "ch29-sequence-20.png",
+        "seconds": 7002.0,
+        "changedPixelsFromBaseline": 3029,
+        "whiteUnionRatio": 0.91098,
+        "ink": 1190,
+        "changed": true,
+        "stable": false
+      }
+    ]
+  }
+]

@@ -1,0 +1,4184 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-27T18:49:09.152194+00:00",
+  "scope": "Resolved NuGet dependencies including build-time packages, plus Mono Android runtime packs. This inventory is not a claim that every build-time dependency is shipped in the APK. Original upstream notices and terms override short labels.",
+  "lockSha256": "877cf570a5a21bde7c157ff3de88b2bc185eea07205d252ea948af8822588380",
+  "packages": [
+    {
+      "id": "Microsoft.ML.OnnxRuntime",
+      "version": "1.30.0",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://github.com/Microsoft/onnxruntime",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Microsoft/onnxruntime.git",
+        "commit": "f2c39fe2f838cf35ce7da92824f5a5e3ee6e88a7"
+      },
+      "license": {
+        "type": "file",
+        "value": "LICENSE",
+        "url": "https://aka.ms/deprecateLicenseUrl"
+      },
+      "mavenCoordinates": [],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/c250d6278f0b47a6-LICENSE",
+          "sha256": "c250d6278f0b47a6439fb7592b08b58a55eb9f535aa49a1db63211c3f982b674",
+          "originalName": "LICENSE",
+          "bytes": 1094
+        },
+        {
+          "asset": "legal/texts/c53a76501ef60db6-ThirdPartyNotices.txt",
+          "sha256": "c53a76501ef60db6f865f20599f220761201ac4057683acefdab37d861b86622",
+          "originalName": "ThirdPartyNotices.txt",
+          "bytes": 344457
+        }
+      ],
+      "nuspecSha256": "66483d35af4ddca2a20d337de51a761f960395570e2bacefb2ea6dc95f6861e1",
+      "dependencyType": "Direct",
+      "frameworks": [
+        "net10.0-android36.0",
+        "net10.0-android36.0/android-x64"
+      ],
+      "nugetContentHash": "RaF3KjPXB/IbNvvrcQtrxS/NZjB9dEHnZQTsdJCLP5Fnn1Jj3LomeqR1mMAoRFKinJ0pIe85PLhLlfGBYqzgWA=="
+    },
+    {
+      "id": "Microsoft.ML.OnnxRuntime.Managed",
+      "version": "1.30.0",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://github.com/Microsoft/onnxruntime",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/onnxruntime",
+        "commit": "f2c39fe2f838cf35ce7da92824f5a5e3ee6e88a7"
+      },
+      "license": {
+        "type": "file",
+        "value": "LICENSE.txt",
+        "url": "https://aka.ms/deprecateLicenseUrl"
+      },
+      "mavenCoordinates": [],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/c250d6278f0b47a6-LICENSE.txt",
+          "sha256": "c250d6278f0b47a6439fb7592b08b58a55eb9f535aa49a1db63211c3f982b674",
+          "originalName": "LICENSE.txt",
+          "bytes": 1094
+        },
+        {
+          "asset": "legal/texts/c53a76501ef60db6-ThirdPartyNotices.txt",
+          "sha256": "c53a76501ef60db6f865f20599f220761201ac4057683acefdab37d861b86622",
+          "originalName": "ThirdPartyNotices.txt",
+          "bytes": 344457
+        }
+      ],
+      "nuspecSha256": "24bfb0b8167b48ec043d525e73ef755efbbd161878aee5e1a18c2adad2484053",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "KHW+vp+i4Mdf6RhIsMvurTVepafXHjg8/VQ0o6sa2wEK0KzV/4iEoRTUvsymcRP+XPAM/r6kZCaTADdV6Xn4RA=="
+    },
+    {
+      "id": "Microsoft.NET.ILLink.Tasks",
+      "version": "10.0.12",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "95017c711e6afc1085133d440e42b4bd78155701"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT",
+        "url": "https://licenses.nuget.org/MIT"
+      },
+      "mavenCoordinates": [],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/6d15e10a101c6bff-THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "originalName": "THIRD-PARTY-NOTICES.TXT",
+          "bytes": 78041
+        }
+      ],
+      "nuspecSha256": "bf5762457b552fed442157eb53c6c6693ded498ecfd5581a77cbdb3898bda628",
+      "dependencyType": "Direct",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "xi+BDjFpW+Sb+MHFHaH6Y/gV9I8BluFwRXc1QyCdoZbIK26eNiBeFuMTe/FMwc33G1wdHCyDg7CVTmb8OdQrMQ=="
+    },
+    {
+      "id": "System.Numerics.Tensors",
+      "version": "9.0.0",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/runtime",
+        "commit": "9d5a6a9aa463d6d10b0b0ba6d5982cc82f363dc3"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT",
+        "url": "https://licenses.nuget.org/MIT"
+      },
+      "mavenCoordinates": [],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/d7a68596ab69b06f-LICENSE.TXT",
+          "sha256": "d7a68596ab69b06f51ca278a6545148e4269a9381c26d597c13df5d88e08cf5b",
+          "originalName": "LICENSE.TXT",
+          "bytes": 1139
+        },
+        {
+          "asset": "legal/texts/40686c6447a7d5b5-THIRD-PARTY-NOTICES.TXT",
+          "sha256": "40686c6447a7d5b5d3693068e4571b5f483d7ed335aeee773ef662440de4c5d5",
+          "originalName": "THIRD-PARTY-NOTICES.TXT",
+          "bytes": 75640
+        }
+      ],
+      "nuspecSha256": "52f3ac41d9235ca1e544e27145aeeef36c2dc2159c33936932d5f9c34267a14e",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "hyJB4UlpAi19Xr9AXzu2NuagKC4lPfHObNMEAA0HmqFz2rX7wKgzeYzO/jM/eBHDhnUGFFEjk5cOoJaxqg5J4A=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Activity",
+      "version": "1.13.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.activity:activity:1.13.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "e4c4afa3b3f249b28facbd289a850787f40d2eb9ef5d1fecab9f8b0e89198724",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "W2Tvk9UOvP6i/cCJrv0vQyAFzaxejfzSQDvjj9BoHtbM7fCVSXUngHTSaWptRcgUQQJyRNmKmTJ2YipndCZijw=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Annotation",
+      "version": "1.10.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.annotation:annotation:1.10.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "62eb46a60634dfea3a8bf010fcb28c4ca4a9a34a29ce066eac19445fb1cdf308",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "OFFhDPUvfvyAaYU1s32hkiRt460zLkNxBgW1l2QUZDa2sSAQSGdrdpSZSpeXGXI0r1lgXPLIv8PWNmStIDr+Hw=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Annotation.Experimental",
+      "version": "1.6.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.annotation:annotation-experimental:1.6.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "dcadf3bd47f29903cd3b8ec6348a11552826cb5f8e91b6d2e28f286006fe7e44",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "sZSJtoivC3uBRIZVkRoBeYtpRcs1MxBxRoW9hcHeNwbQO9yPxBBpUsQyztZT4DrUNXvbLVAjA+fS4kvy7rUjbA=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Annotation.Jvm",
+      "version": "1.10.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.annotation:annotation-jvm:1.10.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "54ad64c5b327740534ff915f43b29bc10e4556d2463b2e08f3d0826183b55e52",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "TwAZDaPB2TYKAfRnrkh59rqrk0KaCKAqkMomZ84WuFJ5elkVzO1ttZjAHY7oD6XkmnaZyOkGhBacxmu4ApTh0g=="
+    },
+    {
+      "id": "Xamarin.AndroidX.AppCompat",
+      "version": "1.7.1.4",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.appcompat:appcompat:1.7.1"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "f72ee6fe3055af19951af25392635e3fe8f9074ef439e38d38df21c8e0d2aa9b",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "txambMgIFpDjAEpwqk0j1GK+pQdwu3JSxVqu5Zd83RrGSFnHoUZEM4ep+ESD75UARqLWYqhMfxpl5P52O2q6pQ=="
+    },
+    {
+      "id": "Xamarin.AndroidX.AppCompat.AppCompatResources",
+      "version": "1.7.1.4",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.appcompat:appcompat-resources:1.7.1"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "aba0b561fb52dc578dfffb7349f29ad2674c8b9a22ffc787aac131a1e7ea689b",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "FMooskcnJ3pU03GtRMVd1Y16ZGahVQ6mgl4msPzWQ2QUoxlie2yPijYQka5k9ssNWjQNsSuEAOfpPz1A3LYsxg=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Arch.Core.Common",
+      "version": "2.2.0.21",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.arch.core:core-common:2.2.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "4ef05f69c69be77f7faa384945bc68f508b6e4065e7d786076352d1192253471",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "K3/VTkAn9aKFPjMQZnMyXwU3jA3hj5RZps/KoQGzGBeg+4KtBpx+aZd8n6bSJQGRg0YF0Viz8bocSoCKfylvtw=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Arch.Core.Runtime",
+      "version": "2.2.0.21",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.arch.core:core-runtime:2.2.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "23f0d2664974c1bc397c8b016ddad6578a757cb8c35e8c371b367a70645c7d70",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "d+xgYu109rmZRpRA3QjdOxHWFwJBndtAudu/XbfeqQR+OTaW7dpFYNAKLK2bGlihQqVszOuVdUdn3crpbZeUGw=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Collection",
+      "version": "1.6.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.collection:collection:1.6.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "282fd37eb1bcd3168209f8fe9491bfc464c5a23da4550a97679a8f4e014129e9",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "2KWXJOSjKTcJRIUrayYj5Kic+UP7TsTCieDBgiyImMhft5cEvdHUJjhseH7WIrKRVkpNoj5PAIlZgRimVSbayA=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Collection.Jvm",
+      "version": "1.6.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.collection:collection-jvm:1.6.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "6483051c24b13d9f12336075fc32fc8b6b6a8e590b42467c99d795ea057a0ffd",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "qmUjU7y9SOuhBwVOVtsJogWE8xuDQIRGN+IQtL+JK4du6BDKrpY4sKSBaPH//+9SAzo+l6V8EgGXd/KhJQM0dg=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Compose.Runtime.Annotation",
+      "version": "1.11.3.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.compose.runtime:runtime-annotation:1.11.3"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "02c65437e01a6ccca919d8a6bee3511d48f559b09621cafcd2131f547ff2a7f1",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "IP+ct5uaVhAp0f2Spe62kXgaoGwLuogBeG42q5ta6Nj7mQlHgxetJC5dwauMXjKnT8hwoZthpP4lvagpCZZdnA=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Compose.Runtime.Annotation.Android",
+      "version": "1.11.3.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.compose.runtime:runtime-annotation-android:1.11.3"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "ae32a268744b47c3cb55acd9521b46f9dcb99b540d7a0bbf0f6d7089df10022e",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "NCz5fp215Nj4lE6SQd8EXjJ6vTztoLCa3rtrOYmb39Tlv96NdDNHTR/jl5ARL8+RjcLuwxwL/q1Na1aVPjFDGA=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Concurrent.Futures",
+      "version": "1.3.0.4",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.concurrent:concurrent-futures:1.3.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "4e420835b528a7f4f0a226da08d8a613f95ff915c57dc9da7d1c22d4487a5cd0",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "KiRIKChlF+ZUSmwF7WsBXl5ACfr/dxaCzk8o3xRqLaUxuY5BFK7mrG1zGahkl1WZFSvXkMIqzA88DShr7EdnXQ=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Core",
+      "version": "1.19.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.core:core:1.19.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "02d888e5ebfaf269c4bb2eeb0b13a9cee45785d14f2cc65d4fe7a0d8337d03e2",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "o99imtQhC8lAEzxbvoeh+Tk4Gr2yHOE5LlV0YJK0n561PZlFvQYBSGrM+ZYL3pivXBO2IjAcWZdRGy67DZI0oA=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Core.Core.Ktx",
+      "version": "1.19.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.core:core-ktx:1.19.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "979b0ae248d616f48202ea124d624a6dbd15c4098e3ac5cfa48f34b5c6f67511",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "oYMa8qwe+Rs4v3Rs1SXA0UJ3DLyFWJtpjwSeFeh1+jlS+SF1xHbOt9G5zKqz193zPP+mDJkaYmdJpv8ahhAjlA=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Core.ViewTree",
+      "version": "1.0.0.6",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.core:core-viewtree:1.0.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "6196d2431c0d304928c73111d49c0a98a36f032254ae57d2621116b426d31d8f",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "BJP0aUy9fLExMVrrjqvzSj5MKU9RFVfT+fxW/5oUrlkmSewDZyfJfHo4MwtmbUDQGDDG+ARpPIABOalhWqYJdA=="
+    },
+    {
+      "id": "Xamarin.AndroidX.CursorAdapter",
+      "version": "1.0.0.37",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.cursoradapter:cursoradapter:1.0.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "dd64ad728b24bc5276aeb631d2604b80e58ac13cb71b9ad3f8a91f72f87a6edc",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "tZxKuVjw9HwxSSVyhxVw4Hs+YRNHbLwpu+5QpSq6RCjY7NVNoHeLklytntBVuDY2EUKOuR2hSrBRhcgijfrxXg=="
+    },
+    {
+      "id": "Xamarin.AndroidX.CustomView",
+      "version": "1.2.0.4",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.customview:customview:1.2.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "2628b3bb6ea99d2ec0c21c9fca36493db67d2b08936e5bc7b677bb8bae18c121",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "AuBRKJ1l2NwVze0pnkCflJM2rWortwoQ3Vz3ZUniYYEfVInDyQVRkNxwlDJqnxCxg/MPYK+120dV/fEQDGOOHg=="
+    },
+    {
+      "id": "Xamarin.AndroidX.DrawerLayout",
+      "version": "1.2.0.21",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.drawerlayout:drawerlayout:1.2.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "136edd0cc615aa55a4e443293891909116dd3b96e8b766d722cfb1debffcd7a7",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "BIvdnKMHI6JFPpApPBjL5/inu/L0wU88bKMDZOE+fnIAob0Qz4ZxyynSJJkC8D2dw2mVITYcAJxXK7zPkas3rg=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Emoji2",
+      "version": "1.6.0.3",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.emoji2:emoji2:1.6.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "0a18c9f8ea1b249bbfa419b4920c44790e96f6735ed8c4f09b11e436499a301d",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "Pb603fbsfvfqbLHrFyn0deReLxb4gJMzBnSXRuuJrh2VL9TcOeNQ7WgpLa0QGJ0Z+3b6iuQhfnd6vNZ7fvYg5w=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Emoji2.ViewsHelper",
+      "version": "1.6.0.3",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.emoji2:emoji2-views-helper:1.6.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "712dbe91541934ea31380382e8ce73bd5d32e1162011190715b26299c67aa29c",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "gVKEntE5UctFDeszUM+/+JVyqiyNkVyRyKXlf27/qUjPV5BzTVCx2JG2xL5C5hYNDQ+XiqKMEA35P+q9hZD+MQ=="
+    },
+    {
+      "id": "Xamarin.AndroidX.ExifInterface",
+      "version": "1.4.2.3",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.exifinterface:exifinterface:1.4.2"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "0abf40ad77f6c66cac524a1639ce1decc66a2d148e629d8f0ddf4314142300fa",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "OkfEbH6yZ0b4S4vJMduFwj4YEDFzqkSc4hMkDWRhSnK76UrJM+N72MzQM3+pVBN5gNyOiKIZHZYLxEKXb0KagQ=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Fragment",
+      "version": "1.8.9.3",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.fragment:fragment:1.8.9"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "fc1319dc4d44cdf86f3807a52174d2baecfb528bd4594eb4dc7468d95b0dce02",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "PJ4Cz/w2kDMiS2Jb74qQVFFYspE6aySP46v8CnBXTSL5GdvQ18LR/MvpOvHVqy6owXh+MhOFhQYcumQHqqPRIA=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Interpolator",
+      "version": "1.0.0.37",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.interpolator:interpolator:1.0.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "3496ddb6cad02765ae6bf487cefc8a7a748c544daa463d99cdbb5c0cc051d6ec",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "uBGc0kgh8v/SDiSWanClynPGz7sa6pQzkGgISn87MsiUqS8wtYlB+4HmXh7kEE449spgwPTf3ziEIEq/uJd99g=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Lifecycle.Common",
+      "version": "2.11.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.lifecycle:lifecycle-common:2.11.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "851df6aede6d1e48856d93dffbb61d485020a87e807c66d3f66e94a3379553ef",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "fCKqf0sAnuA0J4AqusRBWfMSoLQPEt9uDNTB9X2ZM2oed1JKyt8ipdOTvX46pes2HsyCT+0etu4oaJh4Agcdvw=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Lifecycle.Common.Jvm",
+      "version": "2.11.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.lifecycle:lifecycle-common-jvm:2.11.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "26c7550503d840319e847be83a0da27d471342c233cfd79cddbbd48de29f287e",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "wnp6hF14kO3zO9LFdH1SJJMIY6Vm0kIY+/goCRbtLMuF2/ZLnAW4SHGPqNrB467+YAVjNCNkc+CxLWP2ER7EIg=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Lifecycle.LiveData.Core",
+      "version": "2.11.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.lifecycle:lifecycle-livedata-core:2.11.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "a9b0feaa1653fa08180a2ca823ca036ac387df2c21ce2362cae69fd5996aef5f",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "oPRlEve2Cnngh15/6OoEzVE3mwYSo9XAfuphB37ya54+mxSrINO/deTuIR7zgwjG5iTUYKDAHlya848h1/VSug=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Lifecycle.Process",
+      "version": "2.11.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.lifecycle:lifecycle-process:2.11.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "ddb97d1adb78580858ac1dc9e7911d3c2ff0a00c3044486527723bfbc9e48b8b",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "vQbEwTh0oOhmGgJUx6zobjLl6ZEvFfEL9ZTsmQAovOdtvJvrQb/9bAqTxRgO81pOP8b3ZFiwISl5b1yd2hkKXw=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Lifecycle.Runtime",
+      "version": "2.11.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.lifecycle:lifecycle-runtime:2.11.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "376fbecf07c7d2d0f7e194a1e2b4f0b53890c28761c0e6e6732f5a385b33155b",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "Xb/G30kVZVClyHiylVzxG+5Rhce9Zk4BBo1qNzrh8vGztLVg8c1dof1zodB3DOaCE/Kz08xe+azYdeuzgvKwmw=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Lifecycle.Runtime.Android",
+      "version": "2.11.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.lifecycle:lifecycle-runtime-android:2.11.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "36fa97381ee56fd330be02b85fa11a340e5d7246137bd455e7dabc333a347095",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "XdoCaH+dVCnr5ya24MIgasaMyZV2mnUg812Ns+WO2gocOOtSjIxYzbXqihkFTaDUlWk0A+OFRIXTKYZ3ec6Viw=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Lifecycle.ViewModel",
+      "version": "2.11.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.lifecycle:lifecycle-viewmodel:2.11.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "d87fe972cc1e635bc72cb7cf68f39a8989d715457596b070cf8e19b9e1ae11b5",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "XhweDAL6Gehaep9XhmrJCC5y4xNsHAR1+yWcvjreRnLWbSFVc8+qcBRI6emvYC6pzb0y2XjhFaFYEbgmJi3cNA=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Lifecycle.ViewModel.Android",
+      "version": "2.11.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.lifecycle:lifecycle-viewmodel-android:2.11.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "60c58af1ed13079b0d0af12f4f5c13a747535704b47621942c5a1aefb10065ca",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "Yy0/eissXgeHSeyL6x4qeB4XbUy6H007c4xHMtpCP2ujhV7smebva2RbwMB4ikTAON/C715amv1mVfVeo3/JEA=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Lifecycle.ViewModelSavedState",
+      "version": "2.11.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.lifecycle:lifecycle-viewmodel-savedstate:2.11.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "e4183804b0b35f3f2b307d565fb8e709682e4afb69cdc3be6ebd1133670ebb52",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "vjN7bimU3WXfJc12fN5uQV1X2iYbFiB7b46v2i7N4qpCHgnkP/3Ae2fY+7OPEMsLu32N/keO8ZWGX52mGb4ZQw=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Lifecycle.ViewModelSavedState.Android",
+      "version": "2.11.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.lifecycle:lifecycle-viewmodel-savedstate-android:2.11.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "9e28940d16cc8aebfe0e1ce8fb9c16fd1c3d2d58da1035ce29351aae1d09fd2c",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "f+dRGHiNQSAYmSFi78uZ57ZqcgaRK5C6vsA7oyGCeM/yi0S29lWRX1wAlEjcaDal+XB7IE+4AT3gh4gK6RmbFg=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Loader",
+      "version": "1.1.0.37",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.loader:loader:1.1.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "ffbcc876b8273a46a0e5f73c8ac11ac55926d924d42ba5a27a7ca912672251d0",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "pwovhD7xX+PlXLH9O9aU+oZXmAcjCS51f1JN7DoUoE83DWYK90/mWCSSuYcxdly9gJHCcHGoklIoM01qHv7Z7w=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Media3.Common",
+      "version": "1.11.0",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "f90c8363d3360fd86fe705e8d45d86df8a1af81e"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.media3:media3-common:1.11.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "b0180fe85e6105c338ce0035f4d4ec3f604812655ebc987aa1dcfd9432f6f098",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "QrLIzwLxoHKCKSBk057Y7OPHOV4Ea5AlrjAEP2YoR/dbNluiF6VEHB/msbMf0xk/4EAupvngj7Usvji/5DiY0w=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Media3.Container",
+      "version": "1.11.0",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "f90c8363d3360fd86fe705e8d45d86df8a1af81e"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.media3:media3-container:1.11.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "d1ac8f468a920290ff0518cb0da107441b64a939513cdf207b43928bab61eaf0",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "ZhnvnhU4xTe8gkfF+3s/S7xP/RGMTwmSQKKIGnwjL/OlaR3LmK8/GMwDsWvPuWXvZuFt6+2DByVuVN8wNOm7tQ=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Media3.DataSource",
+      "version": "1.11.0",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "f90c8363d3360fd86fe705e8d45d86df8a1af81e"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.media3:media3-datasource:1.11.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "7d3514b654d2a7fa0422a5c798146a0a8dbf31c345d8538b55e3f6b7eb68112e",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "I/Z3VklxURLfBs71oNZ0AGQngqJzlKJfY06FqFyWiWdsw6XDtBQ0BgUOoHsjn8WCk1H0eekrHQW008K4a9KU8A=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Media3.Database",
+      "version": "1.11.0",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "f90c8363d3360fd86fe705e8d45d86df8a1af81e"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.media3:media3-database:1.11.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "2b43c808ffc905ae32b31bbf46440d8d55ed18088cac3c82a1d4e1c03c59d4e4",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "pH6jJZsqPennfS+q4LL+79ddXWrokxSdnJmV5IajyvCe+3z8VhvFAKKOTdRraSuS9wVmVd2GvnxtFAD2bXkTEA=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Media3.Decoder",
+      "version": "1.11.0",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "f90c8363d3360fd86fe705e8d45d86df8a1af81e"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.media3:media3-decoder:1.11.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "bb7e67c75fec76989d2821b1becc3c6d4e8dcb6e5ae9b790cc10ba3608f9ce80",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "gU9hvi/EcfLQt9m9jymLHPpv8gcUl0/NQSymJ7VgfIaEYjQhfkvXJzTSp7RC90Et9qzzZ2dZy8HcWrSWK3OI7w=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Media3.ExoPlayer",
+      "version": "1.11.0",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "f90c8363d3360fd86fe705e8d45d86df8a1af81e"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.media3:media3-exoplayer:1.11.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "fb572f3f1ea9d02b5bd972b5033489991d0d228264ccb263d8e059c108aa1b9c",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Direct",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "W/6iC8FzCrjZkfPSSy7ukUiA5XZvVQ7QKBVOkhOc1pn04mg7NwMWThCId3q+2F1WPLpUcQUmdia306mxWEBIRg=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Media3.Extractor",
+      "version": "1.11.0",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "f90c8363d3360fd86fe705e8d45d86df8a1af81e"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.media3:media3-extractor:1.11.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "5bed98bc9534b0ba71156c8b95d6a22ba6346a4a6287ad4bfcf112ed2498b663",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "JZpK4KPpPHlNEwuMFk9v+qqCBtaC91edLt9UdIPz6P0ST/w7XKYIpQp6UhCX8n8iSx6ivCGSmzzirnFhdJt0SQ=="
+    },
+    {
+      "id": "Xamarin.AndroidX.NavigationEvent",
+      "version": "1.1.2.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.navigationevent:navigationevent:1.1.2"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "f7aedbf5245e071151cd67a9e20b34cb30b8aa10cc4c36b08e9fd8b58950d1a2",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "BuHoykG9rBTQg8WwXhwRl3NQPkroyksciRyuHVuYiO3gtU+M4MQwKj5JUW228yso8psjJhnhNg/79N2ExRF+og=="
+    },
+    {
+      "id": "Xamarin.AndroidX.NavigationEvent.Android",
+      "version": "1.1.2.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.navigationevent:navigationevent-android:1.1.2"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "f402618f8470102aeea0de3541c83d857146785c2ed0a85c04058180e089c16e",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "rRcewSbsor2c/RS/kSCGvahu0boa9jvrNjLCOek8WeQJNyjhMqji7YECbv1PqT9jwHUXcx1FB4ULvjJnqVEtxQ=="
+    },
+    {
+      "id": "Xamarin.AndroidX.ProfileInstaller.ProfileInstaller",
+      "version": "1.4.1.8",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.profileinstaller:profileinstaller:1.4.1"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "37a867e8d656946622a3eb5ef34e0e1f9d6894a40abdeed5899b9ff53e119e75",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "zBwJUR3ipSDdFs8yQCSHZVRc1Ngz6LRcdojEAF3Fn3YeXYjGEpQIWeGaruZi95bePWwk0L5628y3aqznAKfccQ=="
+    },
+    {
+      "id": "Xamarin.AndroidX.ResourceInspection.Annotation",
+      "version": "1.0.1.25",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.resourceinspection:resourceinspection-annotation:1.0.1"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "02c5277844585cab01c18de0a5ed514b3723fdd6d70d2ff9a7e9279ce3fab7a9",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "0L7m/q7Ea0Q8Dx4nFK3BjtJZtcQfPs1DyziPpt7BXplj6zrf4GqKjHhneWNowr/LJxUZvxO+qx9F3/GU+ELlbA=="
+    },
+    {
+      "id": "Xamarin.AndroidX.SavedState",
+      "version": "1.5.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.savedstate:savedstate:1.5.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "3e8c14b25ae6085312c2b3077d4764e440882106207ae504242c47cd52bdd2a7",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "H9wF2dchEuakH4gj4vnPpjgCcZ/f3WU+g1CCO+abTmYmZs3qUYzE4nekVoqNJHQ6PNYc7kMMo7hzM97nSXmS2Q=="
+    },
+    {
+      "id": "Xamarin.AndroidX.SavedState.SavedState.Android",
+      "version": "1.5.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.savedstate:savedstate-android:1.5.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "2a5cfc3ab98a717372542833a43d076c5eda36ec9820d1b9b3b1b8b140fbb58d",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "7XfPayLSlP2RRYcpvvEgbQG/t/g5o/RWtAEVE+sO0NBPNJWlQ/zvEzWjH7JeZE+ttRGov78AiwKfeWVX1ptPwQ=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Startup.StartupRuntime",
+      "version": "1.2.0.8",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.startup:startup-runtime:1.2.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "edb45e857ea5db94021f800d765183b00e0c5cf8434c3131a9f5194d28933cd4",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "HKloS4O57Oniv/5VF0fkHh6zEWRwToK7VyW2ajyWZ7+l+bkxUFZy9tHIHS/TCGvDYR6NVM8yA/Mz2x+TrWwPmg=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Tracing.Tracing",
+      "version": "1.3.0.4",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.tracing:tracing:1.3.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "2a41e60db0bca01948c6d2e5a30f428d320a0e85d2bcd656f3c442f2b4176e17",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "x0Oig3saZ/b2zk0R8Um713vT15I428kKm0jh/cW2t1XDbk/LF9Cnrsbo6/0p8SFPyqQch7JJACbnvsH+xEunZQ=="
+    },
+    {
+      "id": "Xamarin.AndroidX.Tracing.Tracing.Android",
+      "version": "1.3.0.4",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.tracing:tracing-android:1.3.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "18855bd2b83d23e910a89581b08d35b46e443ffb0fd92fb28ed80d8811de57ff",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "qQNpa9D6q6CgtgGRJGfaEZUVFH+0pzA+58V2z8CYosv6K/mKwJys9InR+0xNmMDshm1IuGhX4mgJ3Lf54D2BQg=="
+    },
+    {
+      "id": "Xamarin.AndroidX.VectorDrawable",
+      "version": "1.2.0.11",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.vectordrawable:vectordrawable:1.2.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "77fd36fcd11f918c12c0b0af65121ba2a0a35e61c63bfd7df71aadd4d002ec10",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "281B3dHTUiAyLl3ewj/cHgY0Sm0KAUP4PgLRs2jbeYt+TAvSoIoIM7EXu//bnmG6erY1dIFAfbNKfHQ/yBNp2A=="
+    },
+    {
+      "id": "Xamarin.AndroidX.VectorDrawable.Animated",
+      "version": "1.2.0.11",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.vectordrawable:vectordrawable-animated:1.2.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "3db3456ea64feab716969ee6959bee3aab8bebdd3238032d09ba2fe0c5214dea",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "6IIN9+ShJm59mc3mEe/s3HmB1EHh3wlfyBoQj7boMbmdK0e/kcLxvcVtLFH1WfkmhyYeWwGZY3mLTryVF8mWoQ=="
+    },
+    {
+      "id": "Xamarin.AndroidX.VersionedParcelable",
+      "version": "1.2.1.6",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.versionedparcelable:versionedparcelable:1.2.1"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "fccc6619738a9dcf2895d5da898ce4570328e851b1f8ee4c13780831dcfcdf86",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "RxZnmS3nBqOGHUUegHWBqAU4qlApR8s1nhCZ4CnCJBwvfXJQ1Y9aschXn2fXrYgV86xtwRR31+TN5KufIIvINw=="
+    },
+    {
+      "id": "Xamarin.AndroidX.ViewPager",
+      "version": "1.1.0.7",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "androidx.viewpager:viewpager:1.1.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "e303e4d53954a5532fddb747c94ce4ffb613183cb36d106321c54466d4f49a5e",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "O8iQpk7iyF9yIdctfT1RMq2m2paOoJ6oDhkK6EC02iQuCrv09dv7n7suS0N1a9XEL+UNzQd3ul/lCXHmsIB3QA=="
+    },
+    {
+      "id": "Xamarin.Build.Download",
+      "version": "0.11.4",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://go.microsoft.com/fwlink/?linkid=865061",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/xamarin/XamarinComponents.git",
+        "branch": "refs/tags/20221110-xbd",
+        "commit": "fd9ce2a7ea63f07b2df568a25643a4cb742d18de"
+      },
+      "license": {
+        "type": "legacy-url",
+        "value": "https://go.microsoft.com/fwlink/?linkid=864965",
+        "url": "https://go.microsoft.com/fwlink/?linkid=864965"
+      },
+      "mavenCoordinates": [],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/3eb5742ae075721e-THIRD-PARTY-NOTICE.txt",
+          "sha256": "3eb5742ae075721e42456b278c8715263707d5f93b393ced329234f4734f884a",
+          "originalName": "THIRD-PARTY-NOTICE.txt",
+          "bytes": 1765
+        }
+      ],
+      "nuspecSha256": "a8fe7a7037e4f277f3602543ff96e00163057c81c377ea4d00cb134405c26478",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "u2ROt0h6P7mfs0jbmgvmTrqU/YEpEZcf16xcHa78GSEp7fOZunNtJLCZxooeI1V5p+lrr9kYdg3Pa8FoTbgcXQ==",
+      "scopeNote": "Build-only MSBuild task; legacy license URL returned 404 when checked. Upstream package third-party notices are retained. This is not attributed as a new MIT license grant."
+    },
+    {
+      "id": "Xamarin.Firebase.Annotations",
+      "version": "117.0.0.4",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "com.google.firebase:firebase-annotations:17.0.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "d778cf0f99fb59c1f8b523c0d5845a03356a1c195387b8d75664f83c9d96f698",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "W6nV9ZUh1tCOyBLEi0yZMwjRMqnAYU5LNQCmoxmOedKePVaIV/TpDTRCJvMe1+dIRg5m+vr+Q4E5g8M1xrdf0Q=="
+    },
+    {
+      "id": "Xamarin.Firebase.Components",
+      "version": "119.0.1.2",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "com.google.firebase:firebase-components:19.0.1"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "a05063433e69cb66f217ae56c22bd5b8689bef172d23e10732835b97bfd3b945",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "YNwSQ/i7mn3W1+qyS0pPsjzRFGan2rpNZBrnNnGKLQ3tYXp66BfOA4fpBXV7Utcf13hgXDz7uDbQ169Xwyv90w=="
+    },
+    {
+      "id": "Xamarin.Firebase.Encoders",
+      "version": "117.0.0.26",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "com.google.firebase:firebase-encoders:17.0.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "4ec65c5dafe2c54f2de6bef9edfeece4f0c62780ffdeb06dadca3db266125d7a",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "h2rpkwih48Pm6QYPDd5tq1yE+xaLVRqLqIMf/84VGDeRBGZmskM7LK4RIAy56nD+NYDF9i/CzbieSNnVkGDD1Q=="
+    },
+    {
+      "id": "Xamarin.Firebase.Encoders.JSON",
+      "version": "118.0.1.18",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "com.google.firebase:firebase-encoders-json:18.0.1"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "fc1d9a8131e82a915cf46f78d0b642fc480a4c231782f428a0bcf8a1d4576331",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "X89MBsA5hRKiOdzQqn95rS0ZJ0NBRTGKiX035ziu1W4IcdoHYVLgU0CUr6qdf3cjKq/XhWJsv7MZ0SRRb1+pJQ=="
+    },
+    {
+      "id": "Xamarin.Firebase.Encoders.Proto",
+      "version": "116.0.0.21",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "com.google.firebase:firebase-encoders-proto:16.0.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "0b69f4f21102e97f6a6a624c02920aefe8d371f3df92c7c946c11340b3328539",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "+HfM4X5NJMRPL/FTBRaKSTEuzReh2y73gYi3R1WOyR9wDBHLeDbOkyDERyozBkki0+IgctJundasXGxg+UT+Qw=="
+    },
+    {
+      "id": "Xamarin.Google.Android.DataTransport.TransportApi",
+      "version": "4.1.1.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "com.google.android.datatransport:transport-api:4.1.1"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "5c74e5a23a360a1e5c466d242144a9a3d618d464f20a14c6ea040a6ef5afa689",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "N325GIqPG8sIZwuMoY5HufCkA3AXcse/i+0vO2yqQxLiOau6qMxF4P7WYXOvDy4sQOot5dS/z0K8Pm+ivelpfw=="
+    },
+    {
+      "id": "Xamarin.Google.Android.DataTransport.TransportBackendCct",
+      "version": "4.1.1.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "com.google.android.datatransport:transport-backend-cct:4.1.1"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "c89564e048b641ec8dd432674a35f346637a038bd5705b2790ceabb3d2e3aba9",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "F1FdC/KnXWeLm7yb0+5fVKLOulVe5muzLDAPYsV/iYuqtTiQ7mfNUdDhAL3eT9/YBii++wrw2ajrHYUatnAHBg=="
+    },
+    {
+      "id": "Xamarin.Google.Android.DataTransport.TransportRuntime",
+      "version": "4.1.1.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "com.google.android.datatransport:transport-runtime:4.1.1"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "e8c3ee7e78ca3605e9a469e89466837d209a3cf119a6459ab1844d122cf4050d",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "BLftcHdFSL0+jcVAVnDcHEIeKPEhz9rwnkvWTV/a7xGLvkv2aYgH0iSA4kRqZJuj/PmYydNZkGPqc+GQM81Ouw=="
+    },
+    {
+      "id": "Xamarin.Google.Android.ODML.Image",
+      "version": "1.0.0.20-beta1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "file",
+        "value": "LICENSE.md",
+        "url": "https://aka.ms/deprecateLicenseUrl"
+      },
+      "mavenCoordinates": [
+        "com.google.android.odml:image:1.0.0-beta1"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/f0482595937e7a95-THIRD-PARTY-NOTICES.txt",
+          "sha256": "f0482595937e7a95f5473a6c08a2319eae9c58892e4780960abd182790c69084",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 18129
+        }
+      ],
+      "nuspecSha256": "8b5e447ce15905d81e3b5dc7d7442d329910bd134794f80020f21a09720a2556",
+      "upstreamLicenseReadme": "| **License(s)** | [Android Software Development Kit License](https://developer.android.com/studio/terms.html) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "jhUjrv+IiJ4J4F3kJMNVfnP9QP6E5NkAl9jY3Zve0bywfmSLuj8phxBVv/ACUbNgYr/2leN3lUGfY9Ttp7gv4A=="
+    },
+    {
+      "id": "Xamarin.Google.ErrorProne.Annotations",
+      "version": "2.50.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "com.google.errorprone:error_prone_annotations:2.50.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/fcc5a0baffb2f1b0-THIRD-PARTY-NOTICES.txt",
+          "sha256": "fcc5a0baffb2f1b01b593349b7275518b56621a862f44cbcfbf6bd4476b23461",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12093
+        }
+      ],
+      "nuspecSha256": "6e6aa7740862a174185b75d43c805bcff4a3a5cde61d1fede7bebfb5e57c0f03",
+      "upstreamLicenseReadme": "| **License(s)** | [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "ip4SsCz/U2n/nJVL4Hk6BVzNWdWeQkyyLyo6zm3vWrCeAq/U4tIdNnR7i355pTZMzFeDwcITsTvStf0JQhpBxQ=="
+    },
+    {
+      "id": "Xamarin.Google.Guava",
+      "version": "33.6.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "com.google.guava:guava:33.6.0-android"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/9133ba7182dfd4dc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "9133ba7182dfd4dc7c5a3205e2ee6e979fedf299e14020834e718d6aae95a600",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12110
+        }
+      ],
+      "nuspecSha256": "a307672655ead78d6776918cdc49969f3f184c51269484026d38ea5ca70d937e",
+      "upstreamLicenseReadme": "| **License(s)** | [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "cce1rIPHHod/83hpHkMFJ8ZNQEC/lpd0tco7rwpMaseqLkhoPbBnWJCpNRLAsuNawqSjeQmzgGg9wDp4ZJuMQQ=="
+    },
+    {
+      "id": "Xamarin.Google.Guava.FailureAccess",
+      "version": "1.0.3.6",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "com.google.guava:failureaccess:1.0.3"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/9133ba7182dfd4dc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "9133ba7182dfd4dc7c5a3205e2ee6e979fedf299e14020834e718d6aae95a600",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12110
+        }
+      ],
+      "nuspecSha256": "3c02949e90cc32e41b248470b1bca03af8c088538c5ab70745b93b0797d9d12f",
+      "upstreamLicenseReadme": "| **License(s)** | [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "aTTpKitg0MMphAg5ujSkz6FhULSYsEID2yFJEJ8+c1FKHy+Yo/y5TY2Ndde8+EZ+40R0wpe10EXooI9W3gNaIw=="
+    },
+    {
+      "id": "Xamarin.Google.Guava.ListenableFuture",
+      "version": "9999.0.0",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://go.microsoft.com/fwlink/?linkid=865028",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/xamarin/XamarinComponents",
+        "branch": "Guava-9999.0.0-2022-05-02",
+        "commit": "ee085cc9193283aeaded877b0f47357df9ab92d3"
+      },
+      "license": {
+        "type": "legacy-url",
+        "value": "https://go.microsoft.com/fwlink/?linkid=865030",
+        "url": "https://go.microsoft.com/fwlink/?linkid=865030"
+      },
+      "mavenCoordinates": [],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7a600645908c6cab-THIRD-PARTY-NOTICES.txt",
+          "sha256": "7a600645908c6cabcef12ade96a42cef9c4072f662f620f2aaddfdfa6426e3e1",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12103
+        }
+      ],
+      "nuspecSha256": "3d2786d28c5d0a94e210ecb6b7e0e2c652a29c7d386dffcad47bbbbcee63ef99",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "TFcYM0FvRuHrpgyiCQp/uSWSLVRiN8w9vZ9FclPMUvyFOkaRZ+xItV0CAVw0QCpwARvDeQaEV6Egujru11Hgcg==",
+      "scopeNote": "Dependency placeholder: no guava-listenablefuture.jar; implementation supplied by Guava. Legacy binding license URL returned 404 when checked; original metadata and package notices retained."
+    },
+    {
+      "id": "Xamarin.Google.J2Objc.Annotations",
+      "version": "3.1.0.3",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "com.google.j2objc:j2objc-annotations:3.1"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/9133ba7182dfd4dc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "9133ba7182dfd4dc7c5a3205e2ee6e979fedf299e14020834e718d6aae95a600",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12110
+        }
+      ],
+      "nuspecSha256": "612dc05271ea77d4ae34860ca2e9042873b5ed18674f0cdf64b81cf4f2e1680f",
+      "upstreamLicenseReadme": "| **License(s)** | [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "ZAtSx4HAb1t3L4fBmqnyDxgIeRHuaJerR/wI/XPAuF6clQLbUxox9dIhc0BQ134XBoF70C0hE2LJlPtrMvfyig=="
+    },
+    {
+      "id": "Xamarin.Google.MLKit.Common",
+      "version": "118.11.0.8",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "file",
+        "value": "LICENSE.md",
+        "url": "https://aka.ms/deprecateLicenseUrl"
+      },
+      "mavenCoordinates": [
+        "com.google.mlkit:common:18.11.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/27e5c2c1e392e757-THIRD-PARTY-NOTICES.txt",
+          "sha256": "27e5c2c1e392e757cbfcae80c242a28c25b23b5834d03462f5e72e7c9b56f8e3",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 654
+        }
+      ],
+      "nuspecSha256": "80842307ea2b1b1d1f3e5c9a204234bbe47e2c4cf5fc7c12014d9fbe02448775",
+      "upstreamLicenseReadme": "| **License(s)** | [ML Kit Terms of Service](https://developers.google.com/ml-kit/terms) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "bjadNyGaCW63iSE5L6eLMVEU0wclxRcNO6XXdTzFFaNDQb0D2MtVqBm0yqrW0I+uMHNItlFAcMQKHe5CDdL2Yg=="
+    },
+    {
+      "id": "Xamarin.Google.MLKit.TextRecognition.Bundled.Common",
+      "version": "117.0.0.8",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "file",
+        "value": "LICENSE.md",
+        "url": "https://aka.ms/deprecateLicenseUrl"
+      },
+      "mavenCoordinates": [
+        "com.google.mlkit:text-recognition-bundled-common:17.0.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/27e5c2c1e392e757-THIRD-PARTY-NOTICES.txt",
+          "sha256": "27e5c2c1e392e757cbfcae80c242a28c25b23b5834d03462f5e72e7c9b56f8e3",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 654
+        }
+      ],
+      "nuspecSha256": "102573ba2e770f58dbdcae54bda07d4e0e3453c109806f3b2a21aa0448fbcfc2",
+      "upstreamLicenseReadme": "| **License(s)** | [ML Kit Terms of Service](https://developers.google.com/ml-kit/terms) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "rzoDfnA6JrH+h6+ZcKJEa3kkO95H2h6JAcWsO0IjzDuFFw33uPvn+RUJOQ+6L55KoxqhvA9FG1VJ2KsH5xQPIQ=="
+    },
+    {
+      "id": "Xamarin.Google.MLKit.TextRecognition.Chinese",
+      "version": "116.0.1.8",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "file",
+        "value": "LICENSE.md",
+        "url": "https://aka.ms/deprecateLicenseUrl"
+      },
+      "mavenCoordinates": [
+        "com.google.mlkit:text-recognition-chinese:16.0.1"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/27e5c2c1e392e757-THIRD-PARTY-NOTICES.txt",
+          "sha256": "27e5c2c1e392e757cbfcae80c242a28c25b23b5834d03462f5e72e7c9b56f8e3",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 654
+        }
+      ],
+      "nuspecSha256": "54f6d418799cd44200887e75325176079d63278ef658e0ed62852fd98dcc09d2",
+      "upstreamLicenseReadme": "| **License(s)** | [ML Kit Terms of Service](https://developers.google.com/ml-kit/terms) |",
+      "dependencyType": "Direct",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "5QtPe2HIUVPygDdQkRZK9gnwwVclYUcKXD+oC52bGeYPK+Fm1nM1iUL5B9lJHl/s5sLPem3CRxvkhVfO/4aJDg=="
+    },
+    {
+      "id": "Xamarin.Google.MLKit.Vision.Common",
+      "version": "117.3.0.19",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "file",
+        "value": "LICENSE.md",
+        "url": "https://aka.ms/deprecateLicenseUrl"
+      },
+      "mavenCoordinates": [
+        "com.google.mlkit:vision-common:17.3.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/27e5c2c1e392e757-THIRD-PARTY-NOTICES.txt",
+          "sha256": "27e5c2c1e392e757cbfcae80c242a28c25b23b5834d03462f5e72e7c9b56f8e3",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 654
+        }
+      ],
+      "nuspecSha256": "06ef29c4088d88152cdb1be91d2a9017132ede80d62aa481b5f13276d45bf7c8",
+      "upstreamLicenseReadme": "| **License(s)** | [ML Kit Terms of Service](https://developers.google.com/ml-kit/terms) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "MhZ8Ju8cqSK17h34VcSMvOpcG5VW535d+t1rj17JvEHhYIiNpi3gsjDuocy1GrpnMVFNcVG6AAChhQqPlP84ig=="
+    },
+    {
+      "id": "Xamarin.Google.MLKit.Vision.Interfaces",
+      "version": "116.3.0.13",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "file",
+        "value": "LICENSE.md",
+        "url": "https://aka.ms/deprecateLicenseUrl"
+      },
+      "mavenCoordinates": [
+        "com.google.mlkit:vision-interfaces:16.3.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/27e5c2c1e392e757-THIRD-PARTY-NOTICES.txt",
+          "sha256": "27e5c2c1e392e757cbfcae80c242a28c25b23b5834d03462f5e72e7c9b56f8e3",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 654
+        }
+      ],
+      "nuspecSha256": "e1345c109ebc05338d5406cd542c085c3c3403020bda563b8f388e9f59e2cba0",
+      "upstreamLicenseReadme": "| **License(s)** | [ML Kit Terms of Service](https://developers.google.com/ml-kit/terms) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "qPQGfUuBi9Q0sWfk+T4L4jLekI3oK0zo7fn8GtnbWiUDRwBGv3RC5MiP+Hawef9vNBRfGqID/a3WBuU9KBn5zQ=="
+    },
+    {
+      "id": "Xamarin.GooglePlayServices.Base",
+      "version": "118.10.0.2",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "file",
+        "value": "LICENSE.md",
+        "url": "https://aka.ms/deprecateLicenseUrl"
+      },
+      "mavenCoordinates": [
+        "com.google.android.gms:play-services-base:18.10.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/f0482595937e7a95-THIRD-PARTY-NOTICES.txt",
+          "sha256": "f0482595937e7a95f5473a6c08a2319eae9c58892e4780960abd182790c69084",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 18129
+        }
+      ],
+      "nuspecSha256": "d5e7d235b1a24b67a713b3df5476e9aaf1ca347424fdf1a5cd2db3f704ee33af",
+      "upstreamLicenseReadme": "| **License(s)** | [Android Software Development Kit License](https://developer.android.com/studio/terms.html) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "40L51NSrZ+asfe2eabmuAHdSHD5lU9+87LZ7wP8SHF9o9Tgrzy6biUmIern0nvBj85qpIBCweGBStpViVuWHBw=="
+    },
+    {
+      "id": "Xamarin.GooglePlayServices.Basement",
+      "version": "118.10.0.2",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "file",
+        "value": "LICENSE.md",
+        "url": "https://aka.ms/deprecateLicenseUrl"
+      },
+      "mavenCoordinates": [
+        "com.google.android.gms:play-services-basement:18.10.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/f0482595937e7a95-THIRD-PARTY-NOTICES.txt",
+          "sha256": "f0482595937e7a95f5473a6c08a2319eae9c58892e4780960abd182790c69084",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 18129
+        }
+      ],
+      "nuspecSha256": "da600aaea5583e82ca9895c6a8cdfd6807f007f68f05ef74c53fd055c3701f71",
+      "upstreamLicenseReadme": "| **License(s)** | [Android Software Development Kit License](https://developer.android.com/studio/terms.html) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "/hLDM8ptdZ8XNE8e9QY+8t0ndwXQYrs5LsejfQwyUfLIenuT4I9AR7DIPQU8j3/mhVYYuNUPgKOitAGReavBLA=="
+    },
+    {
+      "id": "Xamarin.GooglePlayServices.MLKit.Text.Recognition.Chinese",
+      "version": "116.0.1.8",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "file",
+        "value": "LICENSE.md",
+        "url": "https://aka.ms/deprecateLicenseUrl"
+      },
+      "mavenCoordinates": [
+        "com.google.android.gms:play-services-mlkit-text-recognition-chinese:16.0.1"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/27e5c2c1e392e757-THIRD-PARTY-NOTICES.txt",
+          "sha256": "27e5c2c1e392e757cbfcae80c242a28c25b23b5834d03462f5e72e7c9b56f8e3",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 654
+        }
+      ],
+      "nuspecSha256": "4d9398bf8cfd03d063fcf1df07d65447c2b01e25cd1b0d0cdd47a4c87f7689a7",
+      "upstreamLicenseReadme": "| **License(s)** | [ML Kit Terms of Service](https://developers.google.com/ml-kit/terms) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "S+p498MICRs1S7fnDmWvE0yJrj6m3h7X5+tR81rmkMADhgbkGk+ZzLzhf5VkmDMOONBwHMabbVjvQu5fP5UEPQ=="
+    },
+    {
+      "id": "Xamarin.GooglePlayServices.MLKit.Text.Recognition.Common",
+      "version": "119.1.0.8",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "file",
+        "value": "LICENSE.md",
+        "url": "https://aka.ms/deprecateLicenseUrl"
+      },
+      "mavenCoordinates": [
+        "com.google.android.gms:play-services-mlkit-text-recognition-common:19.1.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/27e5c2c1e392e757-THIRD-PARTY-NOTICES.txt",
+          "sha256": "27e5c2c1e392e757cbfcae80c242a28c25b23b5834d03462f5e72e7c9b56f8e3",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 654
+        }
+      ],
+      "nuspecSha256": "6b4cab0f2c25d4a078d4c9646be10d8238810f03c9b5c9436dcdd29565f584d8",
+      "upstreamLicenseReadme": "| **License(s)** | [ML Kit Terms of Service](https://developers.google.com/ml-kit/terms) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "qjXjwSQ9qYVYseN6cox53ndi5TTXpwlo6j9wviy8+AY7kykZrxXU+h05zQ/81UJVbF2uujRIslrighqGuHSJpQ=="
+    },
+    {
+      "id": "Xamarin.GooglePlayServices.Tasks",
+      "version": "118.4.1.2",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "file",
+        "value": "LICENSE.md",
+        "url": "https://aka.ms/deprecateLicenseUrl"
+      },
+      "mavenCoordinates": [
+        "com.google.android.gms:play-services-tasks:18.4.1"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/f0482595937e7a95-THIRD-PARTY-NOTICES.txt",
+          "sha256": "f0482595937e7a95f5473a6c08a2319eae9c58892e4780960abd182790c69084",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 18129
+        }
+      ],
+      "nuspecSha256": "ac254bf1d294d8b26915eb814dade2db70a0bb93520f98d777de1d6c3a46d737",
+      "upstreamLicenseReadme": "| **License(s)** | [Android Software Development Kit License](https://developer.android.com/studio/terms.html) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "hhswc2KhaFrfqwyMCdcGsoPKhULY2eEZ0UAxbO8IpQdRp5X2FqkfTGa64TBXWRR8+WQkoM44/akOyeQKBGnSQg=="
+    },
+    {
+      "id": "Xamarin.JSpecify",
+      "version": "1.0.0.7",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "org.jspecify:jspecify:1.0.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/550c765e696f8b24-THIRD-PARTY-NOTICES.txt",
+          "sha256": "550c765e696f8b24ca17254f722f1772365f46b142367d11db1b604645fec683",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12114
+        }
+      ],
+      "nuspecSha256": "3f9c9331fe73b5f262432e5ab711f280defadaf60cf79ea4d6fbbf2cdd31b69b",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "pX+mTpwy0SkHGBxi3YPvQb0xLdl31GZD/VH+ebwXr97d5j7a+DGEyLWRqzC+hgZNK+bCOnlYlnUYYLD4TfSXSA=="
+    },
+    {
+      "id": "Xamarin.JavaX.Inject",
+      "version": "1.0.0.24",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "javax.inject:javax.inject:1"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/1a14e25264f604fc-THIRD-PARTY-NOTICES.txt",
+          "sha256": "1a14e25264f604fca355c489c0d5877480ddb738cec665008bcf494ad1cdc787",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12123
+        }
+      ],
+      "nuspecSha256": "9b8a246c4a98778d19786bacae03073ba09c89ed065b259f15bfd6542e3c771a",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "3zYLFaF3dKqgfsRw2GMm8max7ZJzIGVmHeXVCTG59TlcHqOtQPJ+n4GqJ5bNeshM0VAKwFacsxOU6BejSzKIUw=="
+    },
+    {
+      "id": "Xamarin.Jetbrains.Annotations",
+      "version": "26.1.0.2",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "org.jetbrains:annotations:26.1.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/872d4dac04f9505f-THIRD-PARTY-NOTICES.txt",
+          "sha256": "872d4dac04f9505fd782be74a4ff099208cdbc23fba6df9c0ac73dfdfc5aa482",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12124
+        }
+      ],
+      "nuspecSha256": "8dd2c98ea81ae21226693e54f800a6fb03f572c1f84707eed76e8a05c6c0d467",
+      "upstreamLicenseReadme": "| **License(s)** | [The Apache Software License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "mwKW1QGbVFT649s9fJ/tTX1kkekI8Mt+n4sWS4kP39J78FjaatbNFu7bdyzxHYMbBB61S4cU6XRuaGAw2mhQCQ=="
+    },
+    {
+      "id": "Xamarin.Kotlin.StdLib",
+      "version": "2.4.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "org.jetbrains.kotlin:kotlin-stdlib:2.4.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/f898db982a626060-THIRD-PARTY-NOTICES.txt",
+          "sha256": "f898db982a6260602fed352bb101b4c5be69dcdf8ffd21ab0d504c4e3b01c176",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12093
+        }
+      ],
+      "nuspecSha256": "d2e4d02a56987384f69620fb19a4138a238830078aa128fdb190563b50f56635",
+      "upstreamLicenseReadme": "| **License(s)** | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "ZGskPNF6lIQWzkwfhoRLuf9isUSOmjfTZVOVXXfDP/vL/xLNC4H4h/NC63AcNoscOAReRic0po3VZsqfvLsgZQ=="
+    },
+    {
+      "id": "Xamarin.Kotlin.StdLib.Jdk7",
+      "version": "2.4.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.4.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/f898db982a626060-THIRD-PARTY-NOTICES.txt",
+          "sha256": "f898db982a6260602fed352bb101b4c5be69dcdf8ffd21ab0d504c4e3b01c176",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12093
+        }
+      ],
+      "nuspecSha256": "f1310216421bf2eba3bebfbdd23b544b8a8e35905e81c2ce3c767b908af34393",
+      "upstreamLicenseReadme": "| **License(s)** | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "jp2UVlQc0IZPqe9heyPjRnErroAliVI2PrzN1jTijEVoYX6PEDTQpsI4AOchy5PUUFdoPh8F0DmTlpydqXctig=="
+    },
+    {
+      "id": "Xamarin.Kotlin.StdLib.Jdk8",
+      "version": "2.4.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.4.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/f898db982a626060-THIRD-PARTY-NOTICES.txt",
+          "sha256": "f898db982a6260602fed352bb101b4c5be69dcdf8ffd21ab0d504c4e3b01c176",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12093
+        }
+      ],
+      "nuspecSha256": "e415bc6bf166e42456fd4b4ecc40c391b8af75b3f733baec2cfebd85feede173",
+      "upstreamLicenseReadme": "| **License(s)** | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "y8KdRcNhR/lcKqrvormaY8DWA8DFiYtztOFhMeNbnqzhpcXqpI4OsHQ1SnrjVcPuX2VUc2AwfEn4UlDLrIjksA=="
+    },
+    {
+      "id": "Xamarin.KotlinX.AtomicFU",
+      "version": "0.33.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "org.jetbrains.kotlinx:atomicfu:0.33.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/7e1405f51bf00284-THIRD-PARTY-NOTICES.txt",
+          "sha256": "7e1405f51bf00284ff8b7a63ac55a3c87b2b3c78ab13aef90d2541f247f359f3",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12094
+        }
+      ],
+      "nuspecSha256": "1c82c0055014f868d4ae6bcaf152274ef5266b1f0728d25c79636478eee8c83b",
+      "upstreamLicenseReadme": "| **License(s)** | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "9khTuFz9CvgZJc6pzKXNlmtTZF9zun1TCRHIlWpHddqmLoFjiN2Xy/Qfwj8+KK8EJZEBLPETOu0XsagKlm//SQ=="
+    },
+    {
+      "id": "Xamarin.KotlinX.AtomicFU.Jvm",
+      "version": "0.33.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "org.jetbrains.kotlinx:atomicfu-jvm:0.33.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/7e1405f51bf00284-THIRD-PARTY-NOTICES.txt",
+          "sha256": "7e1405f51bf00284ff8b7a63ac55a3c87b2b3c78ab13aef90d2541f247f359f3",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12094
+        }
+      ],
+      "nuspecSha256": "2744861138bc78d1fb0f89a90f4a46c9284b314707deed23e5e00346cf97db6f",
+      "upstreamLicenseReadme": "| **License(s)** | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "4HAO14g7RTJm+WsahmXwzZBhBAEixKZuyiE+oxdQKAHCOfZzbh5uQphkcbp6YPpV3YVw/oOxE+vgL3Hn4ZPNUA=="
+    },
+    {
+      "id": "Xamarin.KotlinX.Coroutines.Android",
+      "version": "1.11.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/7e1405f51bf00284-THIRD-PARTY-NOTICES.txt",
+          "sha256": "7e1405f51bf00284ff8b7a63ac55a3c87b2b3c78ab13aef90d2541f247f359f3",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12094
+        }
+      ],
+      "nuspecSha256": "307307d094d8ee6f18a1f04ba632ffdd61e9662778779a61db9357221b72eb25",
+      "upstreamLicenseReadme": "| **License(s)** | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "C+N1XS1s7bOD6ydON8DYjucwIsH/y1+zVRNQdwSqAG/6NEQPeTTxww2PpMnnIft9zxrpuCRBmnbb58BvL6j7+g=="
+    },
+    {
+      "id": "Xamarin.KotlinX.Coroutines.Core",
+      "version": "1.11.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/7e1405f51bf00284-THIRD-PARTY-NOTICES.txt",
+          "sha256": "7e1405f51bf00284ff8b7a63ac55a3c87b2b3c78ab13aef90d2541f247f359f3",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12094
+        }
+      ],
+      "nuspecSha256": "939485aeb0a0b1da79c34db4aecb219b88e87a640bfef03e6f3809b81c8bf701",
+      "upstreamLicenseReadme": "| **License(s)** | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "7zMBcmtyOqguwRLVZ8q6/GkWQ5RMu26W+me5KUJZU2yamHjdTfrOHIrnd0zmx3+3wwgohEmzjFfwwyJf3QOSwg=="
+    },
+    {
+      "id": "Xamarin.KotlinX.Coroutines.Core.Jvm",
+      "version": "1.11.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.11.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/7e1405f51bf00284-THIRD-PARTY-NOTICES.txt",
+          "sha256": "7e1405f51bf00284ff8b7a63ac55a3c87b2b3c78ab13aef90d2541f247f359f3",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12094
+        }
+      ],
+      "nuspecSha256": "5494cd8843950d4e87e35b85c48fbd3f671ab9533ca3627fe19268d4d023038b",
+      "upstreamLicenseReadme": "| **License(s)** | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "PfimvxVnQSf3E6eXnWIw3ZW60cSDCNAFNnouf0Bw19/GoHUFnDRIjUrOccnX5TR+V7rvfGP2c3nblijKyPxM+w=="
+    },
+    {
+      "id": "Xamarin.KotlinX.Serialization.Core",
+      "version": "1.11.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/7e1405f51bf00284-THIRD-PARTY-NOTICES.txt",
+          "sha256": "7e1405f51bf00284ff8b7a63ac55a3c87b2b3c78ab13aef90d2541f247f359f3",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12094
+        }
+      ],
+      "nuspecSha256": "b75987873daa9c0b556ef5a82120a86a56742554798242ef072244899b64d640",
+      "upstreamLicenseReadme": "| **License(s)** | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "Isdm4DA4BNRzQr+bX9p31taWWrf0pG0icOpq7kIeXb6qOR96kI6wi1nOlYt46mFtTpbJ2UyY5hkhJC+C+NknwA=="
+    },
+    {
+      "id": "Xamarin.KotlinX.Serialization.Core.Jvm",
+      "version": "1.11.0.1",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/android-libraries",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android-libraries.git",
+        "branch": "refs/heads/main",
+        "commit": "7a5e81cbaebeae73bf81d2a232a8c4bff59c012a"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT AND Apache-2.0",
+        "url": "https://licenses.nuget.org/MIT%20AND%20Apache-2.0"
+      },
+      "mavenCoordinates": [
+        "org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.11.0"
+      ],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/7f92be6c840f2584-LICENSE.md",
+          "sha256": "7f92be6c840f2584494d4986060fe7dfe8bbf02d6ab122980fa1d43ffb2ecb0f",
+          "originalName": "LICENSE.md",
+          "bytes": 1480
+        },
+        {
+          "asset": "legal/texts/7e1405f51bf00284-THIRD-PARTY-NOTICES.txt",
+          "sha256": "7e1405f51bf00284ff8b7a63ac55a3c87b2b3c78ab13aef90d2541f247f359f3",
+          "originalName": "THIRD-PARTY-NOTICES.txt",
+          "bytes": 12094
+        }
+      ],
+      "nuspecSha256": "739609826c8c7207767ad559e20d5684de48d99aa9a51c8af5d2d5189d7e2e68",
+      "upstreamLicenseReadme": "| **License(s)** | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) |",
+      "dependencyType": "Transitive",
+      "frameworks": [
+        "net10.0-android36.0"
+      ],
+      "nugetContentHash": "UKb1C/+LxDhbLU2uQlR/4hEnbMbVir02j6jZE78H2TfP24E7NzXhIlCniFw6qp1nrSRCI4ZSs0dpxHvTANNoZQ=="
+    }
+  ],
+  "runtimePacks": [
+    {
+      "id": "Microsoft.Android.Runtime.Mono.36.android-arm64",
+      "version": "36.1.2",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android",
+        "commit": "01024bb616e7b80417a2c6d320885bfdb956f20a"
+      },
+      "license": {
+        "type": "file",
+        "value": "LICENSE.TXT",
+        "url": "https://aka.ms/deprecateLicenseUrl"
+      },
+      "mavenCoordinates": [],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/cfc21f5e8bd655ae-LICENSE.TXT",
+          "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+          "originalName": "LICENSE.TXT",
+          "bytes": 1116
+        },
+        {
+          "asset": "legal/texts/f7b09b6ee5286596-THIRD-PARTY-NOTICES.TXT",
+          "sha256": "f7b09b6ee5286596d12bd4eb6f82e203b59bcf0b10e48845eacb56f4c3f2b227",
+          "originalName": "THIRD-PARTY-NOTICES.TXT",
+          "bytes": 144846
+        }
+      ],
+      "nuspecSha256": "7824cd3e81b02480686deee28d22f8dc3546ed2dccc6096aae7ebf850b997727"
+    },
+    {
+      "id": "Microsoft.Android.Runtime.Mono.36.android-x64",
+      "version": "36.1.2",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/android",
+        "commit": "01024bb616e7b80417a2c6d320885bfdb956f20a"
+      },
+      "license": {
+        "type": "file",
+        "value": "LICENSE.TXT",
+        "url": "https://aka.ms/deprecateLicenseUrl"
+      },
+      "mavenCoordinates": [],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/cfc21f5e8bd655ae-LICENSE.TXT",
+          "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+          "originalName": "LICENSE.TXT",
+          "bytes": 1116
+        },
+        {
+          "asset": "legal/texts/f7b09b6ee5286596-THIRD-PARTY-NOTICES.TXT",
+          "sha256": "f7b09b6ee5286596d12bd4eb6f82e203b59bcf0b10e48845eacb56f4c3f2b227",
+          "originalName": "THIRD-PARTY-NOTICES.TXT",
+          "bytes": 144846
+        }
+      ],
+      "nuspecSha256": "0dbaa9975a325b2d9ee82633289c3f63e2714646568a5091f4b6cf4c6641c537"
+    },
+    {
+      "id": "Microsoft.NETCore.App.Runtime.Mono.android-arm64",
+      "version": "10.0.12",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "95017c711e6afc1085133d440e42b4bd78155701"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT",
+        "url": "https://licenses.nuget.org/MIT"
+      },
+      "mavenCoordinates": [],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/cfc21f5e8bd655ae-LICENSE.TXT",
+          "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+          "originalName": "LICENSE.TXT",
+          "bytes": 1116
+        },
+        {
+          "asset": "legal/texts/66f1d4e449731855-THIRD-PARTY-NOTICES.TXT",
+          "sha256": "66f1d4e44973185519bb4aa8a9718eb22fc7af2cc532e3ae9cfc4c127ee7fc54",
+          "originalName": "THIRD-PARTY-NOTICES.TXT",
+          "bytes": 76623
+        }
+      ],
+      "nuspecSha256": "7c30520c3e1c9623ba146847775f2f9a2446c5bbab06a693196fb2fb9f85f0d0"
+    },
+    {
+      "id": "Microsoft.NETCore.App.Runtime.Mono.android-x64",
+      "version": "10.0.12",
+      "authors": "Microsoft",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "95017c711e6afc1085133d440e42b4bd78155701"
+      },
+      "license": {
+        "type": "expression",
+        "value": "MIT",
+        "url": "https://licenses.nuget.org/MIT"
+      },
+      "mavenCoordinates": [],
+      "licenseAssets": [
+        {
+          "asset": "legal/texts/cfc21f5e8bd655ae-LICENSE.TXT",
+          "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+          "originalName": "LICENSE.TXT",
+          "bytes": 1116
+        },
+        {
+          "asset": "legal/texts/66f1d4e449731855-THIRD-PARTY-NOTICES.TXT",
+          "sha256": "66f1d4e44973185519bb4aa8a9718eb22fc7af2cc532e3ae9cfc4c127ee7fc54",
+          "originalName": "THIRD-PARTY-NOTICES.TXT",
+          "bytes": 76623
+        }
+      ],
+      "nuspecSha256": "3bab7e4a3604f5b2d0c90e6c8aad7fa85a6b29cef27cd4acbec138a033ba9339"
+    }
+  ],
+  "ocrDetails": "THIRD-PARTY-OCR.md",
+  "ocrModelManifest": "ocr/manifest.json",
+  "googleMlKitTermsUrl": "https://developers.google.com/ml-kit/terms",
+  "googleApisTermsUrl": "https://developers.google.com/terms",
+  "privacyNote": "ML Kit processes image/text inputs on-device; its documented SDK behavior may include performance and usage telemetry. Microsoft binding MIT licenses do not relicense Google native SDKs or models."
+}

@@ -1,0 +1,17 @@
+# 实际自动播放会话回归
+
+该工程直接编译生产 `AppSession.Autoplay.cs`、`AutoPlaybackCycle.cs`、设置、点击目标、显示模型、OCR 调度与剧情核心源码。没有复制人工起点确认、取消或推进门控。
+
+```powershell
+dotnet run --project android/Tests/AutoplaySession/AutoplaySessionRegression.csproj -c Release
+```
+
+结果保存在本目录 `results.json`，包含被测生产文件的 SHA-256。
+
+外部接口的替身保存真实确认回调、按到期时间执行主线程回调、以受控 Task 返回手势结果。音频替身只绑定实际自动播放状态机的票据；夹具音频只用来验证文件存在性，不用于音频解码。
+
+覆盖重复/过期确认、十轮取消—手动定位—重新启动、跨章节/导航/屏幕/音频换代、共同线末句、支线、单句限制、缺音、重复音频结束、取消后旧手势和延迟回调、点击失败、失焦，以及人工起播越过原 15 秒 OCR 期限。
+
+直接调用生产 `PauseAutoPlaybackForOverlayExit`，验证确认后 0／90／179ms 隐藏或离开都会撤销请求；退出后立即重试时，仍在队列中的旧确认及后到的确认／OCR／取消回调都不能影响新会话。
+
+范围限制：不编译整个 `AppSession.cs`，不运行 Android UI、真实 OCR、音频解码、系统触摸或无障碍服务。主入口接线与真实窗口需要由独立设备测试验证。

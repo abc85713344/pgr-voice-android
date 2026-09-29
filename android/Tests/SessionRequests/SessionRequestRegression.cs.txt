@@ -1,0 +1,60 @@
+using System.Security.Cryptography;
+using System.Text.Json;
+using PgrVoice.AndroidApp;
+
+var results = new List<object>(); int failures = 0;
+void Test(string name, Action test)
+{
+    try { test(); results.Add(new { name, passed = true }); }
+    catch (Exception ex) { failures++; results.Add(new { name, passed = false, error = ex.Message }); }
+}
+var phone = new ScreenDisplayState(new(0, 1080, 1920, 0), 1);
+Test("授权后第一帧之前申请的预览可保留并仅交付一次", () =>
+{
+    var pending = new PendingScreenPreview<Action>(); int calls = 0;
+    pending.Set(11, phone, () => calls++);
+    Require(pending.Matches(11, phone), "初始尺寸建立会丢失当前授权的预览");
+    pending.Take(11, phone)?.Invoke(); pending.Take(11, phone)?.Invoke();
+    Require(calls == 1, "同一次请求重复打开框选界面");
+});
+Test("停止或切换操作清除待预览请求，新授权不能触发旧界面", () =>
+{
+    var pending = new PendingScreenPreview<Action>(); int calls = 0;
+    pending.Set(11, phone, () => calls++); pending.Clear();
+    pending.Take(11, phone)?.Invoke(); pending.Take(12, phone)?.Invoke();
+    Require(calls == 0, "失效请求被停止后的截图重新触发");
+});
+Test("即使忘记清理，同形态的新捕获授权也不能消费旧请求", () =>
+{
+    var pending = new PendingScreenPreview<Action>(); int calls = 0;
+    pending.Set(11, phone, () => calls++);
+    pending.Take(12, phone)?.Invoke(); pending.Take(11, phone)?.Invoke();
+    Require(calls == 0, "跨授权请求复活");
+});
+Test("转屏再转回也必须拒绝旧预览版本", () =>
+{
+    var pending = new PendingScreenPreview<Action>(); int calls = 0;
+    pending.Set(11, phone, () => calls++);
+    var landscape = phone.WithProfile(new(0, 1080, 1920, 1));
+    var returned = landscape.WithProfile(phone.Profile);
+    Require(returned.RegionKey == phone.RegionKey && returned != phone, "测试未构造同屏不同版本");
+    pending.Take(11, returned)?.Invoke();
+    Require(calls == 0, "旧预览跨过显示变化仍然有效");
+});
+Test("新的框选请求替换旧请求，只有当前回调获得画面", () =>
+{
+    var pending = new PendingScreenPreview<Action>(); int oldCalls = 0, newCalls = 0;
+    pending.Set(11, phone, () => oldCalls++); pending.Set(11, phone, () => newCalls++);
+    pending.Take(11, phone)?.Invoke();
+    Require(oldCalls == 0 && newCalls == 1, "已替换请求仍然触发");
+});
+var output = args.ElementAtOrDefault(0) ?? "reports/android-session-requests.json";
+var report = new { createdUtc = DateTimeOffset.UtcNow, passed = failures == 0, count = results.Count, failures, tests = results,
+    sourceSha256 = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes("android/PendingScreenPreview.cs"))),
+    scope = "实际待预览请求容器的纯逻辑回归；覆盖停止、重授权、旋转返回、首帧之前请求及一次性交付，不声称Android窗口或设备流程已运行。" };
+Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(output))!);
+File.WriteAllText(output, JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }));
+Console.WriteLine($"SessionRequests: {results.Count - failures}/{results.Count} passed. {Path.GetFullPath(output)}");
+foreach (var result in results) Console.WriteLine(JsonSerializer.Serialize(result));
+return failures == 0 ? 0 : 1;
+static void Require(bool condition, string reason) { if (!condition) throw new InvalidOperationException(reason); }

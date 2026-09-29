@@ -1,0 +1,24 @@
+{
+  "source": "reports/xfold5-20260928/02-game-inner.png",
+  "sourceSize": [
+    2480,
+    2200
+  ],
+  "sourceSha256": "2024b220a3f7501dbc9607987155a832a2809d0fb73c8faeec829bd444d200ee",
+  "resample": "Pillow BILINEAR",
+  "scope": "用户当前第29章第一小节黑底居中旁白。只验证选区，不验证OCR和路线。",
+  "fixtures": [
+    {
+      "file": "chapter29-narration-320x192.argb",
+      "width": 320,
+      "height": 192,
+      "sha256": "f52c899d8e43533a32ded2d79548924249b6f0744dff5b0d822ff3be45d47196"
+    },
+    {
+      "file": "chapter29-narration-160x96.argb",
+      "width": 160,
+      "height": 96,
+      "sha256": "4088483ad206ade54b2839fbdfd7e2f67eee52e355fb6ebe51bf596a92e528a7"
+    }
+  ]
+}

@@ -1,0 +1,206 @@
+{
+  "success": true,
+  "engine": "MlKitChinese",
+  "width": 852,
+  "height": 480,
+  "initializationMs": 439.6127,
+  "managedBytes": 4261200,
+  "nativeBytes": 51086752,
+  "runs": [
+    {
+      "elapsedMs": 851.6944,
+      "text": "那是女明的火种。可\n回顾\n自动\nSKIP",
+      "truncated": false,
+      "blocks": [
+        {
+          "text": "那是女明的火种。可",
+          "confidence": 0.58637154,
+          "polygon": [
+            {
+              "x": 365,
+              "y": 213
+            },
+            {
+              "x": 504,
+              "y": 213
+            },
+            {
+              "x": 504,
+              "y": 227
+            },
+            {
+              "x": 365,
+              "y": 227
+            }
+          ]
+        },
+        {
+          "text": "回顾",
+          "confidence": 0.30664062,
+          "polygon": [
+            {
+              "x": 555,
+              "y": 21
+            },
+            {
+              "x": 582,
+              "y": 21
+            },
+            {
+              "x": 582,
+              "y": 32
+            },
+            {
+              "x": 555,
+              "y": 32
+            }
+          ]
+        },
+        {
+          "text": "自动",
+          "confidence": 0.421875,
+          "polygon": [
+            {
+              "x": 654,
+              "y": 22
+            },
+            {
+              "x": 676,
+              "y": 22
+            },
+            {
+              "x": 676,
+              "y": 33
+            },
+            {
+              "x": 654,
+              "y": 33
+            }
+          ]
+        },
+        {
+          "text": "SKIP",
+          "confidence": 0.7734375,
+          "polygon": [
+            {
+              "x": 749,
+              "y": 23
+            },
+            {
+              "x": 780,
+              "y": 23
+            },
+            {
+              "x": 780,
+              "y": 34
+            },
+            {
+              "x": 749,
+              "y": 34
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "elapsedMs": 329.9119,
+      "text": "那是女明的火种。可\n回顾\n自动\nSKIP",
+      "truncated": false,
+      "blocks": [
+        {
+          "text": "那是女明的火种。可",
+          "confidence": 0.58637154,
+          "polygon": [
+            {
+              "x": 365,
+              "y": 213
+            },
+            {
+              "x": 504,
+              "y": 213
+            },
+            {
+              "x": 504,
+              "y": 227
+            },
+            {
+              "x": 365,
+              "y": 227
+            }
+          ]
+        },
+        {
+          "text": "回顾",
+          "confidence": 0.30664062,
+          "polygon": [
+            {
+              "x": 555,
+              "y": 21
+            },
+            {
+              "x": 582,
+              "y": 21
+            },
+            {
+              "x": 582,
+              "y": 32
+            },
+            {
+              "x": 555,
+              "y": 32
+            }
+          ]
+        },
+        {
+          "text": "自动",
+          "confidence": 0.421875,
+          "polygon": [
+            {
+              "x": 654,
+              "y": 22
+            },
+            {
+              "x": 676,
+              "y": 22
+            },
+            {
+              "x": 676,
+              "y": 33
+            },
+            {
+              "x": 654,
+              "y": 33
+            }
+          ]
+        },
+        {
+          "text": "SKIP",
+          "confidence": 0.7734375,
+          "polygon": [
+            {
+              "x": 749,
+              "y": 23
+            },
+            {
+              "x": 780,
+              "y": 23
+            },
+            {
+              "x": 780,
+              "y": 34
+            },
+            {
+              "x": 749,
+              "y": 34
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixture": "ch29-real-00030",
+  "source": "<项目根>\\reports\\ocr-samples\\frame-00030.0.png",
+  "expectedPhrase": "那是文明的火种",
+  "sampleKind": "real chapter 29 video frame",
+  "phraseFound": false
+}

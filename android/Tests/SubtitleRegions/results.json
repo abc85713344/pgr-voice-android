@@ -1,0 +1,100 @@
+{
+  "passed": true,
+  "count": 23,
+  "failures": 0,
+  "tests": [
+    {
+      "name": "真实第29章黑底旁白 320x192 触发中央范围",
+      "passed": true
+    },
+    {
+      "name": "真实第29章黑底旁白 160x96 触发中央范围",
+      "passed": true
+    },
+    {
+      "name": "全黑过场不触发",
+      "passed": true
+    },
+    {
+      "name": "黑底只有顶部菜单不触发",
+      "passed": true
+    },
+    {
+      "name": "黑底只有右侧进度箭头不触发",
+      "passed": true
+    },
+    {
+      "name": "普通底部字幕保持原框",
+      "passed": true
+    },
+    {
+      "name": "中央白字并伴底部对白时不自动改框",
+      "passed": true
+    },
+    {
+      "name": "正常彩色场景对白保持原框",
+      "passed": true
+    },
+    {
+      "name": "明亮场景中的中央白字保持原框",
+      "passed": true
+    },
+    {
+      "name": "暗灰背景中央文字不视为近黑旁白",
+      "passed": true
+    },
+    {
+      "name": "近黑中央单行文字可识别",
+      "passed": true
+    },
+    {
+      "name": "黑底中央多行文字可识别",
+      "passed": true
+    },
+    {
+      "name": "长行旁白可识别",
+      "passed": true
+    },
+    {
+      "name": "中央彩色提示不触发",
+      "passed": true
+    },
+    {
+      "name": "白色实心横条不当成文字",
+      "passed": true
+    },
+    {
+      "name": "中央空心按钮框不当成文字",
+      "passed": true
+    },
+    {
+      "name": "单像素水平线不当成文字",
+      "passed": true
+    },
+    {
+      "name": "中央大方块不当成文字",
+      "passed": true
+    },
+    {
+      "name": "左边缘亮控件不触发",
+      "passed": true
+    },
+    {
+      "name": "固定随机亮噪点不触发",
+      "passed": true
+    },
+    {
+      "name": "透明未就绪缓冲区不触发",
+      "passed": true
+    },
+    {
+      "name": "拒绝尺寸不符和原始大图，不抛异常",
+      "passed": true
+    },
+    {
+      "name": "输入像素不会被修改",
+      "passed": true
+    }
+  ],
+  "scope": "纯 C# 选区算法与真实手机截图缩略夹具；不代替 OCR、Android 接入或游戏路线端到端测试。"
+}

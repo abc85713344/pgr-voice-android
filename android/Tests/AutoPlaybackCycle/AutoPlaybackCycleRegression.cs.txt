@@ -1,0 +1,160 @@
+using System.Security.Cryptography;
+using System.Text.Json;
+using PgrVoice.AndroidApp;
+
+var results = new List<object>(); int failures = 0;
+void Test(string name, Action test)
+{
+    try { test(); results.Add(new { name, passed = true }); }
+    catch (Exception ex) { failures++; results.Add(new { name, passed = false, error = ex.ToString() }); }
+}
+Test("首次确认后自然播完直接点击；成功后顺序播放，不再请求逐句OCR", () =>
+{
+    var c = new AutoPlaybackCycle(); c.Start("a", 1000); long epoch = c.Epoch;
+    Require(c.Phase == AutoPlaybackPhase.CheckingCurrent, "首次未等待识别");
+    Require(c.PreparePlayback(epoch,"a",1100) && c.BindAudio(epoch,"a",1,1150), "首次音频未绑定");
+    Require(c.CompleteAudio(epoch,1,2000) && c.Phase == AutoPlaybackPhase.Tapping, "完成后仍要求OCR");
+    Require(c.BeginTap(epoch,"b",2100) && c.TapTicket > 0, "完成未授权点击");
+    Require(c.GestureCompleted(epoch,c.TapTicket,"b",2200) && c.Phase == AutoPlaybackPhase.StartingNext, "手势完成未进入下一句准备");
+    Require(c.PreparePlayback(epoch,"b",2201) && c.BindAudio(epoch,"b",2,2202), "下一句需要额外OCR或无法播放");
+    Require(c.Phase == AutoPlaybackPhase.Playing && c.NodeId == "b", "未保持顺序播放");
+});
+Test("未收到匹配的自然完成不得点击；错误或重复音频票据无效", () =>
+{
+    var c = Playing(); long epoch = c.Epoch;
+    Require(!c.BeginTap(epoch,"b",1100), "播放中提前点击");
+    Require(!c.CompleteAudio(epoch,0,1100) && !c.CompleteAudio(epoch,2,1100), "未知音频完成被接受");
+    Require(c.CompleteAudio(epoch,1,1200) && !c.CompleteAudio(epoch,1,1201), "自然完成被消费多次");
+    Require(c.BeginTap(epoch,"b",1300) && !c.BeginTap(epoch,"b",1301) && !c.BeginTap(epoch,"c",1302), "同一自然完成允许多次点击");
+});
+Test("单次完成只授权一个手势；成功回调重复不会播放两次", () =>
+{
+    var c = Tapping(); long epoch = c.Epoch, tap = c.TapTicket;
+    Require(c.GestureCompleted(epoch,tap,"b",1400), "正确回调失败");
+    Require(!c.GestureCompleted(epoch,tap,"b",1401) && !c.BeginTap(epoch,"b",1401), "回调重复授权");
+    Require(c.PreparePlayback(epoch,"b",1450) && !c.PreparePlayback(epoch,"b",1451), "下一句准备多次");
+});
+Test("点击完成须匹配epoch、手势票据和明确下一节点", () =>
+{
+    var c = Tapping(); long epoch = c.Epoch, tap = c.TapTicket;
+    Require(!c.GestureCompleted(epoch-1,tap,"b",1400), "旧epoch接受");
+    Require(!c.GestureCompleted(epoch,tap+1,"b",1400), "错误手势票据接受");
+    Require(!c.GestureCompleted(epoch,tap,"c",1400), "错误下一节点接受");
+    Require(!c.PreparePlayback(epoch,"b",1100) && c.Phase == AutoPlaybackPhase.Tapping, "手势没完成已准备下一句");
+    Require(c.GestureCompleted(epoch,tap,"b",1400), "错误事件污染正确回调");
+    Require(!c.PreparePlayback(epoch,"c",1450) && c.PreparePlayback(epoch,"b",1451), "播错下一节点");
+});
+Test("同epoch的上一手势晚到，不能冒充后来一轮手势", () =>
+{
+    var c = Tapping(); long epoch = c.Epoch, oldTap = c.TapTicket;
+    Require(c.GestureCompleted(epoch,oldTap,"b",1400) && c.PreparePlayback(epoch,"b",1450) && c.BindAudio(epoch,"b",2,1451), "第一轮失败");
+    Require(c.CompleteAudio(epoch,2,2000) && c.BeginTap(epoch,"c",2100), "第二轮失败");
+    long newTap = c.TapTicket; Require(newTap != oldTap, "手势票据重复");
+    Require(!c.GestureCompleted(epoch,oldTap,"b",2200) && !c.GestureCompleted(epoch,oldTap,"c",2200), "旧手势推动新一轮");
+    Require(c.GestureCompleted(epoch,newTap,"c",2200), "新手势无效");
+});
+Test("上一句音频完成晚到，不能授权下一句的点击", () =>
+{
+    var c = Tapping(); long epoch = c.Epoch;
+    Require(c.GestureCompleted(epoch,c.TapTicket,"b",1400) && c.PreparePlayback(epoch,"b",1450), "下一句准备失败");
+    Require(!c.BindAudio(epoch,"b",1,1451), "已经消费的音频票据被重新绑定");
+    Require(c.BindAudio(epoch,"b",2,1452), "新音频票据绑定失败");
+    Require(!c.CompleteAudio(epoch,1,1500) && !c.BeginTap(epoch,"c",1500), "旧音频结束错误点击");
+    Require(c.CompleteAudio(epoch,2,2000), "新音频自然结束失效");
+});
+Test("Stop使所有阶段的旧识别、音频和手势回调失效", () =>
+{
+    foreach (string phase in new[] { "checking", "playing", "armed", "tapping", "starting" })
+    {
+        var c = phase == "checking" ? new AutoPlaybackCycle() : Playing();
+        if (phase == "checking") c.Start("a",1000);
+        if (phase is "armed" or "tapping" or "starting") Require(c.CompleteAudio(c.Epoch,1,1200), "完成准备失败");
+        if (phase is "tapping" or "starting") Require(c.BeginTap(c.Epoch,"b",1300), "手势准备失败");
+        long oldEpoch = c.Epoch, oldTap = c.TapTicket;
+        if (phase == "starting") Require(c.GestureCompleted(oldEpoch,oldTap,"b",1400), "下一句准备失败");
+        c.Stop(); Require(!c.Running && c.Epoch != oldEpoch && c.ExpectedNext == null && c.AudioTicket == 0 && c.TapTicket == 0, "Stop没清理状态");
+        Require(!c.PreparePlayback(oldEpoch,"a",1100) && !c.PreparePlayback(oldEpoch,"b",1100) && !c.BindAudio(oldEpoch,"a",1,1150) &&
+            !c.CompleteAudio(oldEpoch,1,1500) && !c.BeginTap(oldEpoch,"b",1500) && !c.GestureCompleted(oldEpoch,oldTap,"b",1500), "Stop后旧事件复活：" + phase);
+    }
+});
+Test("重新Start同一节点仍换epoch；旧会话相同票据不得冒充新会话", () =>
+{
+    var c = Tapping(); long oldEpoch = c.Epoch, oldTap = c.TapTicket;
+    c.Start("a",2000); long epoch = c.Epoch;
+    Require(epoch != oldEpoch && !c.PreparePlayback(oldEpoch,"a",2050) && c.PreparePlayback(epoch,"a",2051), "Start没隔离旧识别");
+    Require(c.BindAudio(epoch,"a",1,2052) && !c.CompleteAudio(oldEpoch,1,2100), "旧音频冒充新会话");
+    Require(c.CompleteAudio(epoch,1,2200) && c.BeginTap(epoch,"b",2300), "新会话点击准备失败");
+    Require(c.TapTicket != oldTap && !c.GestureCompleted(oldEpoch,oldTap,"b",2400), "旧手势冒充新会话");
+});
+Test("超时的初次识别、点击准备、手势完成和顺序准备可由会话中止", () =>
+{
+    var c = new AutoPlaybackCycle(); c.Start("a",1000);
+    Require(!c.TimedOut(15999) && c.TimedOut(16000), "初次识别超时边界错误"); c.Stop();
+    c = Playing(); Require(c.CompleteAudio(c.Epoch,1,2000), "完成准备失败");
+    Require(!c.TimedOut(5999) && c.TimedOut(6000) && !c.BeginTap(c.Epoch,"b",6000), "过期点击被接受");
+    c = Tapping(); long epoch=c.Epoch, tap=c.TapTicket;
+    Require(!c.GestureCompleted(epoch,tap,"b",5300), "超过手势期限仍接受完成");
+    c = Tapping(); Require(c.GestureCompleted(c.Epoch,c.TapTicket,"b",1400), "手势完成失败");
+    Require(!c.TimedOut(11399) && c.TimedOut(11400), "准备下一句超时边界错误");
+    c.Stop(); Require(!c.TimedOut(long.MaxValue), "停止后仍超时");
+});
+Test("空节点、错误节点、提前音频绑定及自点击连接都拒绝", () =>
+{
+    var c=new AutoPlaybackCycle(); c.Start(" ",1000); Require(!c.Running, "空节点启动");
+    c.Start("a",1000); long epoch=c.Epoch;
+    Require(!c.PreparePlayback(epoch,"",1100) && !c.PreparePlayback(epoch,"wrong",1100) && !c.BindAudio(epoch,"a",1,1150), "未确认即播放");
+    Require(c.PreparePlayback(epoch,"a",1100) && !c.BindAudio(epoch,"wrong",1,1150) && !c.BindAudio(epoch,"a",0,1150) && c.BindAudio(epoch,"a",1,1150), "音频绑定不严格");
+    Require(c.CompleteAudio(epoch,1,2000) && !c.BeginTap(epoch," ",2100) && !c.BeginTap(epoch,"a",2100) && c.BeginTap(epoch,"b",2100), "空或自循环下一句放行");
+});
+Test("关闭模式不会接受任意事件，错误回调保持当前阶段和节点不变", () =>
+{
+    var c=new AutoPlaybackCycle(); Require(!c.PreparePlayback(0,"a",1100) && !c.CompleteAudio(0,1,0) && !c.GestureCompleted(0,1,"a",0), "未启动可推进");
+    c=Playing(); string before=JsonSerializer.Serialize(c);
+    Require(!c.BindAudio(c.Epoch,"a",2,1150) && !c.CompleteAudio(c.Epoch,999,2000), "错误事件被接受");
+    Require(before==JsonSerializer.Serialize(c), "无效事件污染状态");
+});
+Test("已准备节点但前台服务未返回音频票据，十秒后仍会超时并拒绝迟到启动", () =>
+{
+    var c=new AutoPlaybackCycle();c.Start("a",1000);long epoch=c.Epoch;
+    Require(c.PreparePlayback(epoch,"a",2000),"当前句准备失败");
+    Require(c.AudioTicket==0&&!c.TimedOut(11999)&&c.TimedOut(12000),"未绑定音频却永久关闭超时检查");
+    Require(!c.BindAudio(epoch,"a",1,12000),"已经过期的服务回调仍可绑定音频");
+    Require(!c.CompleteAudio(epoch,1,12001)&&!c.BeginTap(epoch,"b",12001),"未启动音频却触发点击");
+    c.Stop();Require(!c.BindAudio(epoch,"a",1,12002),"停止后迟到音频复活会话");
+});
+Test("下一句音频请求同样有期限；有效绑定后不截断长对白", () =>
+{
+    var c=Tapping();long epoch=c.Epoch;
+    Require(c.GestureCompleted(epoch,c.TapTicket,"b",1400)&&c.PreparePlayback(epoch,"b",1900),"下一句准备失败");
+    Require(!c.TimedOut(11899)&&c.TimedOut(11900),"下一句服务等待没有期限");
+    c=Playing();epoch=c.Epoch;
+    Require(!c.TimedOut(900000),"已绑定音频被等待服务期限截断");
+    Require(c.CompleteAudio(epoch,1,900000)&&c.BeginTap(epoch,"b",900001),"长对白自然完成后不能单次推进");
+});
+Test("已超时的初始定位和顺序准备不能通过PreparePlayback清除超时", () =>
+{
+    var c=new AutoPlaybackCycle();c.Start("a",1000);
+    Require(!c.PreparePlayback(c.Epoch,"a",16000)&&c.TimedOut(16000),"迟到定位清除了超时");
+    c=Tapping();Require(c.GestureCompleted(c.Epoch,c.TapTicket,"b",1400),"手势准备失败");
+    Require(!c.PreparePlayback(c.Epoch,"b",11400)&&c.TimedOut(11400),"迟到下一句准备清除了超时");
+});
+string output=args.ElementAtOrDefault(0)??"reports/android-autoplay-cycle.json";
+string source=Path.GetFullPath("android/AutoPlaybackCycle.cs");
+var report=new { createdUtc=DateTimeOffset.UtcNow, passed=failures==0, count=results.Count, failures, tests=results,
+    sourceSha256=Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(source))),
+    scope="纯状态机；证明首次确认后无逐句OCR阶段、单次自然完成至多一次点击、手势与节点票据隔离。共同线/缺音/音频自然完成来源/实际触屏及前台身份由其它门控与设备回归证明。" };
+Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(output))!); File.WriteAllText(output,JsonSerializer.Serialize(report,new JsonSerializerOptions{WriteIndented=true}));
+Console.WriteLine($"AutoPlaybackCycle: {results.Count-failures}/{results.Count} passed. {Path.GetFullPath(output)}");
+foreach(var result in results) Console.WriteLine(JsonSerializer.Serialize(result));
+return failures==0?0:1;
+
+static void Require(bool value,string reason) { if(!value)throw new InvalidOperationException(reason); }
+static AutoPlaybackCycle Playing()
+{
+    var c=new AutoPlaybackCycle();c.Start("a",1000);
+    Require(c.PreparePlayback(c.Epoch,"a",1100)&&c.BindAudio(c.Epoch,"a",1,1150),"建立播放状态失败");return c;
+}
+static AutoPlaybackCycle Tapping()
+{
+    var c=Playing();Require(c.CompleteAudio(c.Epoch,1,1200)&&c.BeginTap(c.Epoch,"b",1300),"建立手势状态失败");return c;
+}

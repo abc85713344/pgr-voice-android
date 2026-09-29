@@ -1,0 +1,71 @@
+using System.Text.Json;
+using PgrVoice.AndroidApp;
+
+var tests = new List<object>(); int failures = 0;
+void Test(string name, Action action)
+{
+    try { action(); tests.Add(new { name, passed = true }); }
+    catch (Exception ex) { failures++; tests.Add(new { name, passed = false, error = ex.Message }); }
+}
+int w = SubtitleRegionSelector.SampleWidth, h = SubtitleRegionSelector.SampleHeight;
+int[] Blank(int color = unchecked((int)0xff000000)) => Enumerable.Repeat(color, w * h).ToArray();
+bool Detect(int[] pixels) => SubtitleRegionSelector.TrySelectNarration(pixels, w, h, out _);
+void Require(bool value, string message) { if (!value) throw new Exception(message); }
+void Fill(int[] p, int x, int y, int width, int height, int color = unchecked((int)0xffffffff))
+{
+    for (int yy = y; yy < y + height; yy++) for (int xx = x; xx < x + width; xx++) p[yy * w + xx] = color;
+}
+// 小型方块字形，有内部空隙；提供可变行数、位置和长短，不模拟 OCR 语义。
+void TextLine(int[] p, int x, int y, int chars = 9, int color = unchecked((int)0xffffffff))
+{
+    for (int c = 0; c < chars; c++)
+    {
+        int start = x + c * 6;
+        Fill(p, start, y, 4, 1, color); Fill(p, start, y + 4, 4, 1, color);
+        Fill(p, start, y, 1, 5, color); Fill(p, start + 3, y, 1, 5, color);
+    }
+}
+
+foreach (var size in new[] { (320, 192), (160, 96) })
+    Test($"真实第29章黑底旁白 {size.Item1}x{size.Item2} 触发中央范围", () =>
+    {
+        byte[] bytes = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "fixtures", $"chapter29-narration-{size.Item1}x{size.Item2}.argb"));
+        int[] pixels = new int[bytes.Length / 4]; Buffer.BlockCopy(bytes, 0, pixels, 0, bytes.Length);
+        Require(SubtitleRegionSelector.TrySelectNarration(pixels, size.Item1, size.Item2, out var region), "真实旁白漏判");
+        Require(region == new NarrationRegion(.04, .15, .92, .50), "输出范围改变");
+        Require(region.Y > .05 && region.Y + region.Height < .69, "选区包含顶部菜单或底部普通对白");
+    });
+Test("全黑过场不触发", () => Require(!Detect(Blank()), "纯黑误判"));
+Test("黑底只有顶部菜单不触发", () => { var p = Blank(); TextLine(p, 100, 5, 25); Require(!Detect(p), "顶部菜单误判"); });
+Test("黑底只有右侧进度箭头不触发", () => { var p = Blank(); Fill(p, 185, 56, 3, 3); Require(!Detect(p), "孤立箭头误判"); });
+Test("普通底部字幕保持原框", () => { var p = Blank(); TextLine(p, 45, 160, 35); Require(!Detect(p), "底部字幕误判"); });
+Test("中央白字并伴底部对白时不自动改框", () => { var p = Blank(); TextLine(p, 120, 58); TextLine(p, 45, 160, 35); Require(!Detect(p), "混合布局误判"); });
+Test("正常彩色场景对白保持原框", () => { var p = Blank(unchecked((int)0xff305070)); TextLine(p, 50, 160, 30); Require(!Detect(p), "彩色背景误判"); });
+Test("明亮场景中的中央白字保持原框", () => { var p = Blank(unchecked((int)0xff888888)); TextLine(p, 120, 58); Require(!Detect(p), "亮场误判"); });
+Test("暗灰背景中央文字不视为近黑旁白", () => { var p = Blank(unchecked((int)0xff202020)); TextLine(p, 120, 58); Require(!Detect(p), "暗灰场景误判"); });
+Test("近黑中央单行文字可识别", () => { var p = Blank(unchecked((int)0xff080808)); TextLine(p, 120, 58); Require(Detect(p), "单行漏判"); });
+Test("黑底中央多行文字可识别", () => { var p = Blank(); TextLine(p, 100, 54, 19); TextLine(p, 100, 67, 19); TextLine(p, 100, 80, 16); Require(Detect(p), "多行漏判"); });
+Test("长行旁白可识别", () => { var p = Blank(); TextLine(p, 40, 58, 40); Require(Detect(p), "长行漏判"); });
+Test("中央彩色提示不触发", () => { var p = Blank(); TextLine(p, 120, 58, color: unchecked((int)0xffff6600)); Require(!Detect(p), "彩色UI误判"); });
+Test("白色实心横条不当成文字", () => { var p = Blank(); Fill(p, 120, 58, 65, 5); Require(!Detect(p), "实心条误判"); });
+Test("中央空心按钮框不当成文字", () => { var p = Blank(); Fill(p, 120, 58, 65, 1); Fill(p, 120, 62, 65, 1); Fill(p, 120, 58, 1, 5); Fill(p, 184, 58, 1, 5); Require(!Detect(p), "空心UI框误判"); });
+Test("单像素水平线不当成文字", () => { var p = Blank(); Fill(p, 120, 58, 100, 1); Require(!Detect(p), "横线误判"); });
+Test("中央大方块不当成文字", () => { var p = Blank(); Fill(p, 140, 58, 14, 14); Require(!Detect(p), "大图标误判"); });
+Test("左边缘亮控件不触发", () => { var p = Blank(); Fill(p, 0, 30, 8, 15); Require(!Detect(p), "侧边控件误判"); });
+Test("固定随机亮噪点不触发", () => { var p = Blank(); var rng = new Random(732); for (int i = 0; i < 220; i++) p[rng.Next(31, 121) * w + rng.Next(30, 290)] = -1; Require(!Detect(p), "噪点误判"); });
+Test("透明未就绪缓冲区不触发", () => { var p = Blank(0); TextLine(p, 120, 58); Require(!Detect(p), "透明帧误判"); });
+Test("拒绝尺寸不符和原始大图，不抛异常", () =>
+{
+    Require(!SubtitleRegionSelector.TrySelectNarration([], w, h, out var region) && region == default, "长度校验失效");
+    Require(!SubtitleRegionSelector.TrySelectNarration([], int.MaxValue, 2, out _), "溢出维度校验失效");
+    Require(!SubtitleRegionSelector.TrySelectNarration(new int[1], 1, 1, out _), "过小样本被接受");
+    Require(!SubtitleRegionSelector.TrySelectNarration([], 2480, 2200, out _), "误扫原始大图");
+});
+Test("输入像素不会被修改", () => { var p = Blank(); TextLine(p, 120, 58); var original = (int[])p.Clone(); Detect(p); Require(p.SequenceEqual(original), "输入被修改"); });
+
+var report = new { passed = failures == 0, count = tests.Count, failures, tests,
+    scope = "纯 C# 选区算法与真实手机截图缩略夹具；不代替 OCR、Android 接入或游戏路线端到端测试。" };
+string json = JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+Console.WriteLine(json);
+if (args.Length > 0) { Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(args[0]))!); File.WriteAllText(args[0], json); }
+return failures == 0 ? 0 : 1;

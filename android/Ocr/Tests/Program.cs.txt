@@ -1,0 +1,45 @@
+using PgrVoice.AndroidApp.Ocr;
+
+var count = 0;
+void Check(bool value, string message) { if (!value) throw new Exception(message); count++; Console.WriteLine("PASS " + message); }
+void Throws<T>(Action action, string message) where T : Exception { try { action(); } catch (T) { Check(true, message); return; } throw new Exception(message); }
+var dict = PaddleTensorCodec.ReadCharacters("甲\r\n\t\n😀\n");
+Check(dict.SequenceEqual(new[] { "", "甲", "\t", "😀", " " }), "dictionary preserves Unicode and whitespace, inserts blank and final space");
+var ctc = new float[] { .1f,.9f,0, .1f,.8f,.1f, .9f,.1f,0, .1f,.8f,.1f, .1f,.1f,.8f };
+var decoded = PaddleTensorCodec.Decode(ctc, 5, 3, ["", "哈", "啊"]);
+Check(decoded.Text == "哈哈啊" && Math.Abs(decoded.Confidence - .8333333f) < .0001, "CTC repeat, blank separation and emitted-token confidence");
+Throws<InvalidDataException>(() => PaddleTensorCodec.Decode(ctc,5,3,["", "哈"]), "dictionary/class count mismatch fails closed");
+var bgr = PaddleTensorCodec.ToBgrTensor([unchecked((int)0xFFFF0000)], 1, 1, 2, false);
+Check(bgr.SequenceEqual(new float[] {-1,0,-1,0,1,0}), "ARGB red maps to BGR, right padding stays normalized zero");
+var det = PaddleTensorCodec.ToBgrTensor([unchecked((int)0xFF0000FF)],1,1,1,true);
+Check(Math.Abs(det[0] - (1-.485f)/.229f)<.0001 && Math.Abs(det[2] - (0-.406f)/.225f)<.0001, "detector follows official BGR ImageNet mean/std");
+Check(PaddleTensorCodec.DetectionSize(2400,300,960)==(960,128), "narrow subtitle crop bounded by longest side");
+Check(PaddleTensorCodec.DetectionSize(200,15,960)==(192,32), "small dimensions retain model stride without huge upscaling");
+const int width = 96, height = 64;
+var probabilities = new float[width*height];
+for(var y=8;y<16;y++) for(var x=10;x<70;x++) probabilities[y*width+x]=.9f;
+for(var y=40;y<48;y++) for(var x=20;x<85;x++) probabilities[y*width+x]=.85f;
+var result=DbPostprocessor.Extract(probabilities,width,height,192,128,new PaddleOcrOptions(),default);
+Check(result.Quads.Count==2 && !result.Truncated,"DB splits two separate subtitle rows");
+Check(result.Quads[0].P0.Y<result.Quads[1].P0.Y && result.Quads[0].Width>110,"DB maps detector coordinates back and expands text box");
+var bounded=DbPostprocessor.Extract(probabilities,width,height,192,128,new PaddleOcrOptions {MaximumTextRegions=1},default);
+Check(bounded.Quads.Count==1 && bounded.Truncated,"DB reports truncation for capped candidate set");
+var invalid=(float[])probabilities.Clone(); Array.Fill(invalid,float.NaN);
+Check(DbPostprocessor.Extract(invalid,width,height,192,128,new PaddleOcrOptions(),default).Quads.Count==0,"NaN probability map produces no trusted text");
+Throws<OperationCanceledException>(()=>DbPostprocessor.Extract(probabilities,width,height,192,128,new PaddleOcrOptions(),new CancellationToken(true)),"DB cancellation stops stale frame work");
+var border = new float[width*height];
+for(var y=0;y<9;y++) for(var x=0;x<50;x++) border[y*width+x]=.9f;
+var edge = DbPostprocessor.Extract(border,width,height,192,128,new PaddleOcrOptions(),default).Quads.Single();
+Check(edge.Points.All(p=>p.X>=0&&p.X<192&&p.Y>=0&&p.Y<128),"expanded edge boxes stay within caller bitmap");
+var tilted = new float[width*height];
+for(var y=0;y<height;y++) for(var x=0;x<width;x++)
+{
+    var u=(x-48)*Math.Cos(.3)+(y-32)*Math.Sin(.3);
+    var v=-(x-48)*Math.Sin(.3)+(y-32)*Math.Cos(.3);
+    if(Math.Abs(u)<28&&Math.Abs(v)<5)tilted[y*width+x]=.9f;
+}
+var rotated = DbPostprocessor.Extract(tilted,width,height,width,height,new PaddleOcrOptions(),default).Quads.Single();
+Check(rotated.Width>50&&rotated.Height>10&&rotated.P1.Y-rotated.P0.Y>10,"tilted text keeps a rotated quadrilateral for perspective crop");
+Array.Fill(probabilities,.4f);
+Check(DbPostprocessor.Extract(probabilities,width,height,width,height,new PaddleOcrOptions(),default).Quads.Count==0,"weak detector confidence is rejected after threshold connectivity");
+Console.WriteLine($"{count} OCR regression checks passed.");

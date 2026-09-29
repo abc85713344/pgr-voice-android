@@ -1,0 +1,230 @@
+using PgrVoice;
+using PgrVoice.AndroidApp;
+using PgrVoice.AndroidApp.Platform;
+using System.Security.Cryptography;
+using System.Text.Json;
+
+var results = new List<object>(); int failures = 0;
+void Test(string name, Action test)
+{
+    try { test(); results.Add(new { name, passed = true }); Console.WriteLine("PASS " + name); }
+    catch (Exception ex) { failures++; results.Add(new { name, passed = false, error = ex.ToString() }); Console.WriteLine("FAIL " + name + ": " + ex.Message); }
+}
+void Check(bool value, string message) { if (!value) throw new Exception(message); }
+AppSession Session(string node = "a", bool currentAudio = true, bool nextAudio = true)
+{
+    Android.OS.SystemClock.Now = 1_000;
+    var engine = new PlaybackEngine(Fixture(currentAudio, nextAudio));
+    if (node == "branch") Check(engine.ConfirmGameLine(node), "支线样本必须先人工确认路线");
+    else engine.Commit(node);
+    engine.PauseForBrowse();
+    return new(engine);
+}
+void Start(AppSession session)
+{
+    session.BeginFromOverlay(); session.Window.Latest.Confirmed(); session.AdvanceClock(180);
+    Check(session.AutoPlaybackRunning, "当前共同句未能启动：" + session.Status);
+}
+void Silent(AppSession session) => Check(session.PlayedNodes.Count == 0 && session.GestureRequests == 0 && !session.AutoPlaybackRunning, "意外播放、点击或启动");
+
+Test("人工确认前保持静音；180ms后直接从当前句播放，不请求OCR", () => {
+    var s = Session(); s.BeginFromOverlay(); Silent(s);
+    Check(s.Window.Latest.Text.Contains("第一句") && s.Window.Latest.Text.Contains("第一节"), "未展示实际起点");
+    s.Window.Latest.Confirmed(); s.AdvanceClock(179); Silent(s); s.AdvanceClock(1);
+    Check(s.AutoPlaybackRunning && s.PlayedNodes.SequenceEqual(["a"]) && s.GestureRequests == 0 && s.OcrRequests == 0, "人工起播仍识别或提前点击");
+    Check(!s.Window.Hidden, "起播隐藏了停止入口");
+});
+Test("同一确认回调重复触发只播放一次", () => {
+    var s = Session(); s.BeginFromOverlay(); var request = s.Window.Latest;
+    request.Confirmed(); request.Confirmed(); s.AdvanceClock(180); request.Confirmed(); s.AdvanceClock(180);
+    Check(s.PlayedNodes.SequenceEqual(["a"]) && s.GestureRequests == 0, "重复确认重播或点击");
+});
+Test("取消后已排队确认不生效", () => {
+    var s = Session(); s.BeginFromOverlay(); var request = s.Window.Latest;
+    request.Confirmed(); request.Cancelled(); s.AdvanceClock(180); Silent(s);
+});
+Test("确认后0到179ms隐藏或离开立即撤销待启动请求", () => {
+    foreach (string reason in new[] { "悬浮控制已隐藏", "正在打开主界面" })
+    foreach (long elapsed in new long[] { 0, 90, 179 })
+    {
+        var s = Session(); s.BeginFromOverlay(); var old = s.Window.Latest;
+        old.Confirmed(); s.AdvanceClock(elapsed); s.LeaveOverlay(reason); s.AdvanceClock(180);
+        Silent(s); Check(GameAdvanceAccessibilityService.BeginCount == 0, "退出后仍建立了自动点击会话");
+        Start(s); old.Confirmed(); old.Locate(); old.Cancelled(); s.AdvanceClock(180);
+        Check(s.AutoPlaybackRunning && s.PlayedNodes.SequenceEqual(["a"]) && s.OcrRequests == 0 && s.GestureRequests == 0,
+            "退出后重试受旧确认、OCR或取消回调影响");
+    }
+});
+Test("隐藏后立即重试，队列中旧确认早于新确认仍不产生额外播放", () => {
+    var s = Session(); s.BeginFromOverlay(); var old = s.Window.Latest; old.Confirmed(); s.AdvanceClock(90);
+    s.LeaveOverlay("悬浮控制已隐藏"); s.BeginFromOverlay(); var current = s.Window.Latest; current.Confirmed();
+    old.Cancelled(); s.AdvanceClock(90); Silent(s);
+    s.AdvanceClock(90); Check(s.AutoPlaybackRunning && s.PlayedNodes.SequenceEqual(["a"]), "新轮未独立起播");
+    old.Confirmed(); old.Locate(); old.Cancelled(); s.AdvanceClock(180);
+    Check(s.AutoPlaybackRunning && s.PlayedNodes.SequenceEqual(["a"]) && s.OcrRequests == 0 && s.GestureRequests == 0,
+        "旧回调终止或重启了新会话");
+});
+Test("新一轮确认不能被旧轮取消或确认消费", () => {
+    var s = Session(); s.BeginFromOverlay(); var old = s.Window.Latest; old.Cancelled();
+    s.BeginFromOverlay(); var current = s.Window.Latest;
+    old.Cancelled(); old.Confirmed(); s.AdvanceClock(180); Silent(s);
+    current.Confirmed(); s.AdvanceClock(180); Check(s.PlayedNodes.SequenceEqual(["a"]), "旧回调破坏了新确认");
+});
+Test("连续十轮取消、手动OCR、重试均仅接受当轮新确认", () => {
+    var s = Session(); int expected = 0;
+    for (int i = 0; i < 10; i++)
+    {
+        s.BeginFromOverlay(); var cancelled = s.Window.Latest;
+        cancelled.Confirmed(); cancelled.Cancelled(); s.AdvanceClock(180);
+        Check(s.PlayedNodes.Count == expected && !s.AutoPlaybackRunning, "取消轮启动了播放");
+        s.RequestOcr(true); s.Engine!.ConfirmCurrentPosition();
+        s.BeginFromOverlay(); var current = s.Window.Latest;
+        cancelled.Confirmed(); cancelled.Cancelled(); current.Confirmed(); current.Confirmed(); s.AdvanceClock(180);
+        expected++; Check(s.PlayedNodes.Count == expected && s.AutoPlaybackRunning, "重试未起播或重复起播");
+        long oldAudio = s.BoundAudioTicket; s.StopAutoPlayback(); s.CompleteAudio(oldAudio);
+        Check(s.GestureRequests == 0 && !s.AutoPlaybackRunning, "取消后的旧音频补点");
+    }
+    Check(s.OcrRequests == 10, "自动起点额外启动了OCR");
+});
+Test("确认弹窗期间换节点，旧回调不播放新旧节点", () => {
+    var s = Session(); s.BeginFromOverlay(); var old = s.Window.Latest; s.MoveCurrent("b");
+    int before = s.PlayedNodes.Count; old.Confirmed(); s.AdvanceClock(180);
+    Check(s.Engine!.CurrentId == "b" && s.PlayedNodes.Count == before && !s.AutoPlaybackRunning && s.GestureRequests == 0, "旧节点确认生效");
+});
+Test("同packId的新Engine也拒绝旧确认", () => {
+    var s = Session(); s.BeginFromOverlay(); var old = s.Window.Latest;
+    var replacement = new PlaybackEngine(s.Engine!.Pack); replacement.Commit("a"); s.ReplaceEngine(replacement);
+    old.Confirmed(); s.AdvanceClock(180); Silent(s);
+});
+Test("节点未变但导航条件变化也拒绝确认", () => {
+    var s = Session(); s.BeginFromOverlay(); var old = s.Window.Latest;
+    s.Engine!.Choices["menu"] = "p"; old.Confirmed(); s.AdvanceClock(180); Silent(s);
+    Check(s.Status.Contains("变化"), "未说明导航变化");
+});
+Test("节点未变但试听发生后拒绝旧确认", () => {
+    var s = Session(); s.BeginFromOverlay(); var old = s.Window.Latest; s.Engine!.Replay();
+    int before = s.PlayedNodes.Count; old.Confirmed(); s.AdvanceClock(180);
+    Check(!s.AutoPlaybackRunning && s.PlayedNodes.Count == before && s.GestureRequests == 0, "试听换代后仍启动旧确认");
+});
+Test("确认期间切屏或捕获会话变化拒绝起播", () => {
+    foreach (bool sessionChange in new[] { false, true })
+    {
+        var s = Session(); s.BeginFromOverlay();
+        if (sessionChange) s.Screen.SessionId++;
+        else s.Screen.DisplayState = s.Screen.DisplayState with { Revision = s.Screen.DisplayState.Revision + 1 };
+        s.Window.Latest.Confirmed(); s.AdvanceClock(180); Silent(s);
+    }
+});
+Test("确认期间回主界面拒绝起播", () => {
+    var s = Session(); s.BeginFromOverlay(); s.SetForeground(true); s.Window.Latest.Confirmed(); s.AdvanceClock(180); Silent(s);
+});
+Test("重新OCR一次性消费确认，旧确认不能随后起播", () => {
+    var s = Session(); s.BeginFromOverlay(); var request = s.Window.Latest;
+    request.Locate(); request.Locate(); request.Confirmed(); s.AdvanceClock(180);
+    Check(s.OcrRequests == 1, "重复OCR请求"); Silent(s);
+});
+Test("没有当前对白时请求人工OCR，不直接自动播放", () => {
+    var s = Session("menu"); s.BeginFromOverlay();
+    Check(s.OcrRequests == 1 && s.Window.Confirmations.Count == 0, "菜单被当作起点确认"); Silent(s);
+});
+Test("共同线末句可以播完，但分支前零点击", () => {
+    var s = Session("b"); Start(s); Check(s.PlayedNodes.SequenceEqual(["b"]), "末句未播"); s.CompleteAudio();
+    Check(!s.AutoPlaybackRunning && s.GestureRequests == 0 && s.Status.Contains("分支"), "跨过分支或未提示");
+});
+Test("当前已在支线则人工确认也不能自动播放", () => {
+    var s = Session("branch"); s.BeginFromOverlay(); s.Window.Latest.Confirmed(); s.AdvanceClock(180); Silent(s);
+    Check(s.Status.Contains("分支"), "支线拒绝原因错误");
+});
+Test("未核实单句限制在人工确认后仍保留", () => {
+    var s = Session(); var pack = s.Engine!.Pack; var option = pack.ById["menu"].Options[0];
+    option.Verified = false; option.LineIds = ["branch"]; var engine = new PlaybackEngine(pack);
+    Check(engine.ConfirmGameLine("branch"), "未能建立单句限制样本"); engine.PauseForBrowse(); s.ReplaceEngine(engine);
+    s.BeginFromOverlay(); s.Window.Latest.Confirmed(); s.AdvanceClock(180); Silent(s);
+    Check(engine.ReviewRoute != null && s.Status.Contains("单句"), "人工起点抹去了单句核对限制");
+});
+Test("当前缺音则确认后零播放零点击", () => {
+    var s = Session(currentAudio: false); s.BeginFromOverlay(); s.Window.Latest.Confirmed(); s.AdvanceClock(180); Silent(s);
+    Check(s.Status.Contains("没有可用配音"), "未说明当前缺音");
+});
+Test("当前音频路径存在但文件丢失也拒绝起播", () => {
+    var s = Session(); s.Engine!.Pack.ById["a"].Audio = "missing.wav";
+    s.BeginFromOverlay(); s.Window.Latest.Confirmed(); s.AdvanceClock(180); Silent(s);
+    Check(s.Status.Contains("没有可用配音"), "未检查音频文件存在性");
+});
+Test("下一句缺音在当前播完后停止，尚未点击游戏", () => {
+    var s = Session(nextAudio: false); Start(s); s.CompleteAudio();
+    Check(!s.AutoPlaybackRunning && s.GestureRequests == 0 && s.Engine!.CurrentId == "a" && s.Status.Contains("下一句缺少"), "缺音仍点击");
+});
+Test("共同线播放完成只申请一次手势，成功后再播下一句", () => {
+    var s = Session(); Start(s); long firstAudio = s.BoundAudioTicket; s.CompleteAudio(firstAudio); s.CompleteAudio(firstAudio);
+    Check(s.GestureRequests == 1 && s.Engine!.CurrentId == "a", "重复音频完成补点或未等手势就推进");
+    GameAdvanceAccessibilityService.CompleteOldestGesture(); s.AdvanceClock(450);
+    Check(s.Engine!.CurrentId == "b" && s.PlayedNodes.SequenceEqual(["a", "b"]), "成功手势后未推进一次");
+    s.CompleteAudio(firstAudio); Check(s.GestureRequests == 1, "旧音频结束引起新点击");
+    s.CompleteAudio(); Check(!s.AutoPlaybackRunning && s.GestureRequests == 1, "末句后跨入分支");
+});
+Test("人工起播不再受15秒开局OCR期限限制", () => {
+    var s = Session(); Start(s); s.AdvanceClock(16_000);
+    Check(s.AutoPlaybackRunning && s.OcrRequests == 0 && s.PlayedNodes.SequenceEqual(["a"]) && s.GestureRequests == 0, "仍等待OCR或超过15秒暂停");
+});
+Test("取消后旧手势返回不得推进重启会话", () => {
+    var s = Session(); Start(s); s.CompleteAudio(); s.StopAutoPlayback(); Start(s);
+    GameAdvanceAccessibilityService.CompleteOldestGesture(); s.AdvanceClock(450);
+    Check(s.Engine!.CurrentId == "a" && s.PlayedNodes.SequenceEqual(["a", "a"]) && s.GestureRequests == 1 && s.AutoPlaybackRunning, "旧手势覆盖新起点");
+});
+Test("取消后的450ms延迟推进不得影响重新确认", () => {
+    var s = Session(); Start(s); s.CompleteAudio(); GameAdvanceAccessibilityService.CompleteOldestGesture();
+    s.StopAutoPlayback(); s.BeginFromOverlay(); var request = s.Window.Latest; s.AdvanceClock(450);
+    Check(s.Engine!.CurrentId == "a" && !s.AutoPlaybackRunning, "旧延迟回调推进当前位置");
+    request.Confirmed(); s.AdvanceClock(180); Check(s.AutoPlaybackRunning && s.Engine.CurrentId == "a", "重试确认失效");
+});
+Test("点击失败停止且不重试", () => {
+    var s = Session(); Start(s); s.CompleteAudio(); GameAdvanceAccessibilityService.CompleteOldestGesture(false); s.AdvanceClock(2_000);
+    Check(!s.AutoPlaybackRunning && s.GestureRequests == 1 && s.Engine!.CurrentId == "a", "手势失败仍重试或推进");
+});
+Test("失焦和显示变化由真实环境定时器停止", () => {
+    foreach (bool displayChange in new[] { false, true })
+    {
+        var s = Session(); Start(s);
+        if (displayChange) s.Screen.DisplayState = s.Screen.DisplayState with { Revision = s.Screen.DisplayState.Revision + 1 };
+        else GameAdvanceAccessibilityService.Availability = GameAdvanceAccessibilityService.Availability with { TargetForeground = false };
+        s.AdvanceClock(750); Check(!s.AutoPlaybackRunning && s.GestureRequests == 0, "环境变化未停止");
+    }
+});
+Test("共同线后接Gap、未知连接或结束均不点击", () => {
+    foreach (string? next in new string?[] { "gap", "unknown", null })
+    {
+        var s = Session("b"); s.Engine!.Pack.ById["b"].NextId = next; Start(s); s.CompleteAudio();
+        Check(!s.AutoPlaybackRunning && s.GestureRequests == 0 && s.PlayedNodes.SequenceEqual(["b"]), "未知边界仍点击");
+    }
+});
+
+string output = Path.GetFullPath(args.FirstOrDefault() ?? "android/Tests/AutoplaySession/results.json");
+var report = new {
+    createdUtc = DateTimeOffset.UtcNow, passed = failures == 0, count = results.Count, failures, tests = results,
+    productionAutoplaySha256 = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes("android/AppSession.Autoplay.cs"))),
+    scope = "直接编译实际 AppSession.Autoplay.cs、AutoPlaybackCycle、设置/点击目标/显示模型、OCR调度与剧情核心。外部 Android 时钟/Handler/音频/确认窗/无障碍通过受控 stub 注入；只验证此 partial 的回调和导航，不声称运行了 AppSession.cs、真实系统触摸或音频解码。音频文件仅是存在性测试夹具。"
+};
+Directory.CreateDirectory(Path.GetDirectoryName(output)!);
+File.WriteAllText(output, JsonSerializer.Serialize(report, Json.Options));
+Console.WriteLine($"AutoplaySession: {results.Count - failures}/{results.Count} passed; report={output}");
+return failures == 0 ? 0 : 1;
+
+static Pack Fixture(bool currentAudio, bool nextAudio)
+{
+    string root = Path.GetFullPath(Path.Combine("android/Tests/AutoplaySession/artifacts", Guid.NewGuid().ToString("N")));
+    Directory.CreateDirectory(root);
+    foreach (string file in new[] { "a.wav", "b.wav", "branch.wav" }) File.WriteAllBytes(Path.Combine(root, file), [0]);
+    var p = new Pack { Root = root, Id = "autoplay-session-fixture", SchemaVersion = 1,
+        Chapters = [new() { Id = "c", Sections = [new() { Id = "s", Title = "第一节", StartId = "a" }] }],
+        Nodes = [
+            new() { Id = "a", SectionId = "s", Speaker = "角色", Text = "第一句", NextId = "b", Audio = currentAudio ? "a.wav" : null },
+            new() { Id = "b", SectionId = "s", Text = "共同线末句", NextId = "menu", Audio = nextAudio ? "b.wav" : null },
+            new() { Id = "menu", SectionId = "s", Kind = "choice", Text = "请选择", Options = [new() { Id = "o", PathId = "p", Label = "进入支线", TargetId = "branch", MergeId = "merge", Verified = true }] },
+            new() { Id = "branch", SectionId = "s", PathId = "p", Text = "支线对白", NextId = "merge", Audio = "branch.wav" },
+            new() { Id = "merge", SectionId = "s", Kind = "merge" },
+            new() { Id = "gap", SectionId = "s", Kind = "gap" }
+        ]
+    };
+    p.Validate(); return p;
+}

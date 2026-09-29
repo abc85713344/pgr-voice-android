@@ -1,0 +1,19 @@
+# .NET 构建产物
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# Python 缓存
+__pycache__/
+*.pyc
+
+# 测试运行产物（每次运行自动生成）
+artifacts/
+
+# 签名材料 —— 绝不入库
+*.keystore
+*.jks
+*.p12
+signing-secret.json

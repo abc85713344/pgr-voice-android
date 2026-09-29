@@ -1,0 +1,42 @@
+{
+  "passed": true,
+  "count": 7,
+  "failures": 0,
+  "tests": [
+    {
+      "name": "切区首帧清空旧共识，保留armed且新区须连续两次才播放",
+      "passed": true
+    },
+    {
+      "name": "切区后旧区域已经生成的Advance决策不能迟到应用",
+      "passed": true
+    },
+    {
+      "name": "切回用户框时同样清空中央区的一次识别",
+      "passed": true
+    },
+    {
+      "name": "切区不能替用户重新开启已暂停的跟随",
+      "passed": true
+    },
+    {
+      "name": "切区清空OCR调度但旧推理占位保留，旧完成不算新区一次",
+      "passed": true
+    },
+    {
+      "name": "真实居中旁白经宽ROI缩小后仍足够亮点，可通过稳定门控",
+      "passed": true
+    },
+    {
+      "name": "两张同一句真图的箭头/采样微差不会重复重置共识",
+      "passed": true
+    }
+  ],
+  "masks": {
+    "firstInk": 53,
+    "resumedInk": 52,
+    "difference": 3,
+    "union": 54
+  },
+  "scope": "直接测试生产核心FollowSafetyController、SubtitleStability、OcrInferenceSchedule；按AppSession现有调用协议输入切区事件。没有执行Android AppSession，原始旧regionGeneration回调守卫只读审查。Pillow掩码只是主机近似。"
+}

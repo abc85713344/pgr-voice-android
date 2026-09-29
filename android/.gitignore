@@ -1,0 +1,6 @@
+bin/
+obj/
+*.user
+*.keystore
+*.p12
+signing-secret.json

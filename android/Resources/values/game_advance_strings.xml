@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="game_advance_service_name">剧情自动下一句（可选）</string>
+    <string name="game_advance_service_summary">点按跟随：你点一次，游戏和配音各前进一步；也支持可选的共同线自动播放。</string>
+    <string name="game_advance_service_description">这是可选的剧情点击功能。开启点按跟随后，你每次轻点已设置的区域，应用在同一位置触碰战双一次，并推进配音；无需屏幕捕获或 OCR。共同线自动播放则在语音结束后点击。遇到分支、未知位置或离开游戏时停止。服务需要手势权限及当前窗口的应用包名和边界，防止误点其他应用或系统弹窗。不读取窗口文字、输入内容或子节点，不上传窗口信息。此服务不是面向残障人士的辅助工具。你可以随时停止或在此处关闭权限；仅开启权限不会点击。普通小按钮播放和 OCR 跟随不需要此权限。</string>
+</resources>

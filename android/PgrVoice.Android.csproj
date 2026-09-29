@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup><Compile Remove="Tests/**/*.cs;**/Tests/**/*.cs" /></ItemGroup>
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>29</SupportedOSPlatformVersion>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>PgrVoice.AndroidApp</RootNamespace>
+    <ApplicationId>cn.pgrvoice.player</ApplicationId>
+    <ApplicationTitle>战双剧情配音</ApplicationTitle>
+    <ApplicationVersion>14</ApplicationVersion>
+    <ApplicationDisplayVersion>0.3.10</ApplicationDisplayVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
+    <AndroidPackageFormats>apk</AndroidPackageFormats>
+    <AndroidUseAapt2>true</AndroidUseAapt2>
+    <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+    <PublishTrimmed>false</PublishTrimmed>
+    <RunAOTCompilation>false</RunAOTCompilation>
+    <AndroidLinkMode>None</AndroidLinkMode>
+    <!-- 当前不裁剪构建的静态 JNI 表遗漏应用回调；显式使用运行时注册，Release 与 Debug 均保留生命周期入口。 -->
+    <AndroidEnableMarshalMethods>false</AndroidEnableMarshalMethods>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../core/PgrVoice.Core.csproj" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.30.0" />
+    <PackageReference Include="Xamarin.AndroidX.Media3.ExoPlayer" Version="1.11.0" />
+    <PackageReference Include="Xamarin.Google.MLKit.TextRecognition.Chinese" Version="116.0.1.8" />
+  </ItemGroup>
+</Project>

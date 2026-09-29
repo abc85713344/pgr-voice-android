@@ -1,0 +1,149 @@
+using System.Text.Json;
+using PgrVoice.AndroidApp;
+
+var tests = new List<object>(); int failures = 0;
+void Test(string name, Action action)
+{
+    try { action(); tests.Add(new { name, passed = true }); }
+    catch (Exception ex) { failures++; tests.Add(new { name, passed = false, error = ex.Message }); }
+}
+void Check(bool condition, string message) { if (!condition) throw new InvalidOperationException(message); }
+bool Tap(TapFollowGestureGate g, long down, long up)
+{
+    g.Begin(3, 1, 200, 300, down);
+    return g.TryEnd(3, 1, 201, 301, up, out _);
+}
+
+Test("单指轻点只回报一次且保留Up物理坐标", () =>
+{
+    var g = new TapFollowGestureGate(12); Check(g.Begin(3, 1, 200, 300, 1000), "Down未接受");
+    Check(g.TryEnd(3, 1, 203.5f, 302.5f, 1150, out var p) && p == new TapFollowPoint(203.5f, 302.5f), "坐标不是Up位置");
+    Check(!g.TryEnd(3, 1, 203.5f, 302.5f, 1150, out _), "重复Up产生第二次请求");
+});
+Test("孤立Up不能发出请求", () => { var g = new TapFollowGestureGate(12); Check(!g.TryEnd(0, 1, 10, 10, 1000, out _), "无Down也触发"); });
+Test("700ms边界接受，701ms长按拒绝", () =>
+{
+    Check(Tap(new(12), 1000, 1700), "700ms轻点被拒"); Check(!Tap(new(12), 1000, 1701), "长按被当轻点");
+});
+Test("12像素边界接受，超出拒绝", () =>
+{
+    var g = new TapFollowGestureGate(12); g.Begin(0, 1, 100, 100, 1000);
+    Check(g.TryEnd(0, 1, 112, 100, 1100, out _), "边界位移被拒");
+    g.Begin(0, 1, 100, 100, 1500); Check(!g.TryEnd(0, 1, 112.1f, 100, 1600, out _), "过量位移触发");
+});
+Test("斜向位移使用距离而非分别比较横纵", () =>
+{
+    var g = new TapFollowGestureGate(12); g.Begin(0, 1, 100, 100, 1000);
+    Check(!g.TryEnd(0, 1, 110, 110, 1100, out _), "斜向拖动误触发");
+});
+Test("拖出后移回原点仍取消", () =>
+{
+    var g = new TapFollowGestureGate(12); g.Begin(0, 1, 100, 100, 1000); g.Move(0, 1, 130, 100, 1050); g.Move(0, 1, 100, 100, 1100);
+    Check(!g.TryEnd(0, 1, 100, 100, 1200, out _), "拖出后回来触发");
+});
+Test("第二根手指加入再移走也不能恢复为轻点", () =>
+{
+    var g = new TapFollowGestureGate(12); g.Begin(0, 1, 100, 100, 1000); g.Move(0, 2, 100, 100, 1050);
+    Check(!g.TryEnd(0, 1, 100, 100, 1100, out _), "多指归单指后触发");
+});
+Test("多指Down和多指Up均拒绝", () =>
+{
+    var g = new TapFollowGestureGate(12); Check(!g.Begin(0, 2, 100, 100, 1000), "多指Down接受");
+    g.Begin(0, 1, 100, 100, 1200); Check(!g.TryEnd(0, 2, 100, 100, 1250, out _), "多指Up接受");
+});
+Test("指针身份改变立即取消", () =>
+{
+    var g = new TapFollowGestureGate(12); g.Begin(3, 1, 100, 100, 1000);
+    Check(!g.TryEnd(5, 1, 100, 100, 1100, out _), "其他指针结束旧触摸");
+});
+Test("系统取消或撤窗后残留Up不触发", () =>
+{
+    var g = new TapFollowGestureGate(12); g.Begin(0, 1, 100, 100, 1000); g.Cancel(); g.Cancel();
+    Check(!g.TryEnd(0, 1, 100, 100, 1100, out _), "Cancel未消除手势");
+});
+Test("重复Down中断原手势，不拼接一个新轻点", () =>
+{
+    var g = new TapFollowGestureGate(12); g.Begin(0, 1, 100, 100, 1000);
+    Check(!g.Begin(0, 1, 100, 100, 1010) && !g.TryEnd(0, 1, 100, 100, 1100, out _), "重复Down继续触发");
+});
+Test("快速连点299ms去重，300ms可再次轻点", () =>
+{
+    var g = new TapFollowGestureGate(12); Check(Tap(g, 900, 1000), "首点失败");
+    Check(!Tap(g, 1250, 1299), "299ms没有去重"); Check(Tap(g, 1299, 1300), "300ms被错误去重");
+});
+Test("撤窗重挂不会清除300ms去重时钟", () =>
+{
+    var g = new TapFollowGestureGate(12); Check(Tap(g, 900, 1000), "首点失败"); g.Cancel();
+    Check(!Tap(g, 1050, 1100), "撤窗绕过去重");
+});
+Test("拒绝反向时间和非法物理坐标", () =>
+{
+    var g = new TapFollowGestureGate(12); Check(!g.Begin(0, 1, float.NaN, 1, 1000), "NaN接受");
+    Check(!g.Begin(0, 1, -1, 1, 1000), "负坐标接受"); Check(!g.Begin(0, 1, 1, 1, -1), "负时间接受");
+    g.Begin(0, 1, 1, 1, 1000); Check(!g.TryEnd(0, 1, 1, 1, 999, out _), "反向时间接受");
+});
+Test("不同密度由调用方传像素阈值，24px可对应12dp", () =>
+{
+    var g = new TapFollowGestureGate(24); g.Begin(0, 1, 100, 100, 1000);
+    Check(g.TryEnd(0, 1, 124, 100, 1100, out _), "高密度12dp被按12px拒绝");
+});
+Test("注入成功仅允许一次推进", () =>
+{
+    var g = new TapFollowRequestGate(); Check(g.TryBegin(1000, out var t) && g.IsInFlight && g.IsCurrent(t), "未建立票据");
+    Check(g.TryComplete(t, true, out bool advance) && advance && !g.IsInFlight, "成功未放行");
+    Check(!g.TryComplete(t, true, out advance) && !advance, "重复成功重复放行");
+});
+Test("注入进行中不允许并发请求", () =>
+{
+    var g = new TapFollowRequestGate(); g.TryBegin(1000, out var t); Check(!g.TryBegin(5000, out _), "进行中并发");
+    Check(g.TryComplete(t, true), "并发拒绝破坏原票据");
+});
+Test("注入失败释放占位但不得推进", () =>
+{
+    var g = new TapFollowRequestGate(); g.TryBegin(1000, out var t);
+    Check(g.TryComplete(t, false, out bool advance) && !advance && !g.IsInFlight, "失败未正确释放");
+    Check(g.TryBegin(1300, out _), "失败后不能再次点击");
+});
+Test("取消会话后的旧成功回调不能推进", () =>
+{
+    var g = new TapFollowRequestGate(); g.TryBegin(1000, out var t); long epoch = g.Epoch; g.Invalidate();
+    Check(g.Epoch > epoch && !g.IsInFlight && !g.IsCurrent(t) && !g.TryComplete(t, true), "旧epoch完成放行");
+});
+Test("旧回调不能清掉新会话正在进行的票据", () =>
+{
+    var g = new TapFollowRequestGate(); g.TryBegin(1000, out var old); g.Invalidate(); g.TryBegin(1400, out var current);
+    Check(!g.TryComplete(old, true, out _) && g.IsCurrent(current), "旧回调夺走新区占位");
+    Check(g.TryComplete(current, true), "新区正常完成失败");
+});
+Test("同epoch旧请求迟到也不能影响较新的请求", () =>
+{
+    var g = new TapFollowRequestGate(); g.TryBegin(1000, out var old); g.TryComplete(old, false); g.TryBegin(1400, out var current);
+    Check(!g.TryComplete(old, true) && g.IsCurrent(current) && g.TryComplete(current, true), "同epoch票据Id未门控");
+});
+Test("请求300ms去重并跨Invalidate保留", () =>
+{
+    var g = new TapFollowRequestGate(); g.TryBegin(1000, out var t); g.TryComplete(t, true); g.Invalidate();
+    Check(!g.TryBegin(1299, out _) && g.TryBegin(1300, out _), "请求去重边界错误");
+});
+Test("默认票据或伪造编号不能推进也不占槽", () =>
+{
+    var g = new TapFollowRequestGate(); Check(!g.TryComplete(default, true), "默认票据触发"); g.TryBegin(1000, out var t);
+    Check(!g.TryComplete(t with { Id = t.Id + 1 }, true) && g.IsCurrent(t), "错误编号破坏有效请求");
+});
+Test("轻点到注入结束的流程只在成功回调推进", () =>
+{
+    var gesture = new TapFollowGestureGate(12); var request = new TapFollowRequestGate(); int advances = 0;
+    Check(Tap(gesture, 900, 1000) && request.TryBegin(1000, out _), "轻点未开始请求");
+    Check(advances == 0, "注入前已推进"); request.Invalidate();
+    TapFollowRequestTicket ticket = default;
+    Check(Tap(gesture, 1300, 1400) && request.TryBegin(1400, out ticket), "重试无法建立");
+    if (request.TryComplete(ticket, true, out bool allowed) && allowed) advances++;
+    if (request.TryComplete(ticket, true, out allowed) && allowed) advances++;
+    Check(advances == 1, "成功完成次数不唯一");
+});
+var report = new { passed = failures == 0, count = tests.Count, failures, tests,
+    scope = "纯逻辑单指轻点和注入票据回归；未运行Android窗口、无障碍注入或真实游戏，不证明游戏一定接收注入。" };
+string json = JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+Console.WriteLine(json);
+if (args.Length > 0) { Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(args[0]))!); File.WriteAllText(args[0], json); }
+return failures == 0 ? 0 : 1;

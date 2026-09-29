@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <style name="AppTheme" parent="android:style/Theme.Material.NoActionBar">
+    <item name="android:fontFamily">sans-serif</item>
+    <item name="android:colorAccent">#E94D5A</item>
+    <item name="android:colorControlNormal">#929DAA</item>
+    <item name="android:colorControlActivated">#E94D5A</item>
+    <item name="android:colorControlHighlight">#33E94D5A</item>
+    <item name="android:textColorPrimary">#F2F3F5</item>
+    <item name="android:textColorSecondary">#929DAA</item>
+    <item name="android:textColorHint">#929DAA</item>
+    <item name="android:colorBackground">#101216</item>
+    <item name="android:colorBackgroundFloating">#22272F</item>
+    <item name="android:windowLightNavigationBar">false</item>
+    <item name="android:windowLightStatusBar">false</item>
+    <item name="android:statusBarColor">#101216</item>
+    <item name="android:navigationBarColor">#101216</item>
+    <item name="android:windowBackground">#101216</item>
+    <item name="android:windowActionModeOverlay">true</item>
+    <item name="android:alertDialogTheme">@style/PgrDialogTheme</item>
+  </style>
+  <style name="PgrDialogTheme" parent="android:style/Theme.Material.Dialog.Alert">
+    <item name="android:fontFamily">sans-serif</item>
+    <item name="android:colorAccent">#E94D5A</item>
+    <item name="android:colorControlActivated">#E94D5A</item>
+    <item name="android:textColorPrimary">#F2F3F5</item>
+    <item name="android:textColorSecondary">#929DAA</item>
+    <item name="android:textColorHint">#929DAA</item>
+    <item name="android:colorBackground">#22272F</item>
+    <item name="android:colorBackgroundFloating">#22272F</item>
+    <item name="android:windowBackground">#22272F</item>
+  </style>
+</resources>

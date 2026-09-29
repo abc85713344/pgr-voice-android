@@ -1,0 +1,164 @@
+using PgrVoice;
+using PgrVoice.AndroidApp;
+using System.Text.Json;
+var results = new List<object>();int failures=0;
+void Test(string name,Action action){try{action();results.Add(new{name,passed=true});}catch(Exception e){failures++;results.Add(new{name,passed=false,error=e.ToString()});}}
+void Check(bool value,string message){if(!value)throw new Exception(message);}
+AppSession Session(){var e=new PlaybackEngine(Pack());e.Commit("a");return new(e);}
+Test("打开台词页暂停且列出当前节台词，空Notify不重建",()=>{var s=Session();s.Open(OverlayBrowsePage.Lines);Check(s.Engine!.Mode==RunMode.Paused&&s.Model.Items.Count==3&&s.Model.Items.Any(i=>i.Selected),"台词页内容或暂停错误");int n=s.Renders;for(int i=0;i<20;i++)s.Tick();Check(s.Renders==n,"无变化仍重建");});
+Test("翻阅小节不更改剧情或SectionId，能回到当前节",()=>{var s=Session();s.Open(OverlayBrowsePage.Lines);s.Choose(s.Model,s.Model.Actions!.Single(a=>a.Title=="下一小节"));Check(s.Engine!.CurrentId=="a"&&s.SectionId=="s1"&&s.Model.Items.Count==1,"翻节改变进度");s.Choose(s.Model,s.Model.Actions!.Single(a=>a.Title=="回到当前小节"));Check(s.Model.Items.Count==3,"无法返回");});
+Test("确认选句只推进一次，旧revision重复点击无效",()=>{var s=Session();s.Open(OverlayBrowsePage.Lines);var model=s.Model;var item=model.Items.Single(i=>i.Title.Contains("第二句"));s.Choose(model,item);Check(s.Engine!.CurrentId=="b"&&s.Plays==1,"选句失败");s.Choose(model,item);Check(s.Engine.CurrentId=="b"&&s.Plays==1,"重复确认发声");});
+Test("旧章节条目不能操作新Engine",()=>{var s=Session();s.Open(OverlayBrowsePage.Lines);var old=s.Model;var e=new PlaybackEngine(Pack());e.Commit("a");s.Replace(e);s.Choose(old,old.Items.Single(i=>i.Title.Contains("第二句")));Check(e.CurrentId=="a"&&s.Plays==0,"跨章节旧操作生效");});
+Test("定位页保留候选，替换候选后旧确认无效",()=>{var s=Session();var list=new[]{new MatchCandidate(s.Engine!.Pack.ById["b"],1,"第二句",null,"测试")};s.Candidates=list;s.Open(OverlayBrowsePage.Locate);Check(ReferenceEquals(s.Candidates,list)&&s.Model.Items.Count==1,"浏览清了候选");var old=s.Model;s.Candidates=new[]{new MatchCandidate(s.Engine.Pack.ById["a"],1,"第一句",null,"新候选")};s.Choose(old,old.Items[0]);Check(s.Engine.CurrentId=="a"&&s.Plays==0,"旧候选被采用");});
+Test("重新OCR指定结果返回悬浮页",()=>{var s=Session();s.Open(OverlayBrowsePage.Locate);s.Choose(s.Model,s.Model.Actions!.Single(a=>a.Title=="OCR 重新定位"));Check(s.OcrRequests==1,"没有请求OCR");});
+Test("悬浮切换定位范围不推进或启动识别，旧按钮失效",()=>{var s=Session();s.Open(OverlayBrowsePage.Locate);var old=s.Model;var action=old.Actions!.Single(a=>a.Title=="定位范围：全画面");s.Choose(old,action);Check(!s.Settings.OcrFullScreen&&s.Engine!.CurrentId=="a"&&s.Plays==0&&s.OcrRequests==0,"切换范围推进或启动OCR");s.Choose(old,action);Check(!s.Settings.OcrFullScreen,"旧按钮重复生效");Check(s.Model.Actions!.Any(a=>a.Title=="定位范围：框选区域"),"范围显示未更新");});
+Test("分支页保留菜单状态，只明确确认后选分支",()=>{var s=Session();s.Engine!.Commit("menu");s.Open(OverlayBrowsePage.Branches);Check(s.Engine.Mode==RunMode.Choice&&s.Model.Items.Count==1&&s.Plays==0,"浏览菜单改变进度");s.Choose(s.Model,s.Model.Items[0]);Check(s.Engine.CurrentId=="branch"&&s.Plays==1,"明确分支无法播放");});
+Test("书签命名包含角色位置，恢复保持静音",()=>{var s=Session();s.Open(OverlayBrowsePage.History);s.Choose(s.Model,s.Model.Actions!.Single());var mark=s.Progress.Bookmarks(s.Engine!.Pack.Id).Single();Check(mark.Label.Contains("角色")&&mark.Label.Contains("第一节")&&mark.Label.Contains("第 1 句"),"书签命名错误");s.Engine.Commit("b");s.Open(OverlayBrowsePage.History);int before=s.Plays;s.Choose(s.Model,s.Model.Items.Single(i=>i.Title.StartsWith("★")));Check(s.Engine.CurrentId=="a"&&s.Plays==before&&s.Engine.Mode!=RunMode.Following,"恢复自动发声");});
+Test("履历只取最近40条且恢复静音",()=>{var s=Session();for(int i=0;i<55;i++)s.Engine!.Commit(i%2==0?"a":"b");s.Open(OverlayBrowsePage.History);Check(s.Model.Items.Count==40,"履历没有限制40条");int before=s.Plays;s.Choose(s.Model,s.Model.Items[1]);Check(s.Plays==before&&s.Engine!.Mode==RunMode.Paused,"履历恢复发声");});
+Test("Invalidate撤销弹窗令牌但保留当前页",()=>{var s=Session();s.Open(OverlayBrowsePage.Lines);var old=s.Model;s.CancelPending();s.Choose(old,old.Items[1]);Check(s.Engine!.CurrentId=="a"&&s.Model.Page==OverlayBrowsePage.Lines&&s.Model.Revision!=old.Revision,"旧令牌仍有效或丢失当前页");});
+Test("收起浏览页后Next不重建整节，重新打开按新进度刷新",()=>{var s=Session();s.Open(OverlayBrowsePage.Lines);int count=s.Renders;s.BrowseVisible=false;s.Command(e=>e.Next(true));Check(s.Renders==count,"隐藏页面仍重建");s.Open(OverlayBrowsePage.Lines);Check(s.Renders>count&&s.Model.Items.Single(i=>i.Title.Contains("第二句")).Selected,"重开页进度未刷新");});
+Test("定位页显示截断原文和当前位置，原文变化刷新但不推进",()=>{var s=Session();s.OcrText=new string('字',300);s.Open(OverlayBrowsePage.Locate);Check(s.Model.Hint.Contains("第一句")&&s.Model.Hint.Contains("仅供核对")&&s.Model.Hint.Length<360,"未显示位置或原文未截断");int count=s.Renders;s.OcrText="新的识别原文";s.Tick();Check(s.Renders>count&&s.Model.Hint.Contains("新的识别原文")&&s.Plays==0,"原文更新未刷新或自行播放");});
+Test("清候选或更换跟随代次后可人工重新匹配原证据，准备阶段无播放",()=>{var s=Session();s.OcrText="第二句";s.StoreOcr("s1",[new(){Text="第二句",Score=.99}]);s.Command(e=>e.PauseForBrowse());Check(s.CanReviewRecognizedText&&s.Candidates.Count==0,"Invalidate误清识别证据");Check(s.PrepareRecognizedTextCandidates()&&s.Candidates.Single().Node.Id=="b"&&s.Engine!.CurrentId=="a"&&s.Plays==0,"重新匹配采用了旧Engine句或提前播放");});
+Test("同packId的新Engine也不能采用旧识别证据",()=>{var s=Session();s.OcrText="第二句";s.StoreOcr("s1",[new(){Text="第二句",Score=.99}]);var next=new PlaybackEngine(Pack());next.Commit("a");s.Replace(next);Check(!s.CanReviewRecognizedText&&!s.PrepareRecognizedTextCandidates()&&s.Candidates.Count==0&&next.CurrentId=="a"&&s.Plays==0,"跨Engine采用旧证据");});
+Test("没有识别证据时明确拒绝，不回退确认旧当前位置",()=>{var s=Session();Check(!s.PrepareRecognizedTextCandidates()&&s.Status.Contains("还没有")&&s.Engine!.CurrentId=="a"&&s.Plays==0,"无证据时错误确认");});
+Test("零匹配清候选并提示无法采用，不改位置不播音",()=>{var s=Session();s.Candidates=[new(s.Engine!.Pack.ById["a"],1,"第一句",null)];s.OcrText="XYZABCDEFG0123456789";s.StoreOcr("s1",[new(){Text=s.OcrText,Score=.99}]);Check(!s.PrepareRecognizedTextCandidates()&&s.Candidates.Count==0&&s.Status.Contains("无法采用")&&s.Engine.CurrentId=="a"&&s.Plays==0,"无匹配回退到当前句");});
+Test("保存的文字与框坐标深拷贝，调用方改写不能污染回看",()=>{var s=Session();var b=new OcrBlock{Text="第二句",Score=.99,Box=[[10,20],[30,20],[30,40],[10,40]]};s.OcrText=b.Text;s.StoreOcr("s1",[b]);b.Text="第一句";b.Box[0][0]=900;Check(s.PrepareRecognizedTextCandidates()&&s.Candidates.Single().Node.Id=="b"&&s.Candidates.Single().Region![0]==10,"回看证据被改写");});
+Test("浏览其他小节仍按原识别小节匹配，不移动剧情",()=>{var s=Session();s.OcrText="第二句";s.StoreOcr("s1",[new(){Text="第二句",Score=.99}]);s.SectionId="s2";Check(s.PrepareRecognizedTextCandidates()&&s.Candidates.Single().Node.SectionId=="s1"&&s.SectionId=="s2"&&s.Engine!.CurrentId=="a","匹配使用了当前浏览小节");});
+Test("原识别小节失效后拒绝采用",()=>{var s=Session();s.OcrText="第二句";s.StoreOcr("s1",[new(){Text="第二句",Score=.99}]);s.Engine!.Pack.Chapters[0].Sections.RemoveAll(x=>x.Id=="s1");Check(!s.CanReviewRecognizedText&&!s.PrepareRecognizedTextCandidates()&&s.Plays==0,"失效小节仍采用");});
+Test("显示原文不是同次证据时拒绝采用",()=>{var s=Session();s.OcrText="第二句";s.StoreOcr("s1",[new(){Text="第二句",Score=.99}]);s.OcrText="另一份原文";Check(!s.CanReviewRecognizedText&&!s.PrepareRecognizedTextCandidates()&&s.Candidates.Count==0,"原文与证据错配");});
+Test("悬浮采用原文先只产生候选，第二步选句确认才播放",()=>{var s=Session();s.OcrText="第二句";s.StoreOcr("s1",[new(){Text="第二句",Score=.99}]);s.Open(OverlayBrowsePage.Locate);var action=s.Model.Actions!.Single(a=>a.Title=="采用上次识别原文");Check(!action.RequiresConfirmation,"准备动作多加了一次确认");s.Choose(s.Model,action);Check(s.Candidates.Count==1&&s.Model.Items.Single().RequiresConfirmation&&s.Engine!.CurrentId=="a"&&s.Plays==0,"准备阶段已播放");s.Choose(s.Model,s.Model.Items.Single());Check(s.Engine!.CurrentId=="b"&&s.Plays==1,"明确采用识别候选未播放正确句");});
+Test("选分支后保留两句正文及高亮，下一句通过人工推进到段末菜单",()=>
+{
+    var s=BranchSession();ChooseContaining(s,s.Model.Items,"连续话题");
+    Check(s.Engine!.CurrentId=="branch-a"&&s.Plays==1,"未进入分支首句");
+    Check(s.Model.Title.Contains("当前支线")&&s.Model.Title.Contains("连续话题")&&s.Model.Items.Count==2&&s.Model.Items.All(i=>i.IsDialogue),"选分支后未显示该段两句正文");
+    Check(s.Model.Items.Single(i=>i.Selected).Title.Contains("询问现状"),"首句未高亮");
+    Check(s.Model.Actions![0].Title.Contains("下一句"),"下一句没有位于首项");
+    var first=s.Model;var next=NextAction(s);s.Choose(first,next);
+    Check(s.Engine.CurrentId=="branch-b"&&s.Plays==2&&s.ManualSteps==1,"下一句没有调用人工推进并播放正文");
+    Check(s.Model.Items.Single(i=>i.Selected).Title.Contains("这是完整回答"),"末句未高亮");
+    s.Choose(first,next);Check(s.Engine.CurrentId=="branch-b"&&s.Plays==2&&s.ManualSteps==1,"旧下一句重复推进");
+    s.Choose(s.Model,NextAction(s));
+    Check(s.Engine.CurrentId=="nested-menu"&&s.Engine.Mode==RunMode.Choice&&s.Plays==2&&s.ManualSteps==2,"未在段末进入菜单并保持静音");
+    Check(s.Model.Items.Single().Title.Contains("继续提问"),"段末未立即显示具体选项");
+});
+Test("支线重播只播放当前句，不推进且旧重播令牌失效",()=>
+{
+    var s=BranchSession();ChooseContaining(s,s.Model.Items,"连续话题");var old=s.Model;
+    var replay=old.Actions!.Single(a=>a.Title.Contains("重播当前句"));s.Choose(old,replay);
+    Check(s.Engine!.CurrentId=="branch-a"&&s.Plays==2,"重播改变位置或没有播放");
+    s.Choose(old,replay);Check(s.Engine.CurrentId=="branch-a"&&s.Plays==2,"迟到重播又播放");
+});
+Test("从支线打开目录再定位其他菜单，立即显示该菜单选项",()=>
+{
+    var s=BranchSession();ChooseContaining(s,s.Model.Items,"连续话题");var branch=s.Model;var oldNext=NextAction(s);int plays=s.Plays;
+    OpenDirectory(s);ChooseContaining(s,s.Model.Items,"备用菜单");
+    Check(s.Engine!.CurrentId=="other-menu"&&s.Engine.Mode==RunMode.Choice&&s.Plays==plays,"定位菜单改变了声音或位置错误");
+    Check(s.Model.Items.Count==1&&s.Model.Items[0].Title.Contains("另一人物话题"),"定位后仍被困在完整目录");
+    s.Choose(branch,oldNext);Check(s.Engine.CurrentId=="other-menu"&&s.ManualSteps==0&&s.Plays==plays,"旧支线下一句污染新菜单");
+    ChooseContaining(s,s.Model.Items,"另一人物话题");Check(s.Engine.CurrentId=="other-line"&&s.Plays==plays+1,"新菜单选项无法使用");
+});
+Test("目录返回当前支线保持位置静音，回到当前分支恢复菜单选项",()=>
+{
+    var s=BranchSession();ChooseContaining(s,s.Model.Items,"连续话题");int plays=s.Plays;
+    OpenDirectory(s);ChooseContaining(s,s.Model.Actions!,"当前支线");
+    Check(s.Engine!.CurrentId=="branch-a"&&s.Plays==plays&&s.Model.Items.Count==2&&s.Model.Items.Any(i=>i.Selected),"目录返回支线改变剧情或未恢复正文");
+    s.Command(e=>{if(!e.OpenGameMenu("nested-menu","s"))throw new Exception(e.NavigationError);});
+    OpenDirectory(s);ChooseContaining(s,s.Model.Actions!,"回到当前分支");
+    Check(s.Engine.CurrentId=="nested-menu"&&s.Model.Items.Count==1&&s.Model.Items[0].Title.Contains("继续提问")&&s.Plays==plays,"目录返回菜单失败");
+});
+Test("未核实路线仅列明示LineIds，逐句确认后的下一句返回菜单",()=>
+{
+    var s=BranchSession();s.ConfirmLine("review-a");s.Open(OverlayBrowsePage.Branches);
+    Check(s.Model.Items.Count==2&&s.Model.Items.All(i=>!i.Title.Contains("不应曝光"))&&s.Model.Items.Any(i=>i.Selected),"未核实列表暴露非LineIds台词");
+    Check(s.Model.Items.All(i=>i.RequiresConfirmation),"未核实台词取消了人工确认");
+    ChooseContaining(s,s.Model.Items,"待核对第二句");Check(s.Engine!.CurrentId=="review-b"&&s.Plays==2,"单句确认未播放所选句");
+    s.Choose(s.Model,NextAction(s));
+    Check(s.Engine.CurrentId=="branch-menu"&&s.Engine.Mode==RunMode.Choice&&s.Plays==2&&s.ManualSteps==1,"未核实单句越过到后继正文");
+});
+Test("选择未核实选项仍在Choice时展示待核对句，不把它当作可连续正文",()=>
+{
+    var s=BranchSession();ChooseContaining(s,s.Model.Items,"待核对话题");
+    Check(s.Engine!.Mode==RunMode.Choice&&s.Engine.CurrentId=="branch-menu"&&s.Engine.ReviewRoute=="review-option"&&s.Plays==0,"选择未核实路线自行推进或播放");
+    Check(s.Model.Title.Contains("待核对话题")&&s.Model.Items.Count==2&&s.Model.Items.All(i=>i.IsDialogue&&i.RequiresConfirmation&&!i.Selected),"未核实选项未显示单句核对列表");
+    Check(!s.Model.Actions!.Any(a=>a.Title.Contains("下一句")||a.Title.Contains("重播当前句")),"没有当前line时仍提供推进按钮");
+    ChooseContaining(s,s.Model.Items,"待核对第一句");Check(s.Engine.CurrentId=="review-a"&&s.Plays==1,"明确选句没有播放");
+    s.Choose(s.Model,NextAction(s));Check(s.Engine.CurrentId=="branch-menu"&&s.Plays==1,"单句核对被当作连续路线");
+});
+Test("Gap打开目录再返回保留续接菜单，确认续接后立刻显示选项",()=>
+{
+    var s=BranchSession();s.Command(e=>{if(!e.OpenGameMenu("nested-menu","s"))throw new Exception(e.NavigationError);});
+    ChooseContaining(s,s.Model.Items,"继续提问");s.Choose(s.Model,NextAction(s));int plays=s.Plays;
+    Check(s.Engine!.CurrentId=="nested-gap"&&s.Engine.Mode==RunMode.Gap,"未到受保护段尾");
+    OpenDirectory(s);ChooseContaining(s,s.Model.Actions!,"当前分支");
+    Check(s.Engine.Mode==RunMode.Gap&&s.Model.Items.Count==1&&s.Model.Items[0].Title.Contains("段末话题")&&s.Plays==plays,"目录返回丢失续接位置");
+    s.Choose(s.Model,s.Model.Items[0]);Check(s.Engine.CurrentId=="nested-menu"&&s.Engine.Mode==RunMode.Choice&&s.Model.Items.Single().Title.Contains("继续提问")&&s.Plays==plays,"续接后仍显示目录或发声");
+});
+Test("返回上级菜单按人工定位，不要求未核实祖先路线已选",()=>
+{
+    var p=BranchPack();p.ById["branch-menu"].PathId="unreviewed-parent";
+    p.Nodes.Add(new(){Id="outer-menu",SectionId="s",Kind="choice",Text="未核实前置",Options=[new(){Id="outer-option",Label="前置入口",PathId="unreviewed-parent",TargetId="branch-menu"}]});p.Validate();
+    var e=new PlaybackEngine(p);Check(e.OpenGameMenu("branch-menu","s"),"不能人工定位内层菜单");var s=new AppSession(e);s.Open(OverlayBrowsePage.Branches);ChooseContaining(s,s.Model.Items,"连续话题");int plays=s.Plays;
+    Check(!e.Choices.ContainsKey("outer-menu"),"测试错误建立了祖先路线");
+    ChooseContaining(s,s.Model.Actions!,"返回上级菜单");
+    Check(e.CurrentId=="branch-menu"&&e.Mode==RunMode.Choice&&!e.Choices.ContainsKey("outer-menu")&&s.Plays==plays,"返回上级失败或补算了祖先分支");
+    Check(s.Model.Items.Any(i=>i.Title.Contains("连续话题")),"返回后仍显示目录");
+});
+Test("进入原声后支线动作不可用，旧下一句与旧选句保持冻结",()=>
+{
+    var s=BranchSession();ChooseContaining(s,s.Model.Items,"连续话题");var old=s.Model;var next=NextAction(s);var line=old.Items.Single(i=>i.Title.Contains("这是完整回答"));int plays=s.Plays;
+    s.Command(e=>e.EnterOriginal());s.Choose(old,next);s.Choose(old,line);
+    Check(s.Engine!.Mode==RunMode.Original&&s.Engine.CurrentId=="branch-a"&&s.Plays==plays&&s.ManualSteps==0,"原声被旧支线动作解冻");
+    Check(s.Model.Items.Count==0&&s.Model.Actions!.Count==0,"原声仍提供支线推进动作");
+});
+Test("更换Engine后旧支线下一句和重播不得操作新章节",()=>
+{
+    var s=BranchSession();ChooseContaining(s,s.Model.Items,"连续话题");var old=s.Model;var next=NextAction(s);var replay=old.Actions!.Single(a=>a.Title.Contains("重播当前句"));int plays=s.Plays;
+    var engine=new PlaybackEngine(BranchPack());engine.OpenGameMenu("other-menu","s");s.Replace(engine);s.Choose(old,next);s.Choose(old,replay);
+    Check(engine.CurrentId=="other-menu"&&engine.Mode==RunMode.Choice&&s.Plays==plays&&s.ManualSteps==0,"跨Engine旧动作仍有效");
+});
+Test("第29章真实关于现状支线选择后显示两句，人工下一句到栗西再到menu003",()=>
+{
+    const string section="ch29-1dc1158611c810722709",menu=section+"-menu-002",first=section+"-55a8506e75715b921f71",second=section+"-6516ce211bb76f665bd4",end=section+"-menu-003";
+    string path=Environment.GetEnvironmentVariable("PGR_CH29_PACK")??@"<你的配音包根目录>\第29章_源解信标\pack.json";
+    var pack=PgrVoice.Pack.Load(path);var e=new PlaybackEngine(pack);Check(e.OpenGameMenu(menu,section),e.NavigationError);var s=new AppSession(e);s.Open(OverlayBrowsePage.Branches);
+    ChooseContaining(s,s.Model.Items,"关于现状");Check(e.CurrentId==first&&s.Plays==1&&s.Model.Items.Count==2&&s.Model.Items.All(i=>i.IsDialogue),"真实选项进入后未保留两句正文");
+    Check(s.Model.Items.Single(i=>i.Selected).Title.Contains("关于现状"),"真实首句未高亮");
+    Check(File.Exists(pack.ResolveAudio(pack.ById[first]))&&File.Exists(pack.ResolveAudio(pack.ById[second])),"正式包这两句音频缺失");
+    s.Choose(s.Model,NextAction(s));Check(e.CurrentId==second&&e.Current!.Speaker=="栗西"&&s.Plays==2&&s.ManualSteps==1,"真实支线停在选项标题");
+    Check(s.Model.Items.Single(i=>i.Selected).Title.Contains("唔，虽然还有能源"),"栗西正文未高亮");
+    s.Choose(s.Model,NextAction(s));Check(e.CurrentId==end&&e.Mode==RunMode.Choice&&s.Plays==2&&s.ManualSteps==2,"真实段尾越过或未到菜单");
+    Check(s.Model.Items.Count==3&&s.Model.Items.Any(i=>i.Title.Contains("小队"))&&s.Model.Items.Any(i=>i.Title.Contains("你们的车"))&&s.Model.Items.Any(i=>i.Title.Contains("说回刚刚")),"真实菜单选项不完整");
+});
+var report=new{passed=failures==0,count=results.Count,failures,tests=results,scope="实际AppSession.OverlayBrowse与AppSession.OcrReview分部、生产Matcher及核心源码；包含正式第29章关于现状路线。外部host stub代替Android主线程/音频/窗口及ManualOverlayStep接入，只验证该入口被调用，不等同Android界面、音频解码或点按转发端到端测试。"};
+string json=JsonSerializer.Serialize(report,new JsonSerializerOptions{WriteIndented=true,Encoder=System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping});
+string output=Path.GetFullPath(args.ElementAtOrDefault(0)??"reports/overlay-pages-034/host-browse-ocr-review.json");
+Directory.CreateDirectory(Path.GetDirectoryName(output)!);File.WriteAllText(output,json);Console.WriteLine(json);return failures==0?0:1;
+static Pack Pack(){var p=new Pack{Id="overlay-test",SchemaVersion=1,Chapters=[new(){Id="c",Sections=[new(){Id="s1",Title="第一节",StartId="a"},new(){Id="s2",Title="第二节",StartId="z"}]}],Nodes=[new(){Id="a",SectionId="s1",Speaker="角色",Text="第一句",NextId="b"},new(){Id="b",SectionId="s1",Text="第二句",NextId="menu"},new(){Id="menu",SectionId="s1",Kind="choice",Text="选择",Options=[new(){Id="o",Label="确认分支",PathId="p",TargetId="branch",Verified=true,MergeId="merge"}]},new(){Id="branch",SectionId="s1",PathId="p",Text="支线句",NextId="merge"},new(){Id="merge",SectionId="s1",Kind="merge"},new(){Id="z",SectionId="s2",Text="第二节句"}]};p.Validate();return p;}
+static AppSession BranchSession(){var e=new PlaybackEngine(BranchPack());if(!e.OpenGameMenu("branch-menu","s"))throw new Exception(e.NavigationError);var s=new AppSession(e);s.Open(OverlayBrowsePage.Branches);return s;}
+static OverlayBrowseItem NextAction(AppSession s)=>s.Model.Actions!.First(a=>a.Title.Contains("下一句"));
+static void ChooseContaining(AppSession s,IReadOnlyList<OverlayBrowseItem> items,string text)=>s.Choose(s.Model,items.Single(i=>i.Title.Contains(text)));
+static void OpenDirectory(AppSession s)=>ChooseContaining(s,s.Model.Actions!,"人物、话题与分支目录");
+static Pack BranchPack()
+{
+    var p=new Pack{Id="overlay-branches-v3",SchemaVersion=3,Chapters=[new(){Id="c",Sections=[new(){Id="s",Title="分支测试节",StartId="branch-menu"}]}],Nodes=
+    [
+        new(){Id="branch-menu",SectionId="s",Kind="choice",Text="人物主菜单",Options=
+        [
+            new(){Id="main-option",Label="连续话题",PathId="main-path",TargetId="branch-a",BodyVerified=true,BodyEvidence=["fixture"],SegmentIds=["branch-a","branch-b","nested-menu"],LineIds=["branch-a","branch-b"],BoundaryId="main-gap"},
+            new(){Id="review-option",Label="待核对话题",PathId="review-path",TargetId="review-a",LineIds=["review-a","review-b"]}
+        ]},
+        new(){Id="branch-a",SectionId="s",PathId="main-path",Speaker="提问者",Text="询问现状",NextId="branch-b"},
+        new(){Id="branch-b",SectionId="s",PathId="main-path",Speaker="答复者",Text="这是完整回答",NextId="nested-menu"},
+        new(){Id="nested-menu",SectionId="s",PathId="main-path",Kind="choice",Text="段末话题",Options=[new(){Id="nested-option",Label="继续提问",PathId="nested-path",TargetId="nested-line",BodyVerified=true,BodyEvidence=["fixture"],SegmentIds=["nested-line"],LineIds=["nested-line"],BoundaryId="nested-gap"}]},
+        new(){Id="nested-line",SectionId="s",PathId="nested-path",Text="进一步回答",NextId="nested-gap"},
+        new(){Id="main-gap",SectionId="s",PathId="main-path",Kind="gap",ResumeMenuIds=["branch-menu"]},
+        new(){Id="nested-gap",SectionId="s",PathId="nested-path",Kind="gap",ResumeMenuIds=["nested-menu"]},
+        new(){Id="review-a",SectionId="s",PathId="review-path",Text="待核对第一句",NextId="review-b"},
+        new(){Id="review-b",SectionId="s",PathId="review-path",Text="待核对第二句",NextId="review-unlisted"},
+        new(){Id="review-unlisted",SectionId="s",PathId="review-path",Text="不应曝光的未列台词"},
+        new(){Id="other-menu",SectionId="s",Kind="choice",Text="备用菜单",Options=[new(){Id="other-option",Label="另一人物话题",PathId="other-path",TargetId="other-line",BodyVerified=true,BodyEvidence=["fixture"],SegmentIds=["other-line"],LineIds=["other-line"],BoundaryId="other-gap"}]},
+        new(){Id="other-line",SectionId="s",PathId="other-path",Text="另一人物的回答",NextId="other-gap"},
+        new(){Id="other-gap",SectionId="s",PathId="other-path",Kind="gap",ResumeMenuIds=["other-menu"]}
+    ]};p.Validate();return p;
+}

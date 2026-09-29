@@ -1,0 +1,104 @@
+{
+  "passed": true,
+  "count": 24,
+  "failures": 0,
+  "tests": [
+    {
+      "name": "单指轻点只回报一次且保留Up物理坐标",
+      "passed": true
+    },
+    {
+      "name": "孤立Up不能发出请求",
+      "passed": true
+    },
+    {
+      "name": "700ms边界接受，701ms长按拒绝",
+      "passed": true
+    },
+    {
+      "name": "12像素边界接受，超出拒绝",
+      "passed": true
+    },
+    {
+      "name": "斜向位移使用距离而非分别比较横纵",
+      "passed": true
+    },
+    {
+      "name": "拖出后移回原点仍取消",
+      "passed": true
+    },
+    {
+      "name": "第二根手指加入再移走也不能恢复为轻点",
+      "passed": true
+    },
+    {
+      "name": "多指Down和多指Up均拒绝",
+      "passed": true
+    },
+    {
+      "name": "指针身份改变立即取消",
+      "passed": true
+    },
+    {
+      "name": "系统取消或撤窗后残留Up不触发",
+      "passed": true
+    },
+    {
+      "name": "重复Down中断原手势，不拼接一个新轻点",
+      "passed": true
+    },
+    {
+      "name": "快速连点299ms去重，300ms可再次轻点",
+      "passed": true
+    },
+    {
+      "name": "撤窗重挂不会清除300ms去重时钟",
+      "passed": true
+    },
+    {
+      "name": "拒绝反向时间和非法物理坐标",
+      "passed": true
+    },
+    {
+      "name": "不同密度由调用方传像素阈值，24px可对应12dp",
+      "passed": true
+    },
+    {
+      "name": "注入成功仅允许一次推进",
+      "passed": true
+    },
+    {
+      "name": "注入进行中不允许并发请求",
+      "passed": true
+    },
+    {
+      "name": "注入失败释放占位但不得推进",
+      "passed": true
+    },
+    {
+      "name": "取消会话后的旧成功回调不能推进",
+      "passed": true
+    },
+    {
+      "name": "旧回调不能清掉新会话正在进行的票据",
+      "passed": true
+    },
+    {
+      "name": "同epoch旧请求迟到也不能影响较新的请求",
+      "passed": true
+    },
+    {
+      "name": "请求300ms去重并跨Invalidate保留",
+      "passed": true
+    },
+    {
+      "name": "默认票据或伪造编号不能推进也不占槽",
+      "passed": true
+    },
+    {
+      "name": "轻点到注入结束的流程只在成功回调推进",
+      "passed": true
+    }
+  ],
+  "scope": "纯逻辑单指轻点和注入票据回归；未运行Android窗口、无障碍注入或真实游戏，不证明游戏一定接收注入。"
+}

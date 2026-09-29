@@ -1,0 +1,36 @@
+{
+  "scope": "主机近似验证宽ROI缩小后有足够文字像素，不能代替Android实际Bitmap缩放测试。",
+  "resample": "Pillow BILINEAR",
+  "maskSize": [
+    384,
+    96
+  ],
+  "fixtures": [
+    {
+      "source": "reports/xfold5-20260928/02-game-inner.png",
+      "sourceSha256": "2024b220a3f7501dbc9607987155a832a2809d0fb73c8faeec829bd444d200ee",
+      "mask": "02-game-inner.mask",
+      "maskSha256": "99e7b1facd8b997770e47069066631fc3e1593a902207993d206291aaab8a1b2",
+      "ink": 53,
+      "crop": [
+        99,
+        330,
+        2281,
+        1100
+      ]
+    },
+    {
+      "source": "reports/xfold5-20260928/06-resume.png",
+      "sourceSha256": "73961a2ee71a15bc42bdfd409ff408296c591211bc4d03bfc314b367dedde979",
+      "mask": "06-resume.mask",
+      "maskSha256": "9d873b85d7fd8a2473139afaef61cf874b9d9cea00247fe0800dff9a8625b857",
+      "ink": 52,
+      "crop": [
+        99,
+        330,
+        2281,
+        1100
+      ]
+    }
+  ]
+}

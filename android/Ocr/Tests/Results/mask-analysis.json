@@ -1,0 +1,299 @@
+[
+  {
+    "size": [
+      192,
+      48
+    ],
+    "whiteCounts": {
+      "frame-00030.0.png": 0,
+      "frame-00300.0.png": 2,
+      "frame-00500.0.png": 15,
+      "frame-00800.0.png": 281,
+      "frame-01500.0.png": 184,
+      "frame-02500.0.png": 202,
+      "frame-03500.0.png": 1149,
+      "frame-05000.0.png": 292,
+      "frame-07000.0.png": 110,
+      "frame-10000.0.png": 157,
+      "frame-12000.0.png": 0,
+      "frame-13000.0.png": 70
+    },
+    "adjacentPairs": [
+      {
+        "a": "frame-00030.0.png",
+        "b": "frame-00300.0.png",
+        "changedPixels": 2,
+        "allPixelRatio": 0.00022,
+        "whiteUnionRatio": 1.0
+      },
+      {
+        "a": "frame-00300.0.png",
+        "b": "frame-00500.0.png",
+        "changedPixels": 17,
+        "allPixelRatio": 0.00184,
+        "whiteUnionRatio": 1.0
+      },
+      {
+        "a": "frame-00500.0.png",
+        "b": "frame-00800.0.png",
+        "changedPixels": 296,
+        "allPixelRatio": 0.03212,
+        "whiteUnionRatio": 1.0
+      },
+      {
+        "a": "frame-00800.0.png",
+        "b": "frame-01500.0.png",
+        "changedPixels": 465,
+        "allPixelRatio": 0.05046,
+        "whiteUnionRatio": 1.0
+      },
+      {
+        "a": "frame-01500.0.png",
+        "b": "frame-02500.0.png",
+        "changedPixels": 286,
+        "allPixelRatio": 0.03103,
+        "whiteUnionRatio": 0.85119
+      },
+      {
+        "a": "frame-02500.0.png",
+        "b": "frame-03500.0.png",
+        "changedPixels": 1351,
+        "allPixelRatio": 0.14659,
+        "whiteUnionRatio": 1.0
+      },
+      {
+        "a": "frame-03500.0.png",
+        "b": "frame-05000.0.png",
+        "changedPixels": 1427,
+        "allPixelRatio": 0.15484,
+        "whiteUnionRatio": 0.99512
+      },
+      {
+        "a": "frame-05000.0.png",
+        "b": "frame-07000.0.png",
+        "changedPixels": 380,
+        "allPixelRatio": 0.04123,
+        "whiteUnionRatio": 0.97187
+      },
+      {
+        "a": "frame-07000.0.png",
+        "b": "frame-10000.0.png",
+        "changedPixels": 61,
+        "allPixelRatio": 0.00662,
+        "whiteUnionRatio": 0.37195
+      },
+      {
+        "a": "frame-10000.0.png",
+        "b": "frame-12000.0.png",
+        "changedPixels": 157,
+        "allPixelRatio": 0.01704,
+        "whiteUnionRatio": 1.0
+      },
+      {
+        "a": "frame-12000.0.png",
+        "b": "frame-13000.0.png",
+        "changedPixels": 70,
+        "allPixelRatio": 0.0076,
+        "whiteUnionRatio": 1.0
+      }
+    ]
+  },
+  {
+    "size": [
+      384,
+      96
+    ],
+    "whiteCounts": {
+      "frame-00030.0.png": 0,
+      "frame-00300.0.png": 37,
+      "frame-00500.0.png": 170,
+      "frame-00800.0.png": 1255,
+      "frame-01500.0.png": 1368,
+      "frame-02500.0.png": 1095,
+      "frame-03500.0.png": 5129,
+      "frame-05000.0.png": 1492,
+      "frame-07000.0.png": 692,
+      "frame-10000.0.png": 668,
+      "frame-12000.0.png": 0,
+      "frame-13000.0.png": 677
+    },
+    "adjacentPairs": [
+      {
+        "a": "frame-00030.0.png",
+        "b": "frame-00300.0.png",
+        "changedPixels": 37,
+        "allPixelRatio": 0.001,
+        "whiteUnionRatio": 1.0
+      },
+      {
+        "a": "frame-00300.0.png",
+        "b": "frame-00500.0.png",
+        "changedPixels": 207,
+        "allPixelRatio": 0.00562,
+        "whiteUnionRatio": 1.0
+      },
+      {
+        "a": "frame-00500.0.png",
+        "b": "frame-00800.0.png",
+        "changedPixels": 1425,
+        "allPixelRatio": 0.03866,
+        "whiteUnionRatio": 1.0
+      },
+      {
+        "a": "frame-00800.0.png",
+        "b": "frame-01500.0.png",
+        "changedPixels": 2603,
+        "allPixelRatio": 0.07061,
+        "whiteUnionRatio": 0.99617
+      },
+      {
+        "a": "frame-01500.0.png",
+        "b": "frame-02500.0.png",
+        "changedPixels": 1905,
+        "allPixelRatio": 0.05168,
+        "whiteUnionRatio": 0.87225
+      },
+      {
+        "a": "frame-02500.0.png",
+        "b": "frame-03500.0.png",
+        "changedPixels": 6102,
+        "allPixelRatio": 0.16553,
+        "whiteUnionRatio": 0.9901
+      },
+      {
+        "a": "frame-03500.0.png",
+        "b": "frame-05000.0.png",
+        "changedPixels": 6499,
+        "allPixelRatio": 0.1763,
+        "whiteUnionRatio": 0.9907
+      },
+      {
+        "a": "frame-05000.0.png",
+        "b": "frame-07000.0.png",
+        "changedPixels": 1976,
+        "allPixelRatio": 0.0536,
+        "whiteUnionRatio": 0.95
+      },
+      {
+        "a": "frame-07000.0.png",
+        "b": "frame-10000.0.png",
+        "changedPixels": 496,
+        "allPixelRatio": 0.01345,
+        "whiteUnionRatio": 0.53448
+      },
+      {
+        "a": "frame-10000.0.png",
+        "b": "frame-12000.0.png",
+        "changedPixels": 668,
+        "allPixelRatio": 0.01812,
+        "whiteUnionRatio": 1.0
+      },
+      {
+        "a": "frame-12000.0.png",
+        "b": "frame-13000.0.png",
+        "changedPixels": 677,
+        "allPixelRatio": 0.01836,
+        "whiteUnionRatio": 1.0
+      }
+    ]
+  },
+  {
+    "size": [
+      512,
+      128
+    ],
+    "whiteCounts": {
+      "frame-00030.0.png": 0,
+      "frame-00300.0.png": 132,
+      "frame-00500.0.png": 362,
+      "frame-00800.0.png": 2339,
+      "frame-01500.0.png": 2957,
+      "frame-02500.0.png": 2465,
+      "frame-03500.0.png": 9318,
+      "frame-05000.0.png": 2857,
+      "frame-07000.0.png": 1610,
+      "frame-10000.0.png": 1245,
+      "frame-12000.0.png": 0,
+      "frame-13000.0.png": 1808
+    },
+    "adjacentPairs": [
+      {
+        "a": "frame-00030.0.png",
+        "b": "frame-00300.0.png",
+        "changedPixels": 132,
+        "allPixelRatio": 0.00201,
+        "whiteUnionRatio": 1.0
+      },
+      {
+        "a": "frame-00300.0.png",
+        "b": "frame-00500.0.png",
+        "changedPixels": 494,
+        "allPixelRatio": 0.00754,
+        "whiteUnionRatio": 1.0
+      },
+      {
+        "a": "frame-00500.0.png",
+        "b": "frame-00800.0.png",
+        "changedPixels": 2701,
+        "allPixelRatio": 0.04121,
+        "whiteUnionRatio": 1.0
+      },
+      {
+        "a": "frame-00800.0.png",
+        "b": "frame-01500.0.png",
+        "changedPixels": 5206,
+        "allPixelRatio": 0.07944,
+        "whiteUnionRatio": 0.99143
+      },
+      {
+        "a": "frame-01500.0.png",
+        "b": "frame-02500.0.png",
+        "changedPixels": 4054,
+        "allPixelRatio": 0.06186,
+        "whiteUnionRatio": 0.85564
+      },
+      {
+        "a": "frame-02500.0.png",
+        "b": "frame-03500.0.png",
+        "changedPixels": 11331,
+        "allPixelRatio": 0.1729,
+        "whiteUnionRatio": 0.98044
+      },
+      {
+        "a": "frame-03500.0.png",
+        "b": "frame-05000.0.png",
+        "changedPixels": 11907,
+        "allPixelRatio": 0.18169,
+        "whiteUnionRatio": 0.98887
+      },
+      {
+        "a": "frame-05000.0.png",
+        "b": "frame-07000.0.png",
+        "changedPixels": 3927,
+        "allPixelRatio": 0.05992,
+        "whiteUnionRatio": 0.93567
+      },
+      {
+        "a": "frame-07000.0.png",
+        "b": "frame-10000.0.png",
+        "changedPixels": 1299,
+        "allPixelRatio": 0.01982,
+        "whiteUnionRatio": 0.62542
+      },
+      {
+        "a": "frame-10000.0.png",
+        "b": "frame-12000.0.png",
+        "changedPixels": 1245,
+        "allPixelRatio": 0.019,
+        "whiteUnionRatio": 1.0
+      },
+      {
+        "a": "frame-12000.0.png",
+        "b": "frame-13000.0.png",
+        "changedPixels": 1808,
+        "allPixelRatio": 0.02759,
+        "whiteUnionRatio": 1.0
+      }
+    ]
+  }
+]

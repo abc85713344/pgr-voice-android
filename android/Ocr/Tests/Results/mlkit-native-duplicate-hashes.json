@@ -1,0 +1,82 @@
+[
+  {
+    "Path": "<AndroidRoot>\\projects\\PgrVoice\\android\\obj\\Debug\\net10.0-android\\android-x64\\lp\\148\\jl\\jni\\arm64-v8a\\libmlkit_google_ocr_pipeline.so",
+    "Bytes": 11064544,
+    "SHA256": "FA41D509A661E8AA8B3E3AC1A28541F8823F308414FCAD733FE26D61FEEA2646"
+  },
+  {
+    "Path": "<AndroidRoot>\\projects\\PgrVoice\\android\\obj\\Debug\\net10.0-android\\android-x64\\lp\\148\\jl\\jni\\armeabi-v7a\\libmlkit_google_ocr_pipeline.so",
+    "Bytes": 6781940,
+    "SHA256": "06B9E2F587E401C6446AA0DB344BB31B622957A2D04AA4EAC03CDE8B3A6ED78A"
+  },
+  {
+    "Path": "<AndroidRoot>\\projects\\PgrVoice\\android\\obj\\Debug\\net10.0-android\\android-x64\\lp\\148\\jl\\jni\\x86\\libmlkit_google_ocr_pipeline.so",
+    "Bytes": 11561048,
+    "SHA256": "50B7EE3A7EFE130AE236456F5D953BC91FA9C3FBB17A38D78E79148BF3E6C2D7"
+  },
+  {
+    "Path": "<AndroidRoot>\\projects\\PgrVoice\\android\\obj\\Debug\\net10.0-android\\android-x64\\lp\\148\\jl\\jni\\x86_64\\libmlkit_google_ocr_pipeline.so",
+    "Bytes": 11626128,
+    "SHA256": "3DDFFB498B60F7F9512E341D4EE3ABE4E1580C4FD65EF9B2C8CE9E490DE467D8"
+  },
+  {
+    "Path": "<AndroidRoot>\\projects\\PgrVoice\\android\\obj\\Debug\\net10.0-android\\android-x64\\lp\\181\\jl\\jni\\arm64-v8a\\libmlkit_google_ocr_pipeline.so",
+    "Bytes": 11064544,
+    "SHA256": "FA41D509A661E8AA8B3E3AC1A28541F8823F308414FCAD733FE26D61FEEA2646"
+  },
+  {
+    "Path": "<AndroidRoot>\\projects\\PgrVoice\\android\\obj\\Debug\\net10.0-android\\android-x64\\lp\\181\\jl\\jni\\armeabi-v7a\\libmlkit_google_ocr_pipeline.so",
+    "Bytes": 6781940,
+    "SHA256": "06B9E2F587E401C6446AA0DB344BB31B622957A2D04AA4EAC03CDE8B3A6ED78A"
+  },
+  {
+    "Path": "<AndroidRoot>\\projects\\PgrVoice\\android\\obj\\Debug\\net10.0-android\\android-x64\\lp\\181\\jl\\jni\\x86\\libmlkit_google_ocr_pipeline.so",
+    "Bytes": 11561048,
+    "SHA256": "50B7EE3A7EFE130AE236456F5D953BC91FA9C3FBB17A38D78E79148BF3E6C2D7"
+  },
+  {
+    "Path": "<AndroidRoot>\\projects\\PgrVoice\\android\\obj\\Debug\\net10.0-android\\android-x64\\lp\\181\\jl\\jni\\x86_64\\libmlkit_google_ocr_pipeline.so",
+    "Bytes": 11626128,
+    "SHA256": "3DDFFB498B60F7F9512E341D4EE3ABE4E1580C4FD65EF9B2C8CE9E490DE467D8"
+  },
+  {
+    "Path": "<AndroidRoot>\\projects\\PgrVoice\\android\\obj\\Release\\net10.0-android\\android-arm64\\lp\\148\\jl\\jni\\arm64-v8a\\libmlkit_google_ocr_pipeline.so",
+    "Bytes": 11064544,
+    "SHA256": "FA41D509A661E8AA8B3E3AC1A28541F8823F308414FCAD733FE26D61FEEA2646"
+  },
+  {
+    "Path": "<AndroidRoot>\\projects\\PgrVoice\\android\\obj\\Release\\net10.0-android\\android-arm64\\lp\\148\\jl\\jni\\armeabi-v7a\\libmlkit_google_ocr_pipeline.so",
+    "Bytes": 6781940,
+    "SHA256": "06B9E2F587E401C6446AA0DB344BB31B622957A2D04AA4EAC03CDE8B3A6ED78A"
+  },
+  {
+    "Path": "<AndroidRoot>\\projects\\PgrVoice\\android\\obj\\Release\\net10.0-android\\android-arm64\\lp\\148\\jl\\jni\\x86\\libmlkit_google_ocr_pipeline.so",
+    "Bytes": 11561048,
+    "SHA256": "50B7EE3A7EFE130AE236456F5D953BC91FA9C3FBB17A38D78E79148BF3E6C2D7"
+  },
+  {
+    "Path": "<AndroidRoot>\\projects\\PgrVoice\\android\\obj\\Release\\net10.0-android\\android-arm64\\lp\\148\\jl\\jni\\x86_64\\libmlkit_google_ocr_pipeline.so",
+    "Bytes": 11626128,
+    "SHA256": "3DDFFB498B60F7F9512E341D4EE3ABE4E1580C4FD65EF9B2C8CE9E490DE467D8"
+  },
+  {
+    "Path": "<AndroidRoot>\\projects\\PgrVoice\\android\\obj\\Release\\net10.0-android\\android-arm64\\lp\\181\\jl\\jni\\arm64-v8a\\libmlkit_google_ocr_pipeline.so",
+    "Bytes": 11064544,
+    "SHA256": "FA41D509A661E8AA8B3E3AC1A28541F8823F308414FCAD733FE26D61FEEA2646"
+  },
+  {
+    "Path": "<AndroidRoot>\\projects\\PgrVoice\\android\\obj\\Release\\net10.0-android\\android-arm64\\lp\\181\\jl\\jni\\armeabi-v7a\\libmlkit_google_ocr_pipeline.so",
+    "Bytes": 6781940,
+    "SHA256": "06B9E2F587E401C6446AA0DB344BB31B622957A2D04AA4EAC03CDE8B3A6ED78A"
+  },
+  {
+    "Path": "<AndroidRoot>\\projects\\PgrVoice\\android\\obj\\Release\\net10.0-android\\android-arm64\\lp\\181\\jl\\jni\\x86\\libmlkit_google_ocr_pipeline.so",
+    "Bytes": 11561048,
+    "SHA256": "50B7EE3A7EFE130AE236456F5D953BC91FA9C3FBB17A38D78E79148BF3E6C2D7"
+  },
+  {
+    "Path": "<AndroidRoot>\\projects\\PgrVoice\\android\\obj\\Release\\net10.0-android\\android-arm64\\lp\\181\\jl\\jni\\x86_64\\libmlkit_google_ocr_pipeline.so",
+    "Bytes": 11626128,
+    "SHA256": "3DDFFB498B60F7F9512E341D4EE3ABE4E1580C4FD65EF9B2C8CE9E490DE467D8"
+  }
+]

@@ -1,0 +1,45 @@
+using PgrVoice.Following;
+namespace PgrVoice.AndroidApp;
+public sealed partial class AppSession
+{
+    long ocrEpoch;
+    readonly AudioStub audio = new();
+    readonly OverlayStub overlay = new();
+    long playGeneration;
+    public PlaybackEngine? Engine { get; private set; }
+    public ListenStub Listening { get; } = new();
+    public bool IsImporting { get; set; }
+    public ScopeSettings Settings { get; } = new();
+    public sealed class ScopeSettings { public bool OcrFullScreen { get; set; } = true; }
+    public void SetOcrFullScreen(bool enabled) { Invalidate();Settings.OcrFullScreen=enabled;Notify(); }
+    public event Action? ContentChanged;
+    public string SectionId { get; set; } = "s1";
+    public string Status { get; set; } = "";
+    public string OcrText { get; set; } = "尚未识别";
+    public IReadOnlyList<MatchCandidate> Candidates { get; set; } = Array.Empty<MatchCandidate>();
+    public ProgressStore Progress { get; } = new(Path.Combine(Path.GetTempPath(), "pgr-overlay-browse-regression", Guid.NewGuid().ToString("N")));
+    public int Plays { get; private set; }
+    public int OcrRequests { get; private set; }
+    public int ManualSteps { get; private set; }
+    public OverlayBrowseModel Model => overlay.Model!;
+    public int Renders => overlay.Renders;
+    public bool BrowseVisible { get=>overlay.IsBrowseVisible; set=>overlay.IsBrowseVisible=value; }
+    public AppSession(PlaybackEngine engine) { Progress.Load(); Replace(engine); }
+    public void Replace(PlaybackEngine engine) { Invalidate(); Engine=engine; SectionId=engine.Current?.SectionId??"s1"; engine.PlayRequested += _=> Plays++; engine.StopRequested += ()=>playGeneration++; engine.Changed += Notify; Notify(); }
+    public void Open(OverlayBrowsePage page) { overlay.IsBrowseVisible=true; OnOverlayBrowseRequested(page); }
+    public void Choose(OverlayBrowseModel model,OverlayBrowseItem item) => OnOverlayBrowseSelected(model.Revision,item.Id);
+    public void Tick()=>Notify();
+    public void CancelPending()=>Invalidate(false);
+    public void StoreOcr(string section,IReadOnlyList<OcrBlock> blocks)=>RememberOcrEvidence(Engine!,section,blocks);
+    public void Post(Action action)=>action();
+    void Notify()=>RefreshOverlayBrowseIfNeeded();
+    void Invalidate(bool clearCandidates=true) { ResetOverlayBrowseRequests(); ocrEpoch++; playGeneration++; if(clearCandidates)Candidates=Array.Empty<MatchCandidate>(); }
+    public void Command(Action<PlaybackEngine> action,bool confirmAfter=false) { Invalidate(); action(Engine!); SectionId=Engine!.Current?.SectionId??SectionId;Notify(); }
+    // Only the platform adapter is stubbed: the supplied action must still run the real engine Next.
+    void ManualOverlayStep(Action<PlaybackEngine> action) { ManualSteps++; Command(action); }
+    public void ConfirmLine(string id,bool original=false)=>Command(e=>{if(!e.ConfirmGameLine(id,original))throw new Exception(e.NavigationError);},true);
+    public void RequestOcr(bool overlayResult=false) { if(!overlayResult)throw new Exception("悬浮OCR未指定返回悬浮页"); OcrRequests++; Invalidate();Notify(); }
+    public sealed class ListenStub { public bool IsPlaying=>false; public void Pause(){} }
+    public sealed class AudioStub { public void Stop(){} }
+    public sealed class OverlayStub { public bool IsBrowseVisible=true; public OverlayBrowseModel? Model; public int Renders; public void UpdateBrowse(OverlayBrowseModel model){Model=model;Renders++;} }
+}

@@ -1,0 +1,248 @@
+using System.Security.Cryptography;
+using System.Text.Json;
+using PgrVoice;
+
+var results = new List<object>(); var realPacks = new List<object>(); int failures = 0;
+void Test(string name, Action test)
+{
+    try { test(); results.Add(new { name, passed = true }); }
+    catch (Exception ex) { failures++; results.Add(new { name, passed = false, error = ex.ToString() }); }
+}
+for (int schema = 1; schema <= 3; schema++)
+{
+    int version = schema;
+    Test($"schema{version} 普通共同句之间可以申请点击，末句仍可播放但停在选择前", () =>
+    {
+        var pack = Fixture(version); var e = At(pack, "a");
+        var d = e.EvaluateCommonAutoPlayNext(); Require(d.CurrentIsCommon && d.Allowed && d.Next?.Id == "b", "共同线被全部禁用");
+        e.Commit("b"); d = e.EvaluateCommonAutoPlayNext(); Require(d.CurrentIsCommon && !d.Allowed && d.Code == "choice", "分支前没有停止或本句不可听");
+    });
+    Test($"schema{version} 已核实分支入口、内部、出口均不能开启自动播放", () =>
+    {
+        var pack = Fixture(version);
+        foreach (string id in new[] { "branch-a", "branch-b", "branch-c" })
+        {
+            var e = new PlaybackEngine(pack); Require(e.ConfirmGameLine(id), "分支测试未实际进入");
+            var d = e.EvaluateCommonAutoPlayNext(); Require(!d.CurrentIsCommon && !d.Allowed, "分支可自动播放：" + id);
+        }
+    });
+    Test($"schema{version} 手动确认共同汇合之后可重新开始，不跨越merge", () =>
+    {
+        var pack = Fixture(version); var e = At(pack, "common-after");
+        Require(e.EvaluateCommonAutoPlayNext() is { CurrentIsCommon: true, Allowed: true, Next.Id: "common-last" }, "汇合后共同线不可用");
+        e.Commit("merge"); Require(!e.EvaluateCommonAutoPlayNext().CurrentIsCommon, "merge被当作普通句");
+    });
+    Test($"schema{version} 只读评估不触发声音、不推进、不改变条件历史", () =>
+    {
+        var e = At(Fixture(version), "a"); int plays = 0, stops = 0, changed = 0;
+        e.PlayRequested += _ => plays++; e.StopRequested += () => stops++; e.Changed += () => changed++;
+        string before = JsonSerializer.Serialize(e.ExportNavigation(), Json.Options);
+        for (int i = 0; i < 4; i++) Require(e.EvaluateCommonAutoPlayNext().Allowed, "正常门控失败");
+        Require(before == JsonSerializer.Serialize(e.ExportNavigation(), Json.Options) && plays + stops + changed == 0, "门控有副作用");
+    });
+}
+Test("旧版漏写PathId的分支，仍由入口和正文图排除", () =>
+{
+    var pack = Fixture(1); foreach (var n in pack.Nodes.Where(n => n.PathId == "p1")) n.PathId = "";
+    pack.ById["menu"].Options[0].LineIds.Clear(); pack.ById["menu"].Options[0].SegmentIds.Clear();
+    foreach (string id in new[] { "branch-a", "branch-b" })
+        Require(At(pack, id).EvaluateCommonAutoPlayNext() is { CurrentIsCommon: false, Allowed: false }, "漏PathId被当成共同线");
+});
+Test("SegmentIds和LineIds各自都能阻止空PathId误判", () =>
+{
+    foreach (bool segment in new[] { true, false })
+    {
+        var pack = Fixture(1); var o = pack.ById["menu"].Options[0];
+        if (segment) o.SegmentIds.Add("a"); else o.LineIds.Add("a");
+        Require(!At(pack, "a").EvaluateCommonAutoPlayNext().CurrentIsCommon, "显式分支范围被忽略");
+    }
+});
+Test("PathId为空但不属于任何已证共同入口的孤立句不启动", () =>
+{
+    var pack = Fixture(3); pack.Nodes.Add(new() { Id = "orphan", SectionId = "s", NextId = "common-last", Text = "孤立句" }); pack.Validate();
+    Require(!At(pack, "orphan").EvaluateCommonAutoPlayNext().CurrentIsCommon, "孤立句被当共同线");
+});
+Test("直达下一句为分支时拒绝，不能只检查当前句", () =>
+{
+    var pack = Fixture(3); pack.ById["b"].NextId = "branch-a";
+    Require(At(pack, "b").EvaluateCommonAutoPlayNext() is { CurrentIsCommon: true, Allowed: false, Code: "next-branch" }, "直接进入分支");
+});
+foreach (string boundary in new[] { "gap", "merge", "return", "end", "choice" })
+{
+    string kind = boundary;
+    Test("下一节点为" + kind + "时本句能听，但不点击、不跳过", () =>
+    {
+        var pack = Fixture(3); var n = new Node { Id = "stop", Kind = kind, SectionId = "s", NextId = "common-after" };
+        pack.Nodes.Add(n); pack.ById["b"].NextId = "stop"; pack.Validate();
+        var d = At(pack, "b").EvaluateCommonAutoPlayNext(); Require(d.CurrentIsCommon && !d.Allowed && d.Code == kind, "越过边界：" + kind);
+    });
+}
+Test("最后一句无Next仍可播放，随后结束", () =>
+{
+    var pack = Fixture(3); pack.ById["common-last"].NextId = null;
+    Require(At(pack, "common-last").EvaluateCommonAutoPlayNext() is { CurrentIsCommon: true, Allowed: false, Code: "end" }, "结束行为错误");
+});
+Test("共同线自循环和远端循环都不启动", () =>
+{
+    foreach (string destination in new[] { "a", "b" })
+    {
+        var pack = Fixture(3); pack.ById["b"].NextId = destination;
+        Require(At(pack, "a").EvaluateCommonAutoPlayNext() is { CurrentIsCommon: false, Allowed: false, Code: "cycle" }, "共同线循环漏检");
+    }
+});
+Test("跨小节、归档或缺失的下一节点不点击", () =>
+{
+    foreach (string mutation in new[] { "section", "archived", "missing" })
+    {
+        var pack = Fixture(3);
+        if (mutation == "section") pack.ById["b"].SectionId = "other";
+        if (mutation == "archived") pack.ById["b"].Archived = true;
+        if (mutation == "missing") pack.ById["a"].NextId = "missing";
+        Require(!At(pack, "a").EvaluateCommonAutoPlayNext().Allowed, mutation + "被点击");
+    }
+});
+Test("原声、暂停、恢复未确认和单句核对均不启动", () =>
+{
+    foreach (string mode in new[] { "original", "paused", "restored", "single" })
+    {
+        var e = At(Fixture(3), "a");
+        if (mode == "original") e.EnterOriginal();
+        if (mode == "paused") e.TogglePause();
+        if (mode == "restored") e.Restore("a");
+        if (mode == "single") e.CommitSingle("a");
+        Require(e.EvaluateCommonAutoPlayNext() is { CurrentIsCommon: false, Allowed: false }, "状态绕过：" + mode);
+    }
+});
+Test("带路线完成标记、条件副作用、隐藏选项的共同句不自动播放", () =>
+{
+    foreach (string marker in new[] { "completed", "facts", "options" })
+    {
+        var pack = Fixture(3);
+        if (marker == "completed") pack.ById["a"].CompleteRoute = "p1";
+        if (marker == "facts") pack.ById["a"].SetFacts.Add("condition");
+        if (marker == "options") pack.ById["a"].Options.Add(new() { TargetId = "branch-a", PathId = "unknown" });
+        Require(!At(pack, "a").EvaluateCommonAutoPlayNext().CurrentIsCommon, "隐藏路线标记被忽略：" + marker);
+    }
+});
+Test("归档旧菜单不能污染新版已证共同线", () =>
+{
+    var pack = Fixture(3); pack.Nodes.Add(new() { Id = "old-menu", SectionId = "s", Kind = "choice", Archived = true,
+        Options = new() { new() { TargetId = "a", PathId = "old", LineIds = new() { "a", "b" } } } }); pack.Validate();
+    Require(At(pack, "a").EvaluateCommonAutoPlayNext().Allowed, "归档旧图污染共同线");
+});
+Test("出口未核实、错误返回、正文断开、条件矛盾的伪汇合都不授权后续", () =>
+{
+    foreach (string mutation in new[] { "unverified", "wrong-return", "disconnected", "contradictory" })
+    {
+        var pack = Fixture(3); var option = pack.ById["menu"].Options[0];
+        if (mutation == "unverified") option.ExitVerified = false;
+        if (mutation == "wrong-return") option.ReturnId = "a";
+        if (mutation == "disconnected") pack.ById["branch-b"].NextId = null;
+        if (mutation == "contradictory") { option.Requires.Add("x"); option.Excludes.Add("x"); }
+        Require(!At(pack, "common-after").EvaluateCommonAutoPlayNext().CurrentIsCommon, "伪共同出口：" + mutation);
+    }
+});
+Test("条件满足或不满足都不能自动进入分支，不能用条件替代用户选择", () =>
+{
+    var pack = Fixture(3); var option = pack.ById["menu"].Options[0]; option.Requires.Add("needed"); option.Excludes.Add("blocked");
+    foreach (string fact in new[] { "", "needed", "blocked" })
+    {
+        var e = new PlaybackEngine(pack); if (fact.Length > 0) e.Facts.Add(fact);
+        Require(e.ConfirmGameLine("branch-a"), "分支条件样本未进入");
+        Require(!e.EvaluateCommonAutoPlayNext().CurrentIsCommon, "条件值让分支获得自动播放权限");
+    }
+});
+Test("嵌套菜单的返回共同段仍在外层分支内，不能开启", () =>
+{
+    var pack = Fixture(1); var nested = new Node { Id = "nested", SectionId = "s", Kind = "choice", PathId = "p1",
+        Options = new() { new() { Id = "nested-o", PathId = "nested-p", TargetId = "nested-line", MergeId = "nested-merge", Verified = true } } };
+    pack.Nodes.Add(nested); pack.Nodes.Add(new() { Id = "nested-line", SectionId = "s", PathId = "nested-p", NextId = "nested-merge" });
+    pack.Nodes.Add(new() { Id = "nested-merge", SectionId = "s", Kind = "merge", NextId = "branch-b" });
+    pack.ById["branch-a"].NextId = "nested"; pack.ById["branch-b"].PathId = ""; pack.Validate();
+    Require(!At(pack, "branch-b").EvaluateCommonAutoPlayNext().CurrentIsCommon, "内层汇合错误解除外层分支限制");
+});
+
+string packRoot = args.ElementAtOrDefault(1) ?? "<数据目录>/主线第03-42章";
+foreach (string chapter in new[] { "第03章_终末展览", "第29章_源解信标" })
+{
+    string title = chapter;
+    Test(title + "真实包逐句共同线和分支门控", () =>
+    {
+        string path = Path.Combine(packRoot, title, "pack.json"); var pack = Pack.Load(path);
+        int common = 0, permitted = 0, branchLines = 0, rejectedBranches = 0, terminalCommon = 0;
+        var codes = new Dictionary<string, int>(); var examples = new List<object>();
+        foreach (var node in pack.Nodes.Where(n => !n.Archived && n.Kind == "line"))
+        {
+            var e = new PlaybackEngine(pack); e.ConfirmGameLine(node.Id);
+            var d = e.EvaluateCommonAutoPlayNext(); codes[d.Code] = codes.GetValueOrDefault(d.Code) + 1;
+            if (d.CurrentIsCommon) common++;
+            if (d.CurrentIsCommon && !d.Allowed) terminalCommon++;
+            if (d.Allowed)
+            {
+                permitted++; Require(d.CurrentIsCommon && d.Next != null && d.Next.PathId.Length == 0 && node.NextId == d.Next.Id && d.Next.SectionId == node.SectionId, "非共同直接连接被放行");
+                if (examples.Count < 3) examples.Add(new { current = node.Id, next = d.Next!.Id });
+            }
+            if (node.PathId.Length > 0) { branchLines++; if (!d.CurrentIsCommon && !d.Allowed) rejectedBranches++; }
+        }
+        Require(permitted > 0 && branchLines > 0 && branchLines == rejectedBranches, "真实包共同线不可用或分支漏放");
+        realPacks.Add(new { title = pack.Title, pack.SchemaVersion, source = path, sha256 = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(path))),
+            activeLines = pack.Nodes.Count(n => !n.Archived && n.Kind == "line"), provenCommonLines = common, allowedDirectPairs = permitted,
+            commonLinesStoppedAtBoundary = terminalCommon, explicitBranchLines = branchLines, rejectedExplicitBranchLines = rejectedBranches, reasons = codes, examples });
+    });
+}
+Test("设备用合成ZIP实物：共同线放行，两条分支禁止，手动确认汇合后恢复共同线", () =>
+{
+    var pack=Pack.Load("<AndroidRoot>/fixtures/autoplay-fixture/voice-pack/pack.json");
+    Require(At(pack,"common0").EvaluateCommonAutoPlayNext() is { CurrentIsCommon:true, Allowed:true, Next.Id:"common1" },"common0→1未放行");
+    Require(At(pack,"common1").EvaluateCommonAutoPlayNext() is { CurrentIsCommon:true, Allowed:false, Code:"choice" },"choice前未停止");
+    foreach(string branch in new[]{"branch3","branchAlt"})
+    {
+        var e=new PlaybackEngine(pack);Require(e.ConfirmGameLine(branch),"实际分支无法确认");
+        Require(e.EvaluateCommonAutoPlayNext() is {CurrentIsCommon:false,Allowed:false},"实际分支被放行");
+    }
+    Require(At(pack,"common5").EvaluateCommonAutoPlayNext() is {CurrentIsCommon:true,Allowed:true,Next.Id:"common6"},"汇合之后不可重新启动");
+    Require(At(pack,"common6").EvaluateCommonAutoPlayNext() is {CurrentIsCommon:true,Allowed:false,Code:"end"},"结束未暂停");
+});
+var report = new { createdUtc = DateTimeOffset.UtcNow, passed = failures == 0, count = results.Count, failures, tests = results, realPacks,
+    scope = "共同线点击资格的纯逻辑验证，不证明实际点击、自然结束回调、OCR、安卓服务或真机表现；分支结束后重新开启由会话状态机负责。" };
+string output = args.ElementAtOrDefault(0) ?? "reports/android-common-autoplay-gate.json";
+Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(output))!); File.WriteAllText(output, JsonSerializer.Serialize(report, Json.Options));
+Console.WriteLine(JsonSerializer.Serialize(report, Json.Options)); return failures == 0 ? 0 : 1;
+
+static void Require(bool value, string reason) { if (!value) throw new InvalidOperationException(reason); }
+static PlaybackEngine At(Pack pack, string id) { var e = new PlaybackEngine(pack); e.Commit(id); return e; }
+static Pack Fixture(int schema)
+{
+    ChoiceOption Option(string id, string path, string target, params string[] lines) => new()
+    {
+        Id = id, PathId = path, TargetId = target, MergeId = "merge", ReturnId = "merge", Verified = true,
+        BodyVerified = true, ExitVerified = true, Evidence = new() { "fixture-proof" }, BodyEvidence = new() { "fixture-body" }, ExitEvidence = new() { "fixture-exit" },
+        SegmentIds = lines.ToList(), LineIds = lines.ToList()
+    };
+    var pack = new Pack { Id = "common-autoplay-" + schema, SchemaVersion = schema,
+        Chapters = new() { new() { Id = "c", Sections = new() { new() { Id = "s", StartId = "a" } } } },
+        Nodes = new()
+        {
+            new() { Id = "a", SectionId = "s", Text = "共同开场", NextId = "b" },
+            new() { Id = "b", SectionId = "s", Text = "共同末句", NextId = "menu" },
+            new() { Id = "menu", SectionId = "s", Kind = "choice", Options = new() { Option("o1", "p1", "branch-a", "branch-a", "branch-b"), Option("o2", "p2", "branch-c", "branch-c") } },
+            new() { Id = "branch-a", SectionId = "s", PathId = "p1", Text = "分支开场", NextId = "branch-b" },
+            new() { Id = "branch-b", SectionId = "s", PathId = "p1", Text = "分支末句", NextId = "merge" },
+            new() { Id = "branch-c", SectionId = "s", PathId = "p2", Text = "第二分支", NextId = "merge" },
+            new() { Id = "merge", SectionId = "s", Kind = "merge", NextId = "common-after" },
+            new() { Id = "common-after", SectionId = "s", Text = "汇合共同句", NextId = "common-last" },
+            new() { Id = "common-last", SectionId = "s", Text = "最后共同句", NextId = "end" },
+            new() { Id = "end", SectionId = "s", Kind = "end" }
+        } };
+    if (schema < 3)
+    {
+        // 真正按旧版本字段测试，不能依赖新版 SegmentIds 或 Body/ExitVerified 恰好存在。
+        foreach (var option in pack.Nodes.SelectMany(n => n.Options))
+        {
+            option.BodyVerified = false; option.ExitVerified = false; option.SegmentIds.Clear();
+            option.BodyEvidence.Clear(); option.ExitEvidence.Clear();
+            if (schema == 1) { option.ReturnId = null; option.Evidence.Clear(); option.LineIds.Clear(); }
+        }
+    }
+    pack.Validate(); return pack;
+}

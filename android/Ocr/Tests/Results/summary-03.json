@@ -1,0 +1,38 @@
+[
+  {
+    "fixture": "ch03-real-010",
+    "engine": "Paddle",
+    "success": true,
+    "phraseFound": true
+  },
+  {
+    "fixture": "ch03-real-010",
+    "engine": "MlKitChinese",
+    "success": true,
+    "phraseFound": true
+  },
+  {
+    "fixture": "ch03-real-015",
+    "engine": "Paddle",
+    "success": true,
+    "phraseFound": true
+  },
+  {
+    "fixture": "ch03-real-015",
+    "engine": "MlKitChinese",
+    "success": true,
+    "phraseFound": true
+  },
+  {
+    "fixture": "ch03-real-025",
+    "engine": "Paddle",
+    "success": true,
+    "phraseFound": true
+  },
+  {
+    "fixture": "ch03-real-025",
+    "engine": "MlKitChinese",
+    "success": true,
+    "phraseFound": true
+  }
+]

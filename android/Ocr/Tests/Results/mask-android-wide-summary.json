@@ -1,0 +1,170 @@
+[
+  {
+    "seconds": 6998.0,
+    "changedPixels": 0,
+    "unionRatio": 0.0,
+    "changed": true,
+    "stable": false,
+    "ink": 784
+  },
+  {
+    "seconds": 6998.2,
+    "changedPixels": 41,
+    "unionRatio": 0.05105853051058531,
+    "changed": true,
+    "stable": false,
+    "ink": 781
+  },
+  {
+    "seconds": 6998.4,
+    "changedPixels": 23,
+    "unionRatio": 0.029003783102143757,
+    "changed": false,
+    "stable": false,
+    "ink": 782
+  },
+  {
+    "seconds": 6998.6,
+    "changedPixels": 21,
+    "unionRatio": 0.02648171500630517,
+    "changed": false,
+    "stable": true,
+    "ink": 784
+  },
+  {
+    "seconds": 6998.8,
+    "changedPixels": 531,
+    "unionRatio": 0.5,
+    "changed": true,
+    "stable": false,
+    "ink": 812
+  },
+  {
+    "seconds": 6999.0,
+    "changedPixels": 192,
+    "unionRatio": 0.1933534743202417,
+    "changed": true,
+    "stable": false,
+    "ink": 982
+  },
+  {
+    "seconds": 6999.2,
+    "changedPixels": 45,
+    "unionRatio": 0.0448654037886341,
+    "changed": true,
+    "stable": false,
+    "ink": 979
+  },
+  {
+    "seconds": 6999.4,
+    "changedPixels": 23,
+    "unionRatio": 0.02320887991927346,
+    "changed": false,
+    "stable": false,
+    "ink": 980
+  },
+  {
+    "seconds": 6999.6,
+    "changedPixels": 27,
+    "unionRatio": 0.027135678391959798,
+    "changed": true,
+    "stable": false,
+    "ink": 984
+  },
+  {
+    "seconds": 6999.8,
+    "changedPixels": 48,
+    "unionRatio": 0.047666335650446874,
+    "changed": true,
+    "stable": false,
+    "ink": 982
+  },
+  {
+    "seconds": 7000.0,
+    "changedPixels": 22,
+    "unionRatio": 0.022155085599194362,
+    "changed": false,
+    "stable": false,
+    "ink": 982
+  },
+  {
+    "seconds": 7000.2,
+    "changedPixels": 50,
+    "unionRatio": 0.049800796812749,
+    "changed": true,
+    "stable": false,
+    "ink": 976
+  },
+  {
+    "seconds": 7000.4,
+    "changedPixels": 24,
+    "unionRatio": 0.024266936299292215,
+    "changed": true,
+    "stable": false,
+    "ink": 978
+  },
+  {
+    "seconds": 7000.6,
+    "changedPixels": 40,
+    "unionRatio": 0.03996003996003996,
+    "changed": true,
+    "stable": false,
+    "ink": 984
+  },
+  {
+    "seconds": 7000.8,
+    "changedPixels": 46,
+    "unionRatio": 0.045771144278606964,
+    "changed": true,
+    "stable": false,
+    "ink": 980
+  },
+  {
+    "seconds": 7001.0,
+    "changedPixels": 21,
+    "unionRatio": 0.02119071644803229,
+    "changed": false,
+    "stable": false,
+    "ink": 981
+  },
+  {
+    "seconds": 7001.2,
+    "changedPixels": 49,
+    "unionRatio": 0.04885343968095713,
+    "changed": true,
+    "stable": false,
+    "ink": 977
+  },
+  {
+    "seconds": 7001.4,
+    "changedPixels": 25,
+    "unionRatio": 0.025252525252525252,
+    "changed": true,
+    "stable": false,
+    "ink": 978
+  },
+  {
+    "seconds": 7001.6,
+    "changedPixels": 38,
+    "unionRatio": 0.03803803803803804,
+    "changed": true,
+    "stable": false,
+    "ink": 982
+  },
+  {
+    "seconds": 7001.8,
+    "changedPixels": 49,
+    "unionRatio": 0.048707753479125246,
+    "changed": true,
+    "stable": false,
+    "ink": 981
+  },
+  {
+    "seconds": 7002.0,
+    "changedPixels": 666,
+    "unionRatio": 0.561078348778433,
+    "changed": true,
+    "stable": false,
+    "ink": 727
+  }
+]

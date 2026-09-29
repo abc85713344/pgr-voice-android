@@ -1,0 +1,289 @@
+using System.Text.Json;
+using PgrVoice;
+using PgrVoice.Following;
+using PgrVoice.AndroidApp.Ocr;
+
+var results = new List<object>();
+int failures = 0;
+void Test(string name, Action test)
+{
+    try { test(); results.Add(new { name, passed = true }); }
+    catch (Exception ex) { failures++; results.Add(new { name, passed = false, error = ex.ToString() }); }
+}
+async Task TestAsync(string name, Func<Task> test)
+{
+    try { await test().WaitAsync(TimeSpan.FromSeconds(5)); results.Add(new { name, passed = true }); }
+    catch (Exception ex) { failures++; results.Add(new { name, passed = false, error = ex.ToString() }); }
+}
+
+Test("两次独立精确观察才推进；固定画面十分钟不再推理或重复播放", () =>
+{
+    var h = new FollowHarness();
+    Require(h.Read(1000, "new", "第二句完整台词") && h.Plays == 0, "第一次观察已播放");
+    Require(!h.Read(1499, "new", "第二句完整台词"), "正常模式超过2Hz");
+    Require(h.Read(1500, "new", "第二句完整台词") && h.Plays == 1 && h.Engine.CurrentId == "second", "第二次没有推进");
+    for (long t = 1700; t <= 601500; t += 200) Require(!h.Read(t, "new", "第二句完整台词"), "固定画面仍启动推理");
+    Require(h.Plays == 1, "固定画面重复播放");
+});
+Test("一次模糊后第一次精确命中不会封口，仍等第二次精确命中", () =>
+{
+    var h = new FollowHarness();
+    Require(h.Read(1000, "new", "识别结果尚不完整"), "模糊观察未运行");
+    Require(h.Read(1500, "new", "第二句完整台词") && h.Plays == 0 && h.Safety.HasPendingConfirmation, "精确一次错误通过");
+    Require(h.Read(2000, "new", "第二句完整台词") && h.Plays == 1, "被总计两次识别提前封口");
+    Require(!h.Read(2500, "new", "第二句完整台词"), "确认之后没有休眠");
+});
+Test("画面变化后恢复两次确认，授权或人工确认的新epoch亦恢复", () =>
+{
+    var h = new FollowHarness(); h.Read(1000, "new", "第二句完整台词"); h.Read(1500, "new", "第二句完整台词");
+    Require(h.Read(2000, "third-frame", "第三句完整台词") && h.Plays == 1, "新画面没有重新等待确认");
+    Require(h.Read(2500, "third-frame", "第三句完整台词") && h.Plays == 2, "新画面不恢复");
+    Require(h.Safety.ConfirmPosition(h.Engine, "third-frame"), "人工重新确认失败");
+    Require(h.Read(3000, "third-frame", "第三句完整台词") && h.Plays == 2, "新epoch没有重启或自行发声");
+});
+Test("已抑制画面仍接受手动OCR；手动请求不突破限速且不自动推进", () =>
+{
+    var s = new OcrInferenceSchedule();
+    Complete(s, Begin(s, 1000)); Complete(s, Begin(s, 1500));
+    Require(!s.TryBegin(1999, 1, "a", false, true, false, out _), "手动绕过限速");
+    Require(s.TryBegin(2000, 1, "a", false, true, false, out var manual), "手动被固定画面抑制");
+    Complete(s, manual);
+    Require(!s.TryBegin(2500, 1, "a", true, false, false, out _), "手动观察意外恢复自动循环");
+});
+Test("异常后按间隔重试；异常不会占用两次有效观察", () =>
+{
+    var s = new OcrInferenceSchedule(); var first = Begin(s, 1000); s.Fail(first);
+    Require(!s.TryBegin(1499, 1, "a", true, false, false, out _), "异常热循环");
+    Complete(s, Begin(s, 1500)); Complete(s, Begin(s, 2000));
+    Require(!s.TryBegin(2500, 1, "a", true, false, false, out _), "有效两次后没停止");
+});
+Test("截断观察不会计入两次完成；重试仍受限速", () =>
+{
+    var s = new OcrInferenceSchedule(); s.Complete(Begin(s, 1000), false, false, 100);
+    Complete(s, Begin(s, 1500)); Complete(s, Begin(s, 2000));
+    Require(!s.TryBegin(2500, 1, "a", true, false, false, out _), "截断重试未结束");
+});
+Test("用户开启低功耗遵守1000ms边界，关闭后恢复500ms边界", () =>
+{
+    var s = new OcrInferenceSchedule(); Complete(s, Begin(s, 1000));
+    Require(!s.TryBegin(1999, 1, "b", true, false, true, out _), "用户降频后的边界提前");
+    Require(s.TryBegin(2000, 1, "b", true, false, true, out var ticket), "用户降频后的边界被延后"); Complete(s, ticket);
+    Require(!s.TryBegin(2499, 1, "c", true, false, false, out _), "关闭低功耗后超过2Hz");
+    Require(s.TryBegin(2500, 1, "c", true, false, false, out _), "关闭低功耗后未恢复2Hz");
+});
+// 调度器不接收设备温度；只验证用户设置与核心行为。设备回归另验证温度事件不会触发任何提示或自动操作。
+Test("不更改低功耗设置时保持500ms上限和用户跟随状态", () =>
+{
+    var h = new FollowHarness(); long epoch = h.Safety.Epoch;
+    Require(h.Read(1000, "new", "第二句完整台词") && h.Plays == 0, "第一次观察直接播放");
+    Require(!h.Read(1499, "new", "第二句完整台词"), "不操作时突破正常频率上限");
+    Require(h.Read(1500, "new", "第二句完整台词") && h.Plays == 1, "不操作时擅自降频或阻止跟随");
+    Require(h.Read(2000, "third-frame", "第三句完整台词") && h.Plays == 1, "下一句未经双次确认播放");
+    Require(h.Read(2500, "third-frame", "第三句完整台词") && h.Plays == 2 && h.Engine.CurrentId == "third", "正常频率不能持续跟随");
+    Require(h.Safety.Mode == FollowMode.Automatic && h.Safety.IsArmed && h.Safety.Epoch == epoch, "不操作时模式或跟随资格改变");
+});
+Test("用户主动降频保留待确认台词与跟随资格，关闭低功耗仍需双次确认", () =>
+{
+    var h = new FollowHarness(); long epoch = h.Safety.Epoch;
+    Require(h.Read(1000, "new", "第二句完整台词") && h.Plays == 0 && h.Safety.HasPendingConfirmation, "第一次识别未等待确认");
+    Require(!h.Read(1500, "new", "第二句完整台词", lowPower: true), "用户主动降频后仍按2Hz识别");
+    Require(!h.Read(1999, "new", "第二句完整台词", lowPower: true), "低功耗超过1Hz");
+    Require(h.Safety.Mode == FollowMode.Automatic && h.Safety.IsArmed && h.Safety.Epoch == epoch, "用户降频取消跟随资格或改模式");
+    Require(h.Read(2000, "new", "第二句完整台词", lowPower: true) && h.Plays == 1 && h.Engine.CurrentId == "second", "低功耗下不能完成原来的第二次确认");
+    Require(!h.Read(2999, "third-frame", "第三句完整台词", lowPower: true), "低功耗提前开始下一轮");
+    Require(h.Read(3000, "third-frame", "第三句完整台词", lowPower: true) && h.Plays == 1, "下一句未经双次确认已播放");
+    Require(!h.Read(3499, "third-frame", "第三句完整台词"), "用户关闭低功耗后突破正常频率上限");
+    Require(h.Read(3500, "third-frame", "第三句完整台词") && h.Plays == 2 && h.Engine.CurrentId == "third", "关闭低功耗后确认不能正常完成");
+    Require(h.Safety.Mode == FollowMode.Automatic && h.Safety.IsArmed && h.Safety.Epoch == epoch, "更改识别频率改变用户选择的跟随状态");
+});
+Test("手动模式下更改低功耗不启用跟随，主动OCR仍可按限速执行", () =>
+{
+    var h = new FollowHarness(); h.Safety.SetMode(FollowMode.Manual); h.Schedule.Reset(); h.Engine.PauseForBrowse();
+    long epoch = h.Safety.Epoch, sequence = 0;
+    foreach (var sample in new[] { (Time: 1000L, LowPower: false), (Time: 2000L, LowPower: true), (Time: 2500L, LowPower: false) })
+    {
+        Require(h.Schedule.TryBegin(sample.Time, epoch, "new", false, true, sample.LowPower, out var ticket) && ticket.Manual, "主动OCR被低功耗设置禁用");
+        var observation = new FollowObservation(epoch, ++sequence, "new", true, [new() { Text = "第二句完整台词", Score = .99 }], "section");
+        var decision = h.Safety.Evaluate(h.Engine, observation);
+        Require(decision.Kind == FollowDecisionKind.Ignored && !h.Safety.TryApply(h.Engine, observation, decision), "手动识别被当成持续跟随");
+        Require(h.Schedule.Complete(ticket, true, false, 100), "手动识别结果不能完成");
+        Require(h.Safety.Mode == FollowMode.Manual && !h.Safety.IsArmed && h.Safety.Epoch == epoch, "低功耗设置改变手动选择");
+        Require(h.Plays == 0 && h.Engine.CurrentId == "first", "手动OCR意外推进或发声");
+    }
+});
+Test("用户手动切模式使在途结果失效，重新跟随需确认位置和全新双次识别", () =>
+{
+    var h = new FollowHarness();
+    Require(h.Read(1000, "new", "第二句完整台词") && h.Safety.HasPendingConfirmation, "未建立第一次确认");
+    long oldEpoch = h.Safety.Epoch;
+    Require(h.Schedule.TryBegin(1500, oldEpoch, "new", true, false, false, out var oldTicket), "第二次识别未开始");
+    var oldObservation = new FollowObservation(oldEpoch, 2, "new", true, [new() { Text = "第二句完整台词", Score = .99 }], "section");
+    h.Safety.SetMode(FollowMode.Manual); h.Schedule.Reset(); h.Engine.PauseForBrowse();
+    var oldDecision = h.Safety.Evaluate(h.Engine, oldObservation);
+    Require(oldDecision.Kind == FollowDecisionKind.Ignored && !h.Safety.TryApply(h.Engine, oldObservation, oldDecision), "切到手动后旧结果仍推进");
+    Require(!h.Schedule.Complete(oldTicket, true, true, 700), "旧结果污染新模式的调度状态");
+    Require(h.Plays == 0 && h.Engine.CurrentId == "first" && h.Safety.Mode == FollowMode.Manual && !h.Safety.IsArmed, "手动切换未静音保留位置");
+    h.Safety.SetMode(FollowMode.Automatic); h.Schedule.Reset();
+    Require(!h.Safety.IsArmed && h.Plays == 0, "选择自动跟随后立即恢复播放");
+    Require(!h.Safety.TryApply(h.Engine, oldObservation, oldDecision), "重新选自动模式后旧结果复活");
+    Require(h.Engine.ConfirmCurrentPosition() && h.Safety.ConfirmPosition(h.Engine, "old"), "明确确认位置后无法开始跟随");
+    Require(h.Read(2000, "new", "第二句完整台词") && h.Plays == 0, "重开后的第一次识别沿用旧确认");
+    Require(h.Read(2500, "new", "第二句完整台词") && h.Plays == 1 && h.Engine.CurrentId == "second", "重开后全新双次识别不能继续");
+});
+Test("慢推理超过500ms降频，恰好500ms不算慢，恢复后的边界准确", () =>
+{
+    var s = new OcrInferenceSchedule(); s.Complete(Begin(s, 1000), true, false, 501);
+    Require(s.Slow && !s.TryBegin(1999, 1, "b", true, false, false, out _), "慢识别未降频");
+    var second = Begin(s, 2000, "b"); s.Complete(second, true, false, 500);
+    Require(!s.Slow && !s.TryBegin(2499, 1, "c", true, false, false, out _), "边界失效");
+    Require(s.TryBegin(2500, 1, "c", true, false, false, out _), "慢状态不能恢复");
+});
+Test("复位及画面变化不能并发启动；旧结果不能影响新画面计数或慢状态", () =>
+{
+    var s = new OcrInferenceSchedule(); var old = Begin(s, 1000); s.Reset();
+    Require(!s.TryBegin(2000, 2, "b", true, false, false, out _), "旧任务仍在途却开启新任务");
+    Require(!s.Complete(old, true, false, 4000) && !s.Slow, "旧结果污染新状态");
+    Require(s.TryBegin(2000, 2, "b", true, false, false, out var current), "旧任务完成后未释放"); Complete(s, current);
+    s.Abandon(old);
+    Require(s.TryBegin(2500, 2, "b", true, false, false, out var next), "旧观察计入新画面的两次");
+    Require(!s.Complete(old, true, false, 5000), "旧结果完成被接纳");
+    Require(!s.TryBegin(3000, 2, "b", true, false, false, out _), "旧完成清除了新在途槽位"); Complete(s, next);
+});
+Test("新画面尚不稳定时拒绝推理并使旧画面结果过期", () =>
+{
+    var s = new OcrInferenceSchedule(); var old = Begin(s, 1000);
+    Require(!s.TryBegin(1500, 1, "b", false, false, false, out _), "不稳定画面启动");
+    Require(!s.Complete(old, true, false, 700), "变化前结果仍有效");
+    Complete(s, Begin(s, 1600, "b")); Complete(s, Begin(s, 2100, "b"));
+});
+
+await TestAsync("空闲时停止也立即返回，耗时模型释放在后台且不阻塞调用线程", async () =>
+{
+    var lifetime = new OcrWorkLifetime(); var entered = Signal(); var finish = Signal(); var callerFinished = Signal();
+    var returned = new TaskCompletionSource<Task>(TaskCreationOptions.RunContinuationsAsynchronously);
+    int callingThread = 0, releaseThread = 0;
+    var caller = new Thread(() =>
+    {
+        try
+        {
+            callingThread = Environment.CurrentManagedThreadId;
+            var stop = lifetime.StopAsync(() =>
+            {
+                releaseThread = Environment.CurrentManagedThreadId; entered.SetResult();
+                finish.Task.GetAwaiter().GetResult();
+            });
+            returned.SetResult(stop);
+        }
+        catch(Exception ex) { returned.TrySetException(ex); }
+        finally { callerFinished.SetResult(); }
+    }) { IsBackground = true, Name = "ocr-stop-test-caller" };
+    caller.Start();
+    try
+    {
+        await entered.Task;
+        var stop = await returned.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        Require(!stop.IsCompleted, "阻塞释放未保持在途");
+        Require(callingThread != releaseThread, "调用停止的线程直接释放模型");
+    }
+    finally { finish.TrySetResult(); }
+    await callerFinished.Task; await await returned.Task;
+});
+await TestAsync("停止立即失效已排队的旧请求，无需等待后台释放完成", async () =>
+{
+    var lifetime = new OcrWorkLifetime(); var running = Signal(); var finish = Signal();
+    int initialized = 0, recognized = 0;
+    var old = lifetime.RunAsync(lifetime.CreateRequest(), () => Task.CompletedTask,
+        async () => { running.SetResult(); await finish.Task; return 1; });
+    await running.Task;
+    var queued = lifetime.RunAsync(lifetime.CreateRequest(), () => { initialized++; return Task.CompletedTask; },
+        () => { recognized++; return Task.FromResult(2); });
+    var stop = lifetime.StopAsync(() => { });
+    Require(!queued.IsCompleted, "旧请求没有排在在途任务之后");
+    finish.SetResult(); await old; await Cancelled(queued); await stop;
+    Require(initialized == 0 && recognized == 0, "旧排队请求在停止之后重新初始化");
+});
+await TestAsync("停止等待在途推理完成，再且仅释放一次模型", async () =>
+{
+    var lifetime = new OcrWorkLifetime(); var running = Signal(); var finish = Signal(); int released = 0;
+    var work = lifetime.RunAsync(lifetime.CreateRequest(), () => Task.CompletedTask, async () => { running.SetResult(); await finish.Task; return 7; });
+    await running.Task; var stop = lifetime.StopAsync(() => released++);
+    Require(!stop.IsCompleted && released == 0, "仍推理时释放模型"); finish.SetResult();
+    Require(await work == 7, "在途结果被破坏"); await stop; Require(released == 1, "模型未释放");
+});
+await TestAsync("停止前已排队但尚未启动的旧请求不能重新初始化模型", async () =>
+{
+    var lifetime = new OcrWorkLifetime(); long old = lifetime.CreateRequest(); int initialized = 0, recognized = 0;
+    await lifetime.StopAsync(() => { });
+    await Cancelled(lifetime.RunAsync(old, () => { initialized++; return Task.CompletedTask; }, () => { recognized++; return Task.FromResult(1); }));
+    Require(initialized == 0 && recognized == 0, "停止后旧任务复活");
+});
+await TestAsync("停止在初始化期间到达：等待初始化结束后卸载，不再启动推理", async () =>
+{
+    var lifetime = new OcrWorkLifetime(); var initialized = Signal(); var finish = Signal(); int recognized = 0, released = 0;
+    var work = lifetime.RunAsync(lifetime.CreateRequest(), async () => { initialized.SetResult(); await finish.Task; }, () => { recognized++; return Task.FromResult(1); });
+    await initialized.Task; var stop = lifetime.StopAsync(() => released++); finish.SetResult();
+    await Cancelled(work); await stop; Require(recognized == 0 && released == 1, "初始化后旧推理复活或未卸载");
+});
+await TestAsync("停止后立刻新请求：旧卸载不能销毁新会话复用的模型", async () =>
+{
+    var lifetime = new OcrWorkLifetime(); var running = Signal(); var finish = Signal(); int released = 0; bool model = true;
+    var old = lifetime.RunAsync(lifetime.CreateRequest(), () => Task.CompletedTask, async () => { running.SetResult(); await finish.Task; return 1; });
+    await running.Task; var stop = lifetime.StopAsync(() => { released++; model = false; });
+    var current = lifetime.RunAsync(lifetime.CreateRequest(), () => Task.CompletedTask, () => Task.FromResult(model));
+    Require(!current.IsCompleted, "新旧推理重叠"); finish.SetResult(); await old; await stop;
+    Require(await current && released == 0, "旧卸载误伤新请求");
+    await lifetime.StopAsync(() => { released++; model = false; }); Require(released == 1 && !model, "后续停止不能卸载");
+});
+await TestAsync("先完成停止再新请求会正常重建，初始化错误不锁死生命周期", async () =>
+{
+    var lifetime = new OcrWorkLifetime(); int created = 0; bool loaded = true;
+    await lifetime.StopAsync(() => loaded = false);
+    Require(await lifetime.RunAsync(lifetime.CreateRequest(), () => { created++; loaded = true; return Task.CompletedTask; }, () => Task.FromResult(loaded)), "卸载后不能重建");
+    try { await lifetime.RunAsync(lifetime.CreateRequest(), () => throw new InvalidDataException("fixture"), () => Task.FromResult(false)); }
+    catch (InvalidDataException) { }
+    await lifetime.StopAsync(() => loaded = false); Require(created == 1 && !loaded, "错误后互斥锁未释放");
+});
+
+Console.WriteLine(JsonSerializer.Serialize(new { scope = "直接编译生产OCR调度、模型生命周期及共享剧情规则；逻辑行为回归，不运行Android或模型，不代表手机性能。", passed = failures == 0, results }, new JsonSerializerOptions { WriteIndented = true }));
+Environment.ExitCode = failures == 0 ? 0 : 1;
+
+static void Require(bool condition, string message) { if (!condition) throw new InvalidOperationException(message); }
+static OcrScheduleTicket Begin(OcrInferenceSchedule s, long now, string frame = "a")
+{
+    Require(s.TryBegin(now, 1, frame, true, false, false, out var ticket), "应开始推理却被阻止：" + now);
+    return ticket;
+}
+static void Complete(OcrInferenceSchedule s, OcrScheduleTicket ticket) => Require(s.Complete(ticket, true, false, 100), "当前结果未接纳");
+static TaskCompletionSource Signal() => new(TaskCreationOptions.RunContinuationsAsynchronously);
+static async Task Cancelled(Task task)
+{
+    try { await task; } catch (OperationCanceledException) { return; }
+    throw new InvalidOperationException("旧任务未取消");
+}
+
+sealed class FollowHarness
+{
+    public PlaybackEngine Engine { get; }
+    public FollowSafetyController Safety { get; } = new();
+    public OcrInferenceSchedule Schedule { get; } = new();
+    public int Plays { get; private set; }
+    long sequence;
+    public FollowHarness()
+    {
+        var pack = new Pack { Id = "调度测试", SchemaVersion = 3,
+            Chapters = [new() { Id = "chapter", Sections = [new() { Id = "section", StartId = "first" }] }],
+            Nodes = [new() { Id = "first", SectionId = "section", Text = "第一句完整台词", NextId = "second" },
+                new() { Id = "second", SectionId = "section", Text = "第二句完整台词", NextId = "third" },
+                new() { Id = "third", SectionId = "section", Text = "第三句完整台词" }] };
+        pack.Validate(); Engine = new(pack); Engine.Commit("first"); Engine.PlayRequested += _ => Plays++;
+        Safety.SetMode(FollowMode.Automatic); if (!Safety.ConfirmPosition(Engine, "old")) throw new InvalidOperationException("fixture");
+    }
+    public bool Read(long now, string frame, string text, bool lowPower = false)
+    {
+        if (!Schedule.TryBegin(now, Safety.Epoch, frame, true, false, lowPower, out var ticket)) return false;
+        var observation = new FollowObservation(Safety.Epoch, ++sequence, frame, true, [new() { Text = text, Score = .99 }], "section");
+        var decision = Safety.Evaluate(Engine, observation); Safety.TryApply(Engine, observation, decision);
+        if (!Schedule.Complete(ticket, true, Safety.HasPendingConfirmation, 100)) throw new InvalidOperationException("有效结果失效");
+        return true;
+    }
+}

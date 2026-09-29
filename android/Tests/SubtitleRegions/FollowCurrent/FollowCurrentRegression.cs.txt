@@ -1,0 +1,161 @@
+using PgrVoice;
+using PgrVoice.Following;
+
+int passed = 0, failed = 0;
+void Test(string name, Action run)
+{
+    try { run(); passed++; Console.WriteLine("PASS " + name); }
+    catch (Exception ex) { failed++; Console.Error.WriteLine("FAIL " + name + ": " + ex.Message); }
+}
+void Require(bool value, string message) { if (!value) throw new Exception(message); }
+Pack Fixture(string current = "克里斯蒂娜，记住……", string next = "黄金时代的荣耀终将重现")
+{
+    var pack = new Pack
+    {
+        Id = "follow-current", SchemaVersion = 3, Root = Path.GetTempPath(),
+        Chapters = [new() { Id = "chapter", Sections = [new() { Id = "section", StartId = "first" }] }],
+        Nodes = [new() { Id = "first", SectionId = "section", Text = current, Speaker = "旁白", NextId = "second" },
+            new() { Id = "second", SectionId = "section", Text = next, Speaker = "旁白", NextId = "third" },
+            new() { Id = "third", SectionId = "section", Text = "这是后面的另一句台词", Speaker = "旁白" }]
+    };
+    pack.Validate(); return pack;
+}
+(PlaybackEngine Engine, FollowSafetyController Follow) Armed(Pack? pack = null)
+{
+    var engine = new PlaybackEngine(pack ?? Fixture()); engine.Commit("first");
+    var follow = new FollowSafetyController(); follow.SetMode(FollowMode.Automatic);
+    Require(follow.ConfirmPosition(engine, "baseline"), "测试位置未确认");
+    return (engine, follow);
+}
+FollowObservation Seen(FollowSafetyController f, long sequence, string frame, string text, double confidence = .99) =>
+    new(f.Epoch, sequence, frame, true, [new() { Text = text, Score = confidence }], "section");
+FollowDecision CheckCurrent(PlaybackEngine e, FollowSafetyController f, long sequence, string frame)
+{
+    var observation = Seen(f, sequence, frame, e.Current!.Text);
+    var decision = f.Evaluate(e, observation);
+    Require(decision.Kind == FollowDecisionKind.Waiting && decision.Reason.Contains("当前句已到位"), "当前句被误报为定位失败");
+    Require(!f.TryApply(e, observation, decision), "当前句导致推进");
+    return decision;
+}
+
+Test("箭头变化后精确当前句保持等待且不重播", () =>
+{
+    var (e, f) = Armed(); int plays = 0; e.PlayRequested += _ => plays++;
+    int history = e.History.Count; long epoch = f.Epoch;
+    CheckCurrent(e, f, 1, "arrow-a"); CheckCurrent(e, f, 2, "arrow-b");
+    Require(e.CurrentId == "first" && plays == 0 && e.History.Count == history && f.IsArmed && f.Epoch == epoch, "核对当前句改变状态");
+});
+Test("当前句更新画面基准并阻止同画面误认下一句", () =>
+{
+    var (e, f) = Armed(); CheckCurrent(e, f, 1, "still-current");
+    var decision = f.Evaluate(e, Seen(f, 2, "still-current", e.Pack.ById["second"].Text));
+    Require(decision.Kind == FollowDecisionKind.Waiting && !f.HasPendingConfirmation && e.CurrentId == "first", "未更新当前句画面基准");
+});
+Test("核对当前句后下一句依旧需要两次完整识别", () =>
+{
+    var (e, f) = Armed(); int plays = 0; e.PlayRequested += _ => plays++;
+    CheckCurrent(e, f, 1, "current");
+    var first = Seen(f, 2, "next", e.Pack.ById["second"].Text);
+    var once = f.Evaluate(e, first);
+    Require(once.Kind == FollowDecisionKind.Waiting && !f.TryApply(e, first, once), "一次下一句识别就推进");
+    var second = first with { Sequence = 3 }; var twice = f.Evaluate(e, second);
+    Require(twice.Kind == FollowDecisionKind.Advance && f.TryApply(e, second, twice), "两次完整下一句无法推进");
+    Require(plays == 1 && e.CurrentId == "second" && !f.TryApply(e, second, twice), "重复播放或推进");
+});
+Test("重新读到当前句清除上一条下一句共识", () =>
+{
+    var (e, f) = Armed();
+    f.Evaluate(e, Seen(f, 1, "next-a", e.Pack.ById["second"].Text));
+    Require(f.HasPendingConfirmation, "未建立首次候选");
+    CheckCurrent(e, f, 2, "current");
+    Require(!f.HasPendingConfirmation, "当前句保留旧共识");
+    var decision = f.Evaluate(e, Seen(f, 3, "next-b", e.Pack.ById["second"].Text));
+    Require(decision.Kind == FollowDecisionKind.Waiting && e.CurrentId == "first", "跨当前句拼接两次确认");
+});
+Test("低置信当前句不能声称已到位", () =>
+{
+    var (e, f) = Armed();
+    var decision = f.Evaluate(e, Seen(f, 1, "changed", e.Current!.Text, .79));
+    Require(decision.Kind == FollowDecisionKind.Candidates && !decision.Reason.Contains("已到位"), "低置信被采纳");
+});
+Test("逐字和错误当前句仍交候选", () =>
+{
+    foreach (var text in new[] { "克里斯蒂娜", "克里斯蒂娜记错" })
+    {
+        var (e, f) = Armed();
+        Require(f.Evaluate(e, Seen(f, 1, "changed", text)).Kind == FollowDecisionKind.Candidates, "不完整当前句被采纳");
+    }
+});
+Test("单字和纯标点不触发当前句核对", () =>
+{
+    foreach (var text in new[] { "嗯", "……！" })
+    {
+        var (e, f) = Armed(Fixture(text));
+        Require(f.Evaluate(e, Seen(f, 1, "changed", text)).Kind == FollowDecisionKind.Candidates, "短句误判已到位");
+    }
+});
+Test("两字当前句可核对但不豁免短下一句角色要求", () =>
+{
+    var (e, f) = Armed(Fixture("明白", "走吧")); CheckCurrent(e, f, 1, "current");
+    for (int i = 2; i <= 3; i++)
+        Require(f.Evaluate(e, Seen(f, i, "next", "走吧")).Kind == FollowDecisionKind.Candidates, "短下一句未见角色也推进");
+});
+Test("相邻同规范文本仍明确要求手动下一句", () =>
+{
+    var (e, f) = Armed(Fixture("我们出发吧。", "我们出发吧！"));
+    for (int i = 1; i <= 3; i++)
+    {
+        var observation = Seen(f, i, "arrow-" + i, e.Current!.Text);
+        var decision = f.Evaluate(e, observation);
+        Require(decision.Kind == FollowDecisionKind.Candidates && decision.Reason.Contains("手动下一句") && !f.TryApply(e, observation, decision), "同文被自动确认");
+    }
+    Require(e.CurrentId == "first", "相邻同文发生推进");
+});
+Test("当前与下一句同时在画面时保守等待不推进", () =>
+{
+    var (e, f) = Armed();
+    for (int i = 1; i <= 3; i++)
+    {
+        var observation = Seen(f, i, "overlap-" + i, e.Current!.Text) with
+        { Blocks = [new() { Text = e.Current.Text, Score = .99 }, new() { Text = e.Pack.ById["second"].Text, Score = .99 }] };
+        var decision = f.Evaluate(e, observation);
+        Require(decision.Kind == FollowDecisionKind.Waiting && !f.TryApply(e, observation, decision) && !f.HasPendingConfirmation, "新旧文字重叠时推进");
+    }
+});
+Test("错误路线不会因核对当前句放开推进", () =>
+{
+    var pack = Fixture(); pack.ById["second"].PathId = "not-selected";
+    var (e, f) = Armed(pack); CheckCurrent(e, f, 1, "current");
+    for (int i = 2; i <= 3; i++)
+    {
+        var observation = Seen(f, i, "other-route", pack.ById["second"].Text);
+        var decision = f.Evaluate(e, observation);
+        Require(decision.Kind == FollowDecisionKind.Candidates && !f.TryApply(e, observation, decision), "进入未选择路线");
+    }
+    Require(e.CurrentId == "first", "路线状态改变");
+});
+Test("原本无法跨越的剧情边界仍需人工确认", () =>
+{
+    foreach (var kind in new[] { "choice", "gap", "merge", "end" })
+    {
+        var pack = Fixture(); pack.ById["second"].Kind = kind;
+        var (e, f) = Armed(pack); CheckCurrent(e, f, 1, "current");
+        Require(e.GetAutomaticNextLine() == null, "边界变可自动到达");
+        var observation = Seen(f, 2, "beyond", pack.ById["third"].Text); var decision = f.Evaluate(e, observation);
+        Require(decision.Kind == FollowDecisionKind.Candidates && !f.TryApply(e, observation, decision) && e.CurrentId == "first", "越过边界");
+    }
+});
+Test("未确认和已过期当前句不能重新武装", () =>
+{
+    var (e, f) = Armed(); var old = Seen(f, 1, "changed", e.Current!.Text); f.Invalidate();
+    Require(f.Evaluate(e, old).Kind == FollowDecisionKind.Ignored && !f.IsArmed, "旧当前句重新武装");
+    Require(f.Evaluate(e, old with { Epoch = f.Epoch, Sequence = 2 }).Kind == FollowDecisionKind.Ignored, "未确认位置接受当前句");
+});
+Test("跨小节当前句即使同文也拒绝", () =>
+{
+    var (e, f) = Armed(); var observation = Seen(f, 1, "changed", e.Current!.Text) with { SectionId = "other-section" };
+    Require(f.Evaluate(e, observation).Kind == FollowDecisionKind.Ignored && e.CurrentId == "first", "跨小节修改基准");
+});
+
+Console.WriteLine($"RESULT {passed}/14 passed; {failed} failed");
+Environment.ExitCode = failed == 0 && passed == 14 ? 0 : 1;
