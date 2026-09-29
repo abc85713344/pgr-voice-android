@@ -9,8 +9,8 @@
 | **包名** | `cn.pgrvoice.player` |
 | **技术栈** | .NET 10 for Android（C#）、Media3 ExoPlayer、ONNX Runtime、ML Kit |
 
-> 这是**源代码仓库**。编译好的 APK 安装包请在 [Releases](https://github.com/abc85713344/pgr-voice-android/releases) 下载。
-> Windows 桌面版（以及 40 章配音包的下载说明）在另一个仓库：[**pgr-voice-pack**](https://github.com/abc85713344/pgr-voice-pack)。
+> 这是**源代码仓库**，编译产物不在这里。**APK 安装包统一在发布页下载**：
+> [**pgr-voice-pack 的 Releases**](https://github.com/abc85713344/pgr-voice-pack/releases/latest) —— Windows 桌面版、Android APK 和 40 章配音包的下载说明都集中在那个仓库。
 
 **社区讨论**：[NGA 发布帖](https://ngabbs.com/read.php?tid=47614112) ｜ [B站演示视频](https://www.bilibili.com/video/BV1FPhZ6yEZB/)
 
