@@ -11,7 +11,7 @@
 运行纯主机回归：
 
 ```powershell
-& 'dotnet' run --project android\Tests\SubtitleRegions\SubtitleRegions.csproj -- android\Tests\SubtitleRegions\results.json
+& '<AndroidRoot>\runtime\dotnet\dotnet.exe' run --project android\Tests\SubtitleRegions\SubtitleRegions.csproj -- android\Tests\SubtitleRegions\results.json
 ```
 
 `fixtures/*.argb` 来自用户第 29 章第一小节截图的双线性缩略图，仅主机测试使用，不放入 APK Assets。`fixtures/provenance.json` 保存源图与夹具校验值。使用 Pillow 的 `prepare_fixture.py` 可从原截图重建夹具；执行回归本身不需要 Python。测试包含真实画面 320 × 192 和 160 × 96 的正例，以及多行、长行、纯黑、顶部菜单、箭头、底部对白、正常场景、空心按钮、噪声和无效缓冲区等边界。
@@ -23,7 +23,7 @@
 `FollowRegionSwitch.cs` 使用生产 `FollowSafetyController`、`SubtitleStability` 和 `OcrInferenceSchedule`，重放 AppSession 的切区调用协议。独立项目直接编译核心源文件，不引用或重建 Android/共享核心项目，避免影响正在进行的发布构建。
 
 ```powershell
-& 'dotnet' run --project android\Tests\SubtitleRegions\CrossRegion\FollowRegionSwitch.csproj -- android\Tests\SubtitleRegions\cross-region-results.json
+& '<AndroidRoot>\runtime\dotnet\dotnet.exe' run --project android\Tests\SubtitleRegions\CrossRegion\FollowRegionSwitch.csproj -- android\Tests\SubtitleRegions\cross-region-results.json
 ```
 
 7 项检查覆盖：切区保留 armed、清掉旧一次共识、新区须连续两次识别、旧 Advance 决策不能迟到应用、切回用户框也重新确认、不能自动开启已暂停的跟随、旧 OCR 槽位与休眠状态，以及真实截图的宽框稳定掩码。

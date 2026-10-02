@@ -43,6 +43,8 @@ namespace PgrVoice.AndroidApp.Ui
 }
 namespace PgrVoice.AndroidApp.Platform
 {
+    public static class VoiceForegroundService
+    { public static void EnsureStarted(object context, Action ready) => ready(); }
     public sealed record GameAdvanceAvailability(bool Connected, bool TargetForeground, bool ScreenReady,
         int DisplayWidth, int DisplayHeight, int Rotation, string Reason)
     { public bool CanTap => Connected && TargetForeground && ScreenReady; public string? DisplayKey { get; init; } }
@@ -75,6 +77,7 @@ namespace PgrVoice.AndroidApp.Platform
 }
 namespace PgrVoice.AndroidApp
 {
+    public sealed record ImportedZipSource(string Uri, string Name, long? Size, long? Modified);
     public sealed partial class AppSession
     {
         readonly object context = new();
@@ -84,7 +87,7 @@ namespace PgrVoice.AndroidApp
         readonly OcrInferenceSchedule ocrSchedule = new();
         readonly PendingStub pendingFrame = new();
         readonly SubtitleStability stability = new();
-        long ocrEpoch, playGeneration, captureNotBefore, nextAudioTicket;
+        long ocrEpoch, playGeneration, captureNotBefore;
         bool manualOcr, uiVisible;
         byte[]? lastMask;
         bool HasConfirmedRegion => true;
@@ -104,6 +107,7 @@ namespace PgrVoice.AndroidApp
         public long AutoEpoch => autoPlay.Epoch;
         public AppSession(PlaybackEngine engine)
         {
+            audio.Played = _ => PlayedNodes.Add(Engine!.CurrentId!);
             GameAdvanceAccessibilityService.Reset(Screen.DisplayState);
             var state = GameAdvanceAccessibilityService.Availability;
             Settings.AdvanceTargets[state.DisplayKey!] = new(GameAdvanceAccessibilityService.OfficialGamePackage,
@@ -113,13 +117,7 @@ namespace PgrVoice.AndroidApp
         public void ReplaceEngine(PlaybackEngine engine)
         {
             Invalidate(); Engine = engine; SectionId = engine.Current?.SectionId ?? "s";
-            engine.PlayRequested += node =>
-            {
-                if (!ReferenceEquals(Engine, engine) || node == null) return;
-                PlayedNodes.Add(node.Id);
-                if (autoPlay.Running && !autoPlay.BindAudio(autoPlay.Epoch, node.Id, ++nextAudioTicket, Android.OS.SystemClock.Now))
-                    throw new Exception("Production autoplay did not prepare the emitted audio request");
-            };
+            engine.PlayRequested += node => PlayNode(engine, node);
             engine.StopRequested += () => { playGeneration++; audio.Stop(); };
             engine.Changed += Notify;
         }
@@ -142,7 +140,13 @@ namespace PgrVoice.AndroidApp
         { CancelAutoPlayback(); ocrEpoch++; playGeneration++; pendingFrame.Clear(); manualOcr = false; ocrSchedule.Reset(); overlay.SetCaptureHidden(false); }
         void Notify() { }
         void SaveSettings() { }
-        public sealed class AudioStub { public void Stop() { } }
+        public sealed class AudioStub
+        {
+            long nextTicket;
+            public Action<string>? Played;
+            public long PlayTagged(string path) { Played?.Invoke(path); return ++nextTicket; }
+            public void Stop() { }
+        }
         public sealed class ListeningStub { public bool IsPlaying; public void Pause() => IsPlaying = false; }
         public sealed class PendingStub { public void Clear() { } }
         public sealed class ScreenStub

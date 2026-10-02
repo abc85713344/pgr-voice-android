@@ -120,7 +120,7 @@ Test("更换Engine后旧支线下一句和重播不得操作新章节",()=>
 Test("第29章真实关于现状支线选择后显示两句，人工下一句到栗西再到menu003",()=>
 {
     const string section="ch29-1dc1158611c810722709",menu=section+"-menu-002",first=section+"-55a8506e75715b921f71",second=section+"-6516ce211bb76f665bd4",end=section+"-menu-003";
-    string path=Environment.GetEnvironmentVariable("PGR_CH29_PACK")??@"<你的配音包根目录>\第29章_源解信标\pack.json";
+    string path=Environment.GetEnvironmentVariable("PGR_CH29_PACK")??@"<数据目录>\主线第03-42章\第29章_源解信标\pack.json";
     var pack=PgrVoice.Pack.Load(path);var e=new PlaybackEngine(pack);Check(e.OpenGameMenu(menu,section),e.NavigationError);var s=new AppSession(e);s.Open(OverlayBrowsePage.Branches);
     ChooseContaining(s,s.Model.Items,"关于现状");Check(e.CurrentId==first&&s.Plays==1&&s.Model.Items.Count==2&&s.Model.Items.All(i=>i.IsDialogue),"真实选项进入后未保留两句正文");
     Check(s.Model.Items.Single(i=>i.Selected).Title.Contains("关于现状"),"真实首句未高亮");

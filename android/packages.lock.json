@@ -1043,7 +1043,7 @@
         "type": "Project"
       }
     },
-    "net10.0-android36.0/android-arm64": {
+    "net10.0-android36.0/android-x64": {
       "Microsoft.ML.OnnxRuntime": {
         "type": "Direct",
         "requested": "[1.30.0, )",

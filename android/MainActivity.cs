@@ -151,6 +151,7 @@ public sealed partial class MainActivity : Activity
     protected override void OnPause(){PauseListeningUi();session?.SetUiVisible(false);session?.SaveProgress();base.OnPause();}
     protected override void OnDestroy()
     {
+        importCancellation?.Cancel();importDialog?.Dismiss();importDialog=null;
         alive=false;session.Changed-=UpdateStatus;session.ContentChanged-=Render;session.CapturePermissionRequested-=RequestCapture;session.NavigationRequested-=OnNavigation;
         subtitleRegionOverlay?.Dispose();subtitleRegionOverlay=null;
         session.Listening.Changed-=OnListeningChanged;
@@ -236,7 +237,7 @@ public sealed partial class MainActivity : Activity
             button.SetTextColor(which==(int)DialogButtonType.Positive?PgrTheme.Cyan:PgrTheme.Secondary);button.SetMinimumHeight(Dp(48));button.SetAllCaps(false);
         }
     }
-    void Safe(Action action){try{action();}catch(Exception ex){Info("操作未完成",ex.Message);}}
+    void Safe(Action action){try{if(session.IsDeletingPackage){Info("请稍候","正在删除章节文件，请等待完成。");return;}action();}catch(Exception ex){Info("操作未完成",ex.Message);}}
     void Info(string title,string message)
     {var b=new AlertDialog.Builder(this);b.SetTitle(title);b.SetMessage(message);b.SetPositiveButton("知道了",(_,_)=>{});StyleDialog(b.Show());}
     void Confirm(string title,string message,Action action)
@@ -301,7 +302,8 @@ public sealed partial class MainActivity : Activity
         ListeningEntrance();
         var heading=Row(content);heading.SetGravity(GravityFlags.CenterVertical);
         var label=Text("章节配音包",19);label.SetTypeface(Typeface.Default,TypefaceStyle.Bold);heading.AddView(label,new LinearLayout.LayoutParams(0,-2,1));
-        var import=new Button(this){Text=session.IsImporting?"取消导入":"导入 ZIP",TextSize=12};PgrTheme.StyleButton(import,quiet:true);ButtonIcon(import,"import");import.Click+=(_,_)=>Safe(()=>{if(session.IsImporting)importCancellation?.Cancel();else SelectFile(ImportRequest,"application/zip");});heading.AddView(import,new LinearLayout.LayoutParams(-2,Dp(48)));
+        var import=new Button(this){Text=importCancellation!=null?"取消导入":"导入 ZIP",TextSize=12};PgrTheme.StyleButton(import,quiet:true);ButtonIcon(import,"import");import.Click+=(_,_)=>Safe(()=>{if(importCancellation!=null)importCancellation.Cancel();else SelectFile(ImportRequest,"application/zip");});heading.AddView(import,new LinearLayout.LayoutParams(-2,Dp(48)));
+        Line("可长按多选 ZIP，一次导入多个章节。",11);
         if(packages.Count==0)
         {
             var empty=Card(content);var caption=Text("还没有章节",18);caption.SetTypeface(Typeface.Default,TypefaceStyle.Bold);empty.AddView(caption);
@@ -319,8 +321,12 @@ public sealed partial class MainActivity : Activity
             var progress=Text(session.Progress.GetSummary(pack.PackId) is { Length:>0 } summary?summary:"尚未开始 · 点击查看剧情",11);progress.SetTextColor(PgrTheme.Secondary);progress.SetMaxLines(2);progress.Ellipsize=global::Android.Text.TextUtils.TruncateAt.End;progress.SetPadding(0,0,0,0);details.AddView(progress);
             card.AddView(details,new LinearLayout.LayoutParams(0,-2,1));card.AddView(Icon("chevron",selected?PgrTheme.Red:PgrTheme.Secondary,18),new LinearLayout.LayoutParams(Dp(22),Dp(28)));
             content.AddView(card,new LinearLayout.LayoutParams(-1,-2){TopMargin=Dp(5),BottomMargin=Dp(4)});
+            var manage=new Button(this){Text="管理文件 · "+ChapterTitle(pack.Title),TextSize=12};
+            manage.ContentDescription="管理章节文件："+pack.Title;PgrTheme.StyleButton(manage,quiet:true);
+            manage.Click+=(_,_)=>Safe(()=>ManagePackage(pack.PackId));
+            content.AddView(manage,new LinearLayout.LayoutParams(-1,Dp(42)){BottomMargin=Dp(10)});
         }
-        Line("章节单独导入，更新时保留已有进度。",11);
+        Line("章节按顺序逐个导入，更新时保留已有进度。",11);
     }
     bool NeedPack(){if(session.Engine!=null)return false;Line("请先在“章节”中导入并打开配音包。");return true;}
     void SectionSelector()
@@ -661,7 +667,13 @@ public sealed partial class MainActivity : Activity
     }
     void SelectFile(int request,string mime)
     {
+        if(request==ImportRequest&&(deletingArchive||importCancellation!=null||session.PackagesBusy)){Info("请稍候","章节文件正在处理中，请等待完成。");return;}
         var intent=new Intent(Intent.ActionOpenDocument);intent.AddCategory(Intent.CategoryOpenable);intent.SetType("*/*");
+        if(request==ImportRequest)
+        {
+            intent.AddFlags(ActivityFlags.GrantReadUriPermission|ActivityFlags.GrantWriteUriPermission|ActivityFlags.GrantPersistableUriPermission);
+            intent.PutExtra(Intent.ExtraAllowMultiple,true);
+        }
         intent.PutExtra(Intent.ExtraMimeTypes,new[]{mime,"application/octet-stream","application/x-zip-compressed"});StartActivityForResult(intent,request);
     }
     void SaveFile(string name)
@@ -689,10 +701,14 @@ public sealed partial class MainActivity : Activity
                 return;
             }
             if(requestCode==OverlayRequest){if(global::Android.Provider.Settings.CanDrawOverlays(this))session.ShowOverlay();return;}
-            if(resultCode!=Result.Ok||data?.Data==null)return;
+            if(resultCode!=Result.Ok||data==null)return;
             if(requestCode==ImportRequest)
-            {importCancellation=new();using var stream=ContentResolver!.OpenInputStream(data.Data)!;await session.ImportAsync(stream,importCancellation.Token);page=0;Render();}
-            else if(requestCode==ExportRequest)
+            {
+                await ImportSelectedZipsAsync(data);
+                return;
+            }
+            if(data.Data==null)return;
+            if(requestCode==ExportRequest)
             {
                 if(string.IsNullOrEmpty(exportText))throw new InvalidOperationException("导出已中断，请回到设置页重新选择要导出的内容。");
                 using(var output=ContentResolver!.OpenOutputStream(data.Data,"wt")??throw new IOException("无法打开所选保存位置，请选择其他位置后重试。"))

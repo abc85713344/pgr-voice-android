@@ -23,6 +23,7 @@ public sealed partial class MainActivity
 
     void ClearListeningViews()
     {
+        ClearListeningDirectoryViews();
         listeningPosition = listeningSpeaker = listeningDialogue = listeningStatus = listeningResume = null;
         listeningPlay = listeningPolicy = listeningSpeed = listeningSleep = listeningBookmark = null;
         listeningSeek = null; listeningTime = null; listeningSeeking = false;
@@ -71,7 +72,6 @@ public sealed partial class MainActivity
         var navigation = Row(content);
         ButtonIcon(Button(navigation, "返回章节", () => ShowPage(0)), "previous");
         ButtonIcon(Button(navigation, "切换大章", ChooseListeningChapter), "archive");
-        if (CompactLayout && player.Pack != null) ListeningPlaybackControls(content);
         ListeningHero();
         if (player.Pack == null || player.Chapter == null)
         {
@@ -83,6 +83,8 @@ public sealed partial class MainActivity
             return;
         }
 
+        ListeningPlaybackControls(content);
+        BuildListeningDirectory();
         var playing = Card(content, selected: true);
         listeningPosition = Text("", 11); listeningPosition.SetTextColor(PgrTheme.Cyan); playing.AddView(listeningPosition);
         listeningSpeaker = Text("", 17); listeningSpeaker.SetTypeface(Typeface.Default, TypefaceStyle.Bold); playing.AddView(listeningSpeaker);
@@ -106,7 +108,6 @@ public sealed partial class MainActivity
         });
         playing.AddView(listeningSeek);
         listeningTime = Text("", 11); listeningTime.SetTextColor(PgrTheme.Secondary); listeningTime.SetPadding(0, 0, 0, Dp(2)); playing.AddView(listeningTime);
-        if (!CompactLayout) ListeningPlaybackControls(playing);
         var shortcuts = Row(playing);
         ButtonIcon(Button(shortcuts, "小节目录", ShowListeningSections), "story");
         listeningBookmark = Button(shortcuts, "记下这句", AddListeningBookmark); ButtonIcon(listeningBookmark, "bookmark");
@@ -132,14 +133,14 @@ public sealed partial class MainActivity
         var manage = new Button(this) { Text = "全部 / 管理", TextSize = 12 }; PgrTheme.StyleButton(manage, quiet: true); manage.Click += (_, _) => Safe(ManageListeningBookmarks); bookmarkHeading.AddView(manage, new LinearLayout.LayoutParams(-2, Dp(48)));
         listeningBookmarks = new LinearLayout(this) { Orientation = Orientation.Vertical }; content.AddView(listeningBookmarks);
         ButtonIcon(Button(content, "停止听书并保留位置", player.Stop), "close");
-        Button(content, "听书使用说明", () => Info("听书使用说明", "按大章节收听，章内小节连续衔接，到大章末尾停止。\n\n听书进度和书签独立保存，不会改变游戏中的剧情进度。重新打开、跳转小节或恢复书签后，点播放才会发声。\n\n分支可设为全部听、手动选择或默认第一个。手动选择遇到分支会暂停，回到听书页点选后继续。全部听仅依据配音包已有的路线内容，分支衔接以包内资料为准。\n\n支持后台收听、倍速与定时关闭。通知栏可控制播放；系统限制后台活动时，请在手机的应用电池设置中允许后台运行。\n\n听书无需屏幕捕获、悬浮窗或无障碍权限。游戏配音和听书共用音频输出，开始一种播放时会暂停另一种。"));
+        Button(content, "听书使用说明", () => Info("听书使用说明", "按大章节收听，章内小节连续衔接，到大章末尾停止。\n\n小节台词目录显示完整正文，翻阅或选中台词不影响收听。点“定位到选中台词”后暂停，点播放再继续；“回到正在听”只返回当前句的显示位置。待选分支的后文可以阅读，需要打开选项后再收听。\n\n听书进度和书签独立保存，不会改变游戏中的剧情进度。重新打开、跳转小节或恢复书签后，点播放才会发声。\n\n分支可设为全部听、手动选择或默认第一个。手动选择遇到分支会暂停，回到听书页点选后继续。全部听仅依据配音包已有的路线内容，分支衔接以包内资料为准。\n\n支持后台收听、倍速与定时关闭。通知栏可控制播放；系统限制后台活动时，请在手机的应用电池设置中允许后台运行。\n\n听书无需屏幕捕获、悬浮窗或无障碍权限。游戏配音和听书共用音频输出，开始一种播放时会暂停另一种。"));
         UpdateListeningPage();
         QueueListeningUiTick();
     }
 
     void ListeningHero()
     {
-        if (CompactLayout) { Line(session.Listening.Chapter?.Title ?? "故事，在耳边继续", 17); return; }
+        if (CompactLayout || session.Listening.Pack != null) { Line(session.Listening.Chapter?.Title ?? "故事，在耳边继续", 17); return; }
         var hero = new FrameLayout(this); int height = CompactLayout ? 116 : 142;
         if (archiveArt == null)
         { using var stream = Assets!.Open("ui/story-archive-v2.png"); using var options = new BitmapFactory.Options { InSampleSize = 2 }; archiveArt = BitmapFactory.DecodeStream(stream, null, options); }
@@ -164,6 +165,7 @@ public sealed partial class MainActivity
     {
         var player = session.Listening;
         if (listeningPosition == null) return;
+        UpdateListeningDirectory();
         listeningPosition.Text = player.PositionText;
         listeningSpeaker!.Text = player.Current is { Kind: "line" } node ? (string.IsNullOrWhiteSpace(node.Speaker) ? "旁白" : node.Speaker) : player.Choices.Count > 0 ? "选择下一段故事" : "声音档案";
         listeningDialogue!.Text = player.Current?.Text ?? "选择一段故事，准备开始收听。";
@@ -261,30 +263,13 @@ public sealed partial class MainActivity
     {
         var player = session.Listening;
         if (player.Chapter == null) return;
+        var owner = player.Pack; var chapter = player.Chapter;
         var sections = player.Chapter.Sections;
-        Choose("小节目录 · 跳转后暂停", sections.Select((s, i) => $"{i + 1:00}  {s.Title}" + (player.Current?.SectionId == s.Id ? "  · 当前" : "")).ToArray(), i =>
-            Choose(sections[i].Title, new[] { "定位到小节开头", "挑选一句台词" }, action =>
-            { if (action == 0) player.JumpToSection(sections[i].Id); else ShowListeningLines(sections[i].Id, 0); }));
-    }
-
-    void ShowListeningLines(string sectionId, int offset)
-    {
-        var player = session.Listening;
-        if (player.Pack == null) return;
-        var available = player.AvailableNodeIds;
-        var lines = player.Pack.Nodes.Where(n => !n.Archived && n.Kind == "line" && n.SectionId == sectionId)
-            .Select((node, index) => (Node: node, Number: index + 1)).Where(x => available.Contains(x.Node.Id)).ToList();
-        const int size = 35;
-        var visible = lines.Skip(offset).Take(size).ToList();
-        var labels = visible.Select(x => $"{x.Number}. {x.Node.Speaker}：{x.Node.Text}").ToList();
-        int previous = -1, next = -1;
-        if (offset > 0) { previous = labels.Count; labels.Add("上一页台词"); }
-        if (offset + size < lines.Count) { next = labels.Count; labels.Add("下一页台词"); }
-        Choose($"当前收听路线 · {lines.Count} 句（全部台词请切至全部听取）", labels.ToArray(), i =>
+        Choose("浏览小节 · 不改变收听位置", sections.Select((s, i) => $"{i + 1:00}  {s.Title}" + (player.Current?.SectionId == s.Id ? "  · 正在听" : "")).ToArray(), i =>
         {
-            if (i == previous) ShowListeningLines(sectionId, Math.Max(0, offset - size));
-            else if (i == next) ShowListeningLines(sectionId, offset + size);
-            else player.JumpToNode(visible[i].Node.Id);
+            if (!ReferenceEquals(owner, player.Pack) || !ReferenceEquals(chapter, player.Chapter)) return;
+            listeningBrowsePinned = true; listeningBrowseSection = sections[i].Id; listeningSelectedKey = null;
+            UpdateListeningDirectory(true); ScrollToListeningDirectory();
         });
     }
 

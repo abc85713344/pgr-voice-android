@@ -138,6 +138,24 @@ Test("已超时的初始定位和顺序准备不能通过PreparePlayback清除�
     c=Tapping();Require(c.GestureCompleted(c.Epoch,c.TapTicket,"b",1400),"手势准备失败");
     Require(!c.PreparePlayback(c.Epoch,"b",11400)&&c.TimedOut(11400),"迟到下一句准备清除了超时");
 });
+Test("标点停顿有独立期限，不能由音频结束提前触发或重复完成", () =>
+{
+    var c=new AutoPlaybackCycle(); c.Start("a",1000); long epoch=c.Epoch;
+    Require(c.PreparePlayback(epoch,"a",1100)&&c.BeginSilentPause(epoch,"a",1100),"未进入停顿");
+    Require(!c.BindAudio(epoch,"a",1,1150)&&!c.CompleteAudio(epoch,1,1150)&&!c.CompleteSilentPause(epoch,"a",2299),"停顿提前完成");
+    Require(!c.CompleteSilentPause(epoch,"b",2300)&&!c.CompleteSilentPause(epoch-1,"a",2300),"旧轮或错误节点可完成");
+    Require(c.CompleteSilentPause(epoch,"a",2300)&&!c.CompleteSilentPause(epoch,"a",2301),"停顿不符合一次性消费");
+    Require(c.BeginTap(epoch,"b",2301)&&!c.BeginTap(epoch,"b",2302),"停顿允许多次点击");
+});
+Test("停止重启和超时撤销标点停顿，不能接管已绑定音频", () =>
+{
+    var c=Playing(); Require(!c.BeginSilentPause(c.Epoch,"a",1200),"已播放音频仍被定时器接管");
+    c.Start("a",2000); long epoch=c.Epoch;
+    Require(c.PreparePlayback(epoch,"a",2100)&&c.BeginSilentPause(epoch,"a",2100),"未进入停顿");
+    Require(c.TimedOut(13300)&&!c.CompleteSilentPause(epoch,"a",13300),"长时间挂起后仍点击");
+    c.Stop(); Require(c.SilentPauseUntil==0&&!c.CompleteSilentPause(epoch,"a",13301),"停止未撤销停顿");
+    c.Start("a",14000); Require(!c.CompleteSilentPause(epoch,"a",14001),"旧轮停顿影响重启");
+});
 string output=args.ElementAtOrDefault(0)??"reports/android-autoplay-cycle.json";
 string source=Path.GetFullPath("android/AutoPlaybackCycle.cs");
 var report=new { createdUtc=DateTimeOffset.UtcNow, passed=failures==0, count=results.Count, failures, tests=results,

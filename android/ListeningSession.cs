@@ -44,6 +44,9 @@ public sealed class ListeningSession
     public Pack? Pack => core?.Pack;
     public Chapter? Chapter => core?.Chapter;
     public Node? Current => core?.Current?.Node;
+    public ListeningItem? CurrentItem => core?.Current;
+    public IReadOnlyList<ListeningItem> Items => core?.Items ?? Array.Empty<ListeningItem>();
+    public ListeningDirectory? ReadDirectory(string sectionId) => core == null ? null : ListeningDirectory.Create(core, sectionId);
     public bool IsPlaying => running;
     public string Status { get => status + (saveWarning == null ? "" : "；" + saveWarning); private set => status = value; }
     public ListeningBranchPolicy Policy => core?.Policy ?? ListeningBranchPolicy.First;
@@ -130,6 +133,18 @@ public sealed class ListeningSession
             core = null; document = null; offset = 0;
             Status = "章节内容已更新，请重新选择听书大章。"; diagnostics.Log("听书章节更新", ex.Message); Notify();
         }
+    }
+    public void UnloadPackage(string packId)
+    {
+        if (Pack?.Id == packId)
+        {
+            Stop(); core = null; document = null; offset = 0; knownDuration = 0; durationNodeId = null;
+            resumeNeedsSelection = false; resumeNotice = null;
+            Status = "章节已卸载，听书进度和书签已保留。";
+        }
+        if (preferences.LastPackId == packId)
+        { preferences.LastPackId = null; preferences.LastChapterId = null; SavePreferences(); }
+        Notify();
     }
     AndroidAudioPlayer Audio
     {
@@ -232,6 +247,19 @@ public sealed class ListeningSession
     { if (core != null) { Pause(); Move(() => core.SeekSection(id)); } }
     public void JumpToNode(string id)
     { if (core != null) { Pause(); Move(() => core.SeekNode(id)); } }
+    public bool LocateDirectoryEntry(string sectionId, string key)
+    {
+        if (core == null) return false;
+        // 每次点击按最新计划核对；预览只能打开本节待选点，不能直接跳入未选路线。
+        string? target = ListeningDirectory.Create(core, sectionId).TargetFor(key);
+        if (target == null)
+        {
+            Status = "这句可在目录中阅读，但尚未接入当前收听路线。可在收听设置中选择全部听取。";
+            Notify(); return false;
+        }
+        Pause(); Move(() => core.SeekItem(target));
+        return core.Current?.Id == target;
+    }
     public void Choose(string optionId)
     {
         if (core == null) return;

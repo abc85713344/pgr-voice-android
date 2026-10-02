@@ -7,12 +7,12 @@
 从播放器项目根目录执行，需要 .NET 10。构建输出必须放到工程目录外，避免嵌套 `obj` 被其他工程的默认源文件扫描包含：
 
 ```powershell
-$env:DOTNET_ROOT='.android-root\runtime\dotnet'
-$env:DOTNET_CLI_HOME='.android-root\dotnet-user'
-$env:NUGET_PACKAGES='.android-root\nuget'
-& 'dotnet' run `
+$env:DOTNET_ROOT='<AndroidRoot>\runtime\dotnet'
+$env:DOTNET_CLI_HOME='<AndroidRoot>\dotnet-user'
+$env:NUGET_PACKAGES='<AndroidRoot>\nuget'
+& '<AndroidRoot>\runtime\dotnet\dotnet.exe' run `
   --project android\Tests\OverlayBrowse\OverlayBrowseRegression.csproj `
-  --artifacts-path '.artifacts\overlay-browse-regression\artifacts' `
+  --artifacts-path '<AndroidRoot>\temp\overlay-browse-regression\artifacts' `
   -- reports\overlay-pages-034\host-browse-ocr-review.json
 ```
 

@@ -5,7 +5,7 @@
 统一构建阶段可运行：
 
 ```powershell
-& 'dotnet' run --project 'android/Tests/DisplayProfileRegression.csproj' -p:BaseIntermediateOutputPath=<AndroidRoot>/temp/display-profile-regression/obj/ -p:MSBuildProjectExtensionsPath=<AndroidRoot>/temp/display-profile-regression/obj/ -p:OutputPath=<AndroidRoot>/temp/display-profile-regression/bin/
+& '<AndroidRoot>\runtime\dotnet\dotnet.exe' run --project 'android/Tests/DisplayProfileRegression.csproj' -p:BaseIntermediateOutputPath=<AndroidRoot>/temp/display-profile-regression/obj/ -p:MSBuildProjectExtensionsPath=<AndroidRoot>/temp/display-profile-regression/obj/ -p:OutputPath=<AndroidRoot>/temp/display-profile-regression/bin/
 ```
 
 生产代码使用 `Display.GetMode().PhysicalWidth/PhysicalHeight`、显示标识与旋转方向。物理显示监听与服务配置变化均触发检查；帧读取也复核形态。`MediaProjection` 的输出尺寸不参与屏幕身份判定，因此两个物理屏幕的单应用共享均为 16:9 时仍可分开。屏幕变化使自动跟随失效，必须重新确认；取图到保存之间切屏会拒绝旧框选。旧版四类比例配置保留在 `Regions`，但不自动套用；重新框选后保存到 `DisplayRegions`。

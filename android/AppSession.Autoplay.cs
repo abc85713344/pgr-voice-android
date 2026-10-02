@@ -16,6 +16,7 @@ public sealed partial class AppSession
     string? autoPendingNode,autoPendingFrame;
     int autoConsensus;
     Action? autoTimer;
+    Action? autoSilentTimer;
     sealed record AutoStartConfirmation(PlaybackEngine Engine,Node Node,long Epoch,long AudioGeneration,
         string Navigation,ScreenDisplayState Display,long CaptureSession);
     AutoStartConfirmation? autoStartConfirmation;
@@ -47,6 +48,7 @@ public sealed partial class AppSession
         autoCaptureControlGeneration=autoCaptureControlEpoch=0;
         autoPlay.Stop();
         if(autoTimer!=null){main.RemoveCallbacks(autoTimer);autoTimer=null;}
+        if(autoSilentTimer!=null){main.RemoveCallbacks(autoSilentTimer);autoSilentTimer=null;}
         autoServiceToken=0;autoTarget=null;ResetAutoConsensus();
         if(wasRunning)GameAdvanceAccessibilityService.CancelSession();
         if(wasRunning)overlay.SetCaptureHidden(false);
@@ -101,7 +103,7 @@ public sealed partial class AppSession
         var decision=engine.EvaluateCommonAutoPlayNext();
         if(!decision.CurrentIsCommon){PauseAutoPlayback(decision.Reason);return;}
         var node=confirmation.Node;
-        if(engine.Pack.ResolveAudio(node) is not { } file||!File.Exists(file))
+        if(!CanAutoPlayLine(engine.Pack,node))
         {PauseAutoPlayback("当前句没有可用配音，自动播放已暂停，尚未点击游戏。");return;}
         if(!PrepareAutoPlaybackEnvironment())return;
         autoPlay.Start(node.Id,SystemClock.ElapsedRealtime());
@@ -178,7 +180,7 @@ public sealed partial class AppSession
         var probe=new PlaybackEngine(engine.Pack);
         if(!probe.ImportNavigation(engine.ExportNavigation())||!probe.ConfirmGameLine(node.Id)||!probe.EvaluateCommonAutoPlayNext().CurrentIsCommon)
         {PauseAutoPlayback("当前是分支线或尚未核实的段落，不能自动播放；回到共同线后可重新开启。");return;}
-        if(engine.Pack.ResolveAudio(node) is not { } file||!File.Exists(file))
+        if(!CanAutoPlayLine(engine.Pack,node))
         {PauseAutoPlayback("当前句没有可用配音，自动播放已暂停。");return;}
         // 重定位前换代，废弃所有初始 OCR；真实引擎只在已武装播放阶段发声。
         autoPlay.Start(node.Id,SystemClock.ElapsedRealtime());
@@ -205,6 +207,38 @@ public sealed partial class AppSession
         long epoch=autoPlay.Epoch;
         if(!autoPlay.CompleteAudio(epoch,ticket,SystemClock.ElapsedRealtime()))return;
         Diagnostics.Log("自动播放自然结束",$"node={autoPlay.NodeId}; audio={ticket}");
+        AdvanceAfterAutoLine(epoch);
+    }
+    // 只将非空的纯标点正文当作停顿；不从角色名、音频状态或去标点后的空串推断。
+    // 已声明音频却丢失文件时仍提示缺音，已有音频则正常播放。
+    static bool IsSilentPunctuation(Node node)=>node.Kind=="line"&&string.IsNullOrWhiteSpace(node.Audio)&&
+        !string.IsNullOrWhiteSpace(node.Text)&&node.Text.Any(char.IsPunctuation)&&
+        node.Text.All(c=>char.IsWhiteSpace(c)||char.IsPunctuation(c));
+    static bool CanAutoPlayLine(Pack pack,Node node)=>IsSilentPunctuation(node)||
+        pack.ResolveAudio(node) is { } file&&File.Exists(file);
+    void StartAutoSilentPause(PlaybackEngine owner,Node node,long request)
+    {
+        audio.Stop();
+        if(!CheckAutoPlaybackEnvironment())return;
+        long epoch=autoPlay.Epoch;
+        if(owner.CurrentId!=node.Id||!owner.EvaluateCommonAutoPlayNext().CurrentIsCommon||
+            !autoPlay.BeginSilentPause(epoch,node.Id,SystemClock.ElapsedRealtime()))
+        {PauseAutoPlayback("当前停顿不属于已确认的共同线，自动播放已暂停。");return;}
+        Status="标点停顿 · 稍后自动继续";Notify();
+        Diagnostics.Log("自动播放标点停顿",node.Id);
+        if(autoSilentTimer!=null)main.RemoveCallbacks(autoSilentTimer);
+        autoSilentTimer=()=>
+        {
+            if(autoPlay.Epoch!=epoch||request!=playGeneration||!ReferenceEquals(Engine,owner)||owner.CurrentId!=node.Id)return;
+            if(!CheckAutoPlaybackEnvironment())return;
+            if(!autoPlay.CompleteSilentPause(epoch,node.Id,SystemClock.ElapsedRealtime()))return;
+            autoSilentTimer=null;
+            AdvanceAfterAutoLine(epoch);
+        };
+        main.PostDelayed(autoSilentTimer,AutoPlaybackCycle.SilentPauseMilliseconds);
+    }
+    void AdvanceAfterAutoLine(long epoch)
+    {
         if(!CheckAutoPlaybackEnvironment()||Engine is not { } engine||engine.CurrentId!=autoPlay.NodeId)return;
         var decision=engine.EvaluateCommonAutoPlayNext();
         if(!decision.Allowed||decision.Next==null)
@@ -218,7 +252,7 @@ public sealed partial class AppSession
             PauseAutoPlayback(decision.Reason+"\n本次尚未点击游戏下一句。\n"+nextStep);return;
         }
         var next=decision.Next;
-        if(engine.Pack.ResolveAudio(next) is not { } file||!File.Exists(file)){PauseAutoPlayback("下一句缺少配音，尚未点击游戏。\n请手动继续这句，或更新章节配音包；到有配音的共同剧情后再定位开启。");return;}
+        if(!CanAutoPlayLine(engine.Pack,next)){PauseAutoPlayback("下一句缺少配音，尚未点击游戏。\n请手动继续这句，或更新章节配音包；到有配音的共同剧情后再定位开启。");return;}
         var target=autoTarget!;
         if(overlay.ContainsPoint(target.CenterX,target.CenterY)){PauseAutoPlayback("悬浮控制挡住了下一句区域，请挪开悬浮球后重新开始。");return;}
         if(!autoPlay.BeginTap(epoch,next.Id,SystemClock.ElapsedRealtime())){PauseAutoPlayback("点击请求已变化，请重新定位。");return;}

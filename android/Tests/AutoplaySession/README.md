@@ -1,14 +1,16 @@
 # 实际自动播放会话回归
 
-该工程直接编译生产 `AppSession.Autoplay.cs`、`AutoPlaybackCycle.cs`、设置、点击目标、显示模型、OCR 调度与剧情核心源码。没有复制人工起点确认、取消或推进门控。
+该工程直接编译生产 `AppSession.Autoplay.cs`、`AppSession.Playback.cs`、`AutoPlaybackCycle.cs`、设置、点击目标、显示模型、OCR 调度与剧情核心源码。没有复制人工起点确认、取消、音频入口或推进门控。
 
 ```powershell
-dotnet run --project android/Tests/AutoplaySession/AutoplaySessionRegression.csproj -c Release
+<AndroidRoot>\runtime\dotnet\dotnet.exe run --project android/Tests/AutoplaySession/AutoplaySessionRegression.csproj -c Release
 ```
 
 结果保存在本目录 `results.json`，包含被测生产文件的 SHA-256。
 
-外部接口的替身保存真实确认回调、按到期时间执行主线程回调、以受控 Task 返回手势结果。音频替身只绑定实际自动播放状态机的票据；夹具音频只用来验证文件存在性，不用于音频解码。
+外部接口的替身保存真实确认回调、按到期时间执行主线程回调、以受控 Task 返回手势结果。音频替身返回递增票据，由生产播放入口绑定状态机；夹具音频只用来验证文件存在性，不用于音频解码。
+
+0.3.14 新增纯标点起点、连续停顿、前后音频衔接、1200ms 期限、已有音频优先、正文与文件缺失仍暂停、分支边界、旧音频回调、停顿中停止重启／导航变化／失焦换屏与手动模式隔离，共 40 项会话回归。
 
 覆盖重复/过期确认、十轮取消—手动定位—重新启动、跨章节/导航/屏幕/音频换代、共同线末句、支线、单句限制、缺音、重复音频结束、取消后旧手势和延迟回调、点击失败、失焦，以及人工起播越过原 15 秒 OCR 期限。
 

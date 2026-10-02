@@ -1,7 +1,7 @@
 namespace PgrVoice.AndroidApp;
 
 /// <summary>首次确认位置后按共同剧情顺序播放；每次自然完成最多授权一个手势。</summary>
-public enum AutoPlaybackPhase { Off, CheckingCurrent, Playing, Tapping, StartingNext }
+public enum AutoPlaybackPhase { Off, CheckingCurrent, Playing, Tapping, StartingNext, SilentPause }
 
 public sealed class AutoPlaybackCycle
 {
@@ -13,6 +13,8 @@ public sealed class AutoPlaybackCycle
     public long AudioTicket { get; private set; }
     public long TapTicket { get; private set; }
     public long Deadline { get; private set; }
+    public const int SilentPauseMilliseconds = 1200;
+    public long SilentPauseUntil { get; private set; }
     long nextTapTicket;
     long lastAudioTicket;
     public void Start(string nodeId, long now)
@@ -24,7 +26,7 @@ public sealed class AutoPlaybackCycle
     public void Stop()
     {
         Epoch++; Phase=AutoPlaybackPhase.Off; NodeId=""; ExpectedNext=null;
-        AudioTicket=0; TapTicket=0; Deadline=0; lastAudioTicket=0;
+        AudioTicket=0; TapTicket=0; Deadline=0; lastAudioTicket=0; SilentPauseUntil=0;
     }
     public bool PreparePlayback(long epoch,string nodeId,long now)
     {
@@ -48,6 +50,17 @@ public sealed class AutoPlaybackCycle
     {
         if(epoch!=Epoch||Phase!=AutoPlaybackPhase.Playing||ticket<=0||ticket!=AudioTicket)return false;
         AudioTicket=0;TapTicket=0;ExpectedNext=null;Phase=AutoPlaybackPhase.Tapping;Deadline=now+4_000;return true;
+    }
+    public bool BeginSilentPause(long epoch,string nodeId,long now)
+    {
+        if(epoch!=Epoch||Phase!=AutoPlaybackPhase.Playing||NodeId!=nodeId||AudioTicket!=0||TimedOut(now))return false;
+        SilentPauseUntil=now+SilentPauseMilliseconds;Deadline=SilentPauseUntil+10_000;
+        Phase=AutoPlaybackPhase.SilentPause;return true;
+    }
+    public bool CompleteSilentPause(long epoch,string nodeId,long now)
+    {
+        if(epoch!=Epoch||Phase!=AutoPlaybackPhase.SilentPause||NodeId!=nodeId||now<SilentPauseUntil||TimedOut(now))return false;
+        SilentPauseUntil=0;TapTicket=0;ExpectedNext=null;Phase=AutoPlaybackPhase.Tapping;Deadline=now+4_000;return true;
     }
     public bool BeginTap(long epoch,string expectedNext,long now)
     {

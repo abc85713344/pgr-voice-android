@@ -199,11 +199,109 @@ Test("共同线后接Gap、未知连接或结束均不点击", () => {
     }
 });
 
+Test("纯标点起点无音频时停留1200ms，随后只点击一次并正常播放下一句", () => {
+    foreach (string text in new[] { "。。。。。。", "……", "...", "？！", "——", " \t… …\r\n" })
+    {
+        var s = Session(currentAudio: false); s.Engine!.Current!.Text = text; Start(s);
+        Check(s.PlayedNodes.Count == 0 && s.BoundAudioTicket == 0 && s.AutoPlaybackPhaseName == "SilentPause", "标点假装播放了音频");
+        s.CompleteAudio(1); s.AdvanceClock(1199); Check(s.GestureRequests == 0, "停顿提前完成");
+        s.AdvanceClock(1); Check(s.GestureRequests == 1 && s.Engine.CurrentId == "a", "停顿未触发单次手势或提前移动导航");
+        GameAdvanceAccessibilityService.CompleteOldestGesture(); s.AdvanceClock(450);
+        Check(s.Engine.CurrentId == "b" && s.PlayedNodes.SequenceEqual(["b"]) && s.AutoPlaybackRunning, "标点后没有恢复正常配音");
+        s.CompleteAudio(); Check(!s.AutoPlaybackRunning && s.GestureRequests == 1, "标点放宽了分支限制");
+    }
+});
+Test("连续两句纯标点逐句停留，前后有音频的对白保持顺序", () => {
+    var s = Session(); var pack = s.Engine!.Pack;
+    pack.ById["a"].NextId = "pause1";
+    pack.Nodes.Add(new() { Id = "pause1", SectionId = "s", Text = "……", NextId = "pause2" });
+    pack.Nodes.Add(new() { Id = "pause2", SectionId = "s", Text = "。。。。。。", NextId = "b", AudioStatus = "not-spoken" });
+    pack.Validate(); Start(s); long oldAudio = s.BoundAudioTicket; s.CompleteAudio();
+    foreach (string id in new[] { "pause1", "pause2" })
+    {
+        int before = s.GestureRequests;
+        GameAdvanceAccessibilityService.CompleteOldestGesture(); s.AdvanceClock(450);
+        Check(s.Engine.CurrentId == id && s.PlayedNodes.SequenceEqual(["a"]), "漏过标点或启动虚假音频");
+        s.CompleteAudio(oldAudio); s.AdvanceClock(1199); Check(s.GestureRequests == before, "旧音频或提前定时触发了点击");
+        s.AdvanceClock(1); Check(s.GestureRequests == before + 1, "未对每句独立点击");
+    }
+    GameAdvanceAccessibilityService.CompleteOldestGesture(); s.AdvanceClock(450);
+    Check(s.Engine.CurrentId == "b" && s.PlayedNodes.SequenceEqual(["a", "b"]) && s.GestureRequests == 3, "前后对白错位");
+});
+Test("纯标点已有配音时仍等待真实音频自然结束", () => {
+    var s = Session(); s.Engine!.Current!.Text = "……"; Start(s); s.AdvanceClock(2400);
+    Check(s.PlayedNodes.SequenceEqual(["a"]) && s.GestureRequests == 0, "跳过已有配音");
+    s.CompleteAudio(); Check(s.GestureRequests == 1, "真实配音结束未推进");
+});
+Test("带文字数字符号空白或动作说明的无音频句仍暂停，not-spoken不作为放行依据", () => {
+    foreach (string text in new[] { "……等等。", "123……", "a...", "（沉默）", "★", "😀", "", " \t\r\n" })
+    {
+        var s = Session(currentAudio: false); s.Engine!.Current!.Text = text; s.Engine.Current.AudioStatus = "not-spoken";
+        s.BeginFromOverlay(); s.Window.Latest.Confirmed(); s.AdvanceClock(180); Silent(s);
+        Check(s.Status.Contains("没有可用配音"), "非纯标点被放行：" + text);
+    }
+});
+Test("纯标点引用的音频文件丢失时仍暂停，包括下一句", () => {
+    foreach (bool next in new[] { false, true })
+    {
+        var s = Session(); var node = s.Engine!.Pack.ById[next ? "b" : "a"]; node.Text = "……"; node.Audio = "missing.wav";
+        if (next) { Start(s); s.CompleteAudio(); }
+        else { s.BeginFromOverlay(); s.Window.Latest.Confirmed(); s.AdvanceClock(180); }
+        Check(!s.AutoPlaybackRunning && s.GestureRequests == 0, "音频丢失被纯标点掩盖");
+    }
+});
+Test("标点停顿后遇到普通正文缺音仍停在点击之前", () => {
+    var s = Session(currentAudio: false, nextAudio: false); s.Engine!.Current!.Text = "……"; Start(s); s.AdvanceClock(1200);
+    Check(!s.AutoPlaybackRunning && s.GestureRequests == 0 && s.Engine.CurrentId == "a" && s.Status.Contains("下一句缺少"), "跳过正文缺音");
+});
+Test("纯标点末句在分支未知连接与结束前停止", () => {
+    foreach (string? next in new string?[] { "menu", "gap", "unknown", null })
+    {
+        var s = Session("b", nextAudio: false); s.Engine!.Current!.Text = "……"; s.Engine.Current.NextId = next;
+        Start(s); s.AdvanceClock(1200); Silent(s);
+    }
+});
+Test("支线纯标点仍不能开启共同线自动播放", () => {
+    var s = Session("branch"); s.Engine!.Current!.Text = "……"; s.Engine.Current.Audio = null;
+    s.BeginFromOverlay(); s.Window.Latest.Confirmed(); s.AdvanceClock(180); Silent(s);
+    Check(s.Status.Contains("分支"), "纯标点绕过了支线限制");
+});
+Test("停顿中停止后旧定时器不能点击；重新开启必须完整停顿", () => {
+    var s = Session(currentAudio: false); s.Engine!.Current!.Text = "……"; Start(s); s.AdvanceClock(600);
+    s.StopAutoPlayback(); Start(s); s.AdvanceClock(420); Check(s.GestureRequests == 0, "旧轮定时器影响重启");
+    s.AdvanceClock(779); Check(s.GestureRequests == 0, "新轮未完整停顿");
+    s.AdvanceClock(1); Check(s.GestureRequests == 1, "新轮未继续");
+});
+Test("停顿中停止或导航切换后不再点击", () => {
+    foreach (bool navigate in new[] { false, true })
+    {
+        var s = Session(currentAudio: false); s.Engine!.Current!.Text = "……"; Start(s); s.AdvanceClock(600);
+        if (navigate) s.MoveCurrent("b"); else s.StopAutoPlayback();
+        int played = s.PlayedNodes.Count;
+        s.AdvanceClock(2400);
+        Check(!s.AutoPlaybackRunning && s.GestureRequests == 0 && s.PlayedNodes.Count == played, "旧停顿在手动操作后继续播放或点击");
+    }
+});
+Test("停顿期间失焦换屏或捕获失效会停止且零点击", () => {
+    foreach (string change in new[] { "focus", "display", "capture" })
+    {
+        var s = Session(currentAudio: false); s.Engine!.Current!.Text = "……"; Start(s); s.AdvanceClock(800);
+        if (change == "focus") GameAdvanceAccessibilityService.Availability = GameAdvanceAccessibilityService.Availability with { TargetForeground = false };
+        if (change == "display") s.Screen.DisplayState = s.Screen.DisplayState with { Revision = s.Screen.DisplayState.Revision + 1 };
+        if (change == "capture") s.Screen.CaptureActive = false;
+        s.AdvanceClock(400); Silent(s);
+    }
+});
+Test("手动重播纯标点不启动停顿或自动点击", () => {
+    var s = Session(currentAudio: false); s.Engine!.Current!.Text = "……"; s.Engine.Replay(); s.AdvanceClock(3000); Silent(s);
+});
+
 string output = Path.GetFullPath(args.FirstOrDefault() ?? "android/Tests/AutoplaySession/results.json");
 var report = new {
     createdUtc = DateTimeOffset.UtcNow, passed = failures == 0, count = results.Count, failures, tests = results,
     productionAutoplaySha256 = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes("android/AppSession.Autoplay.cs"))),
-    scope = "直接编译实际 AppSession.Autoplay.cs、AutoPlaybackCycle、设置/点击目标/显示模型、OCR调度与剧情核心。外部 Android 时钟/Handler/音频/确认窗/无障碍通过受控 stub 注入；只验证此 partial 的回调和导航，不声称运行了 AppSession.cs、真实系统触摸或音频解码。音频文件仅是存在性测试夹具。"
+    productionPlaybackSha256 = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes("android/AppSession.Playback.cs"))),
+    scope = "直接编译实际 AppSession.Autoplay.cs、AppSession.Playback.cs、AutoPlaybackCycle、设置/点击目标/显示模型、OCR调度与剧情核心。Android 时钟/Handler/音频/确认窗/无障碍通过受控 stub 注入；不声称运行完整 AppSession.cs、真实系统触摸或音频解码。音频文件仅是存在性测试夹具。"
 };
 Directory.CreateDirectory(Path.GetDirectoryName(output)!);
 File.WriteAllText(output, JsonSerializer.Serialize(report, Json.Options));

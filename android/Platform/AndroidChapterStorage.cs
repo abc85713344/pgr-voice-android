@@ -13,4 +13,6 @@ public sealed class AndroidChapterStorage : IChapterStorage
     public Task<InstalledPackage> ImportAsync(Stream zipStream, CancellationToken cancellationToken = default,
         IProgress<PackageImportProgress>? progress = null) => repository.ImportAsync(zipStream, cancellationToken, progress);
     public void CleanAbandonedImports() => repository.CleanAbandonedImports();
+    public Task<PackageRemovalResult> RemoveAsync(string packId, string expectedRevision) => repository.RemoveAsync(packId, expectedRevision);
+    public PackageFolder Browse(string packId, string relativePath = "", string? expectedRevision = null) => repository.Browse(packId, relativePath, expectedRevision);
 }

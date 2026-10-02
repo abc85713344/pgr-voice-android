@@ -11,4 +11,6 @@ public interface IChapterStorage
     Task<InstalledPackage> ImportAsync(Stream zipStream, CancellationToken cancellationToken = default,
         IProgress<PackageImportProgress>? progress = null);
     void CleanAbandonedImports();
+    Task<PackageRemovalResult> RemoveAsync(string packId, string expectedRevision);
+    PackageFolder Browse(string packId, string relativePath = "", string? expectedRevision = null);
 }

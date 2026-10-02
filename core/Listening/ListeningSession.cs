@@ -15,6 +15,7 @@ public sealed class ListeningSession
     readonly string fingerprint;
     Dictionary<string, string> choices = new(StringComparer.Ordinal);
     List<ListeningItem> items = new();
+    Dictionary<string, int> menuPositions = new(StringComparer.Ordinal);
     int index;
 
     public ListeningSession(Pack pack, string chapterId, ListeningBranchPolicy policy = ListeningBranchPolicy.First)
@@ -25,7 +26,7 @@ public sealed class ListeningSession
         Policy = policy;
         // 正文更改也使句内毫秒位置失效；音频文件/配音更新不改变位置与书签。
         fingerprint = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
-            PlaybackEngine.NavigationFingerprint(pack) + JsonSerializer.Serialize(
+            "listening-plan:3:" + PlaybackEngine.NavigationFingerprint(pack) + JsonSerializer.Serialize(
                 pack.Nodes.Where(n => chapter.Sections.Any(s => s.Id == n.SectionId))
                     .Select(n => new { n.Id, n.Text, n.Speaker }), Json.Options))));
         Rebuild();
@@ -43,7 +44,23 @@ public sealed class ListeningSession
     public long ResumePositionMs { get; private set; }
     public bool HasPendingChoice => Current?.Kind == ListeningItemKind.Choice;
 
-    void Rebuild() => items = new PlanBuilder(pack, chapter, Policy, choices).Build();
+    void Rebuild()
+    {
+        var builder = new PlanBuilder(pack, chapter, Policy, choices);
+        items = builder.Build(); menuPositions = builder.MenuPositions;
+    }
+
+    static bool TryMenuPosition(IReadOnlyList<ListeningItem> plan, IReadOnlyDictionary<string, int> positions,
+        string? itemId, string sectionId, out int position)
+    {
+        position = -1;
+        // 空菜单或被去重的菜单可能不产生任何内容，记录的插入位置随后会落到下一小节。
+        // 这种情况不能解释成用户选择了跳节，也不能将无内容的锚点当成整章完结。
+        if (itemId == null || !positions.TryGetValue(itemId, out int candidate)
+            || candidate < 0 || candidate >= plan.Count || plan[candidate].SectionId != sectionId) return false;
+        position = candidate;
+        return true;
+    }
 
     /// <summary>音频完成、显式跳句或 Notice 已展示后调用。Choice 必须 Choose/SkipChoice。</summary>
     public bool MoveNext()
@@ -91,6 +108,14 @@ public sealed class ListeningSession
         index = target; ResumePositionMs = 0; return true;
     }
 
+    /// <summary>目录定位只接受当前计划中的台词或待选项；不展开或确认任何分支。</summary>
+    public bool SeekItem(string itemId)
+    {
+        int target = items.FindIndex(i => i.Id == itemId && i.Kind is ListeningItemKind.Line or ListeningItemKind.Choice);
+        if (target < 0) return false;
+        index = target; ResumePositionMs = 0; return true;
+    }
+
     public bool SeekSection(string sectionId)
     {
         int target = items.FindIndex(i => i.SectionId == sectionId);
@@ -105,7 +130,12 @@ public sealed class ListeningSession
         if (policy == Policy) return;
         var current = Current;
         Policy = policy; choices.Clear(); Rebuild(); index = 0; ResumePositionMs = 0;
-        if (current != null && !SeekNode(current.NodeId)) SeekSection(current.SectionId);
+        if (current != null)
+        {
+            if (current.Kind == ListeningItemKind.Choice && TryMenuPosition(items, menuPositions, current.Id, current.SectionId, out int menuPosition))
+                index = menuPosition;
+            else if (!SeekNode(current.NodeId)) SeekSection(current.SectionId);
+        }
     }
 
     public ListeningSnapshot Capture(long positionMs = 0)
@@ -133,9 +163,13 @@ public sealed class ListeningSession
         // 更新仅改音频时精确恢复；正文/导航改变后只允许稳定节点定位，清除句内时间。
         var restoredChoices = snapshot.Choices.Where(p => p.Key != null && p.Value != null)
             .ToDictionary(p => p.Key, p => p.Value, StringComparer.Ordinal);
-        var restoredItems = new PlanBuilder(pack, chapter, snapshot.Policy, restoredChoices).Build();
+        var builder = new PlanBuilder(pack, chapter, snapshot.Policy, restoredChoices);
+        var restoredItems = builder.Build();
         bool same = snapshot.Fingerprint == fingerprint;
         int target = snapshot.Completed && same ? restoredItems.Count : restoredItems.FindIndex(i => i.Id == snapshot.ItemId);
+        int menuPosition = -1;
+        bool resumedMenu = target < 0 && TryMenuPosition(restoredItems, builder.MenuPositions, snapshot.ItemId, snapshot.SectionId, out menuPosition);
+        if (resumedMenu) target = menuPosition;
         if (target < 0 && snapshot.NodeId != null)
         {
             string nodeId = snapshot.NodeId;
@@ -143,10 +177,19 @@ public sealed class ListeningSession
             while (pack.Migrations.TryGetValue(nodeId, out var migrated) && seen.Add(nodeId)) nodeId = migrated;
             target = restoredItems.FindIndex(i => i.NodeId == nodeId && i.Kind == ListeningItemKind.Line);
         }
+        bool resumeAtInteraction = false;
+        if (target < 0 && !same)
+        {
+            // 旧听书计划曾跳过互动。更新后不要越过新增的待选点恢复后文，也不清空旧断点。
+            target = restoredItems.FindIndex(i => i.SectionId == snapshot.SectionId && i.Kind == ListeningItemKind.Choice
+                && i.Notice.StartsWith("等待互动：", StringComparison.Ordinal));
+            resumeAtInteraction = target >= 0;
+        }
         if (target < 0) { reason = "配音包内容已变化，原位置不在当前收听路线中，请重新选择小节。"; return false; }
-        choices = restoredChoices; items = restoredItems; Policy = snapshot.Policy; index = target;
+        choices = restoredChoices; items = restoredItems; menuPositions = builder.MenuPositions; Policy = snapshot.Policy; index = target;
         ResumePositionMs = same && Current?.Kind == ListeningItemKind.Line ? Math.Clamp(snapshot.PositionMs, 0, 24 * 60 * 60 * 1000L) : 0;
-        if (!same) reason = "章节内容已更新，已按台词编号定位；本句从头播放。";
+        if (resumedMenu) reason = "已按收听策略接回原互动位置，点击播放继续。";
+        else if (!same) reason = resumeAtInteraction ? "听书互动导航已更新，已停在本节互动选项，确认后继续。" : "章节内容或听书导航已更新，已按台词编号定位；本句从头播放。";
         return true;
     }
 
@@ -158,6 +201,7 @@ public sealed class ListeningSession
         readonly Dictionary<string, int> menuVisits = new(StringComparer.Ordinal);
         readonly Dictionary<string, HashSet<string>> heardOptions = new(StringComparer.Ordinal);
         readonly Dictionary<string, int> lineNumbers = new(StringComparer.Ordinal);
+        internal Dictionary<string, int> MenuPositions { get; } = new(StringComparer.Ordinal);
         bool waiting;
         int operations;
         const int MaxOperations = 200000;
@@ -172,7 +216,7 @@ public sealed class ListeningSession
                 int number = 0;
                 foreach (var line in pack.Nodes.Where(n => !n.Archived && n.Kind == "line" && n.SectionId == section.Id)) lineNumbers[line.Id] = ++number;
                 Walk(section.StartId, section, new(StringComparer.Ordinal), "", null, 0);
-                if (policy == ListeningBranchPolicy.All)
+                if (policy == ListeningBranchPolicy.All && !waiting)
                 {
                     var unconnected = pack.Nodes.Where(n => !n.Archived && n.Kind == "line" && n.SectionId == section.Id && !emitted.Contains(n.Id)).ToList();
                     if (unconnected.Count > 0)
@@ -200,7 +244,7 @@ public sealed class ListeningSession
                 section.Id, section.Title, 0, "", message));
         }
 
-        string? Walk(string? id, Section section, HashSet<string> stops, string branch, HashSet<string>? scope, int depth)
+        string? Walk(string? id, Section section, HashSet<string> stops, string branch, HashSet<string>? scope, int depth, bool confirmEntry = false)
         {
             if (waiting) return null;
             if (depth > MaxDepth) { Notice(section, "分支嵌套过深，已跳过无法安全展开的部分。", id); return null; }
@@ -222,12 +266,61 @@ public sealed class ListeningSession
                         id = node.NextId; break;
                     case "end": return null;
                     case "gap":
-                        Notice(section, "此处正文或续接连接尚未核实，已跳过未明确连接的内容。", node.Id);
+                    {
+                        // 只接受包内明确登记的同小节续接菜单。不能把所有 gap.NextId 当成可靠出口。
+                        var menus = node.ResumeMenuIds.Distinct(StringComparer.Ordinal)
+                            .Where(m => Valid(m, section) && pack.ById[m].Kind == "choice").ToList();
+                        if (menus.Count > 0)
+                        {
+                            string next = menus[0];
+                            if (menus.Count > 1)
+                            {
+                                int visit = menuVisits.GetValueOrDefault("resume:" + node.Id);
+                                menuVisits["resume:" + node.Id] = visit + 1;
+                                string key = "resume:" + node.Id + ":" + visit;
+                                MenuPositions["choice:" + key] = result.Count;
+                                if (policy == ListeningBranchPolicy.Manual)
+                                {
+                                    if (!selections.TryGetValue(key, out var selected) || selected != Skip && !menus.Contains(selected))
+                                    {
+                                        var candidates = menus.Select(m => new ChoiceOption { Id = m, TargetId = m,
+                                            Label = string.IsNullOrWhiteSpace(pack.ById[m].Text)
+                                                ? string.Join(" / ", pack.ById[m].Options.Select(o => o.Label)) : pack.ById[m].Text }).ToList();
+                                        result.Add(new("choice:" + key, ListeningItemKind.Choice, node, section.Id, section.Title,
+                                            0, branch, "等待互动：请选择要进入的互动菜单，确认后显示该菜单的选项。", key, candidates));
+                                        waiting = true; return null;
+                                    }
+                                    if (selected == Skip) return null;
+                                    next = selected;
+                                }
+                                else if (policy == ListeningBranchPolicy.All)
+                                {
+                                    // 多个明确续接菜单也服从全听策略。共同出口最后处理，避免先播共同线再折返另一个菜单。
+                                    var joins = menus.Select(m => FindJoin(pack.ById[m], pack.ById[m].Options.Where(o => Valid(o.TargetId, section)).ToList(), section, stops)).ToList();
+                                    string? common = joins.All(j => j != null) && joins.Distinct().Count() == 1 ? joins[0] : null;
+                                    var menuStops = new HashSet<string>(stops, StringComparer.Ordinal);
+                                    if (common != null) menuStops.Add(common);
+                                    string? returnedMenu = null;
+                                    foreach (string menu in menus)
+                                    {
+                                        returnedMenu = Walk(menu, section, menuStops, branch, null, depth + 1, confirmEntry: true);
+                                        if (waiting) return null;
+                                    }
+                                    return common != null ? Walk(common, section, stops, branch, null, depth + 1) : returnedMenu;
+                                }
+                            }
+                            // 到已登记的菜单重新建立段落范围，仍保留父菜单/共同线的停止目标。
+                            return Walk(next, section, stops, branch, null, depth + 1, confirmEntry: true);
+                        }
+                        Notice(section, "此处游戏出口尚未核实。听书仅采用菜单已登记的后续连接；没有连接的内容不自动续播。", node.Id);
                         return null;
+                    }
                     case "return":
                     case "merge": id = node.NextId; break;
                     case "choice":
                     {
+                        bool interaction = confirmEntry;
+                        confirmEntry = false;
                         var allOptions = node.Options.Where(o => Valid(o.TargetId, section)).ToList();
                         if (!heardOptions.TryGetValue(node.Id, out var heard)) heardOptions[node.Id] = heard = new(StringComparer.Ordinal);
                         var options = allOptions.Where(o => !heard.Contains(o.Id)).ToList();
@@ -237,12 +330,15 @@ public sealed class ListeningSession
                         int visit = menuVisits.GetValueOrDefault(node.Id);
                         menuVisits[node.Id] = visit + 1;
                         string key = node.Id + ":" + visit;
+                        MenuPositions["choice:" + key] = result.Count;
                         if (policy == ListeningBranchPolicy.Manual)
                         {
                             if (!selections.TryGetValue(key, out var selection) || selection != Skip && options.All(o => o.Id != selection))
                             {
                                 result.Add(new("choice:" + key, ListeningItemKind.Choice, node, section.Id, section.Title,
-                                    0, branch, "请选择要收听的路线", key, options));
+                                    0, branch, interaction
+                                        ? "等待互动：请选择下方选项，确认后继续本节。"
+                                        : "请选择要收听的路线", key, options));
                                 waiting = true; return null;
                             }
                             if (selection == Skip) { foreach (var option in options) heard.Add(option.Id); id = join; break; }
@@ -280,7 +376,7 @@ public sealed class ListeningSession
                                 continuations.Add(returned);
                         }
                         if (policy == ListeningBranchPolicy.Manual && returned == node.Id)
-                        { id = node.Id; break; }
+                        { id = node.Id; confirmEntry = interaction; break; }
                         if (returned != null && stops.Contains(returned)) return returned;
                         // 选项可以分别返回菜单或共同线。只采用确实走到的已核实出口，
                         // 不让旧 MergeId 把“返回上一层”错误解释成退出整个选择。

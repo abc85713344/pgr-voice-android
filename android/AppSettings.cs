@@ -11,6 +11,7 @@ public sealed record ScreenRegion(float Left = .025f, float Top = .64f, float Wi
 public sealed class AppSettings
 {
     public string? LastPackId { get; set; }
+    public Dictionary<string, ImportedZipSource> ImportedArchives { get; set; } = new();
     // 仅控制播放器主界面，不改变系统或游戏的屏幕方向。
     public string MainOrientation { get; set; } = "auto";
     public bool ShowCompactButtons { get; set; } = true;

@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **版本** | 0.3.10（versionCode 14） |
+| **版本** | 0.3.14（versionCode 18） |
 | **系统要求** | Android 10（API 29）及以上，**仅 64 位**（arm64-v8a / x86_64） |
 | **包名** | `cn.pgrvoice.player` |
 | **技术栈** | .NET 10 for Android（C#）、Media3 ExoPlayer、ONNX Runtime、ML Kit |

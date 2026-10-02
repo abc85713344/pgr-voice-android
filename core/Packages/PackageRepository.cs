@@ -25,7 +25,7 @@ public sealed record InstalledPackage(string PackId, string Title, int SchemaVer
 /// 每次导入生成不可变 revision，唯一提交点是原子替换 current.json。
 /// 原包与 ProgressStore 始终独立，失败、取消或进程退出不会覆盖原包或进度。
 /// </summary>
-public sealed class PackageRepository
+public sealed partial class PackageRepository
 {
     static readonly ConcurrentDictionary<string, SemaphoreSlim> Gates = new(StringComparer.Ordinal);
     readonly string root;
@@ -73,14 +73,17 @@ public sealed class PackageRepository
         if (!gate.Wait(0)) return;
         try
         {
-            string incoming = Path.Combine(root, ".incoming");
-            if (!Directory.Exists(incoming)) return;
-            foreach (string directory in Directory.EnumerateDirectories(incoming))
+            foreach (string area in new[] { ".incoming", ".deleted" })
             {
-                if (!Guid.TryParseExact(Path.GetFileName(directory), "N", out _)) continue;
-                try { Directory.Delete(directory, true); }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-                { CoreDiagnostics.Write("package", "临时导入文件清理失败，已保留：" + ex.Message); }
+                string incoming = Path.Combine(root, area);
+                if (!Directory.Exists(incoming)) continue;
+                foreach (string directory in Directory.EnumerateDirectories(incoming))
+                {
+                    if (!Guid.TryParseExact(Path.GetFileName(directory), "N", out _)) continue;
+                    try { Directory.Delete(directory, true); }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                    { CoreDiagnostics.Write("package", "临时章节文件清理失败，已保留：" + ex.Message); }
+                }
             }
         }
         finally { gate.Release(); }

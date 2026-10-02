@@ -152,6 +152,7 @@ public sealed partial class AppSession
     }
     public void LoadPack(string id)
     {
+        if(IsDeletingPackage)throw new InvalidOperationException("正在删除章节，请等待完成。");
         if(Listening.IsPlaying)Listening.Pause();
         Invalidate();audio.Stop();
         if(Engine!=null){SaveProgress();saveQueue.Flush();}
@@ -166,24 +167,6 @@ public sealed partial class AppSession
         if(Progress.LastError.Length>0)Status=Progress.LastError;
         ContentChanged?.Invoke();Notify();
     }
-    void PlayNode(PlaybackEngine owner,Node? node)
-    {
-        if(!ReferenceEquals(owner,Engine)||node==null)return;
-        long request=++playGeneration;
-        string? path=owner.Pack.ResolveAudio(node);
-        if(path==null||!File.Exists(path)){audio.Stop();if(autoPlay.Running)PauseAutoPlayback("这一句没有可用配音，自动播放已暂停。");else{Status=owner.Pack.AudioNotice(node);Notify();}return;}
-        VoiceForegroundService.EnsureStarted(context,()=>
-        {
-            if(request!=playGeneration||!ReferenceEquals(Engine,owner))return;
-            if(autoPlay.Running&&!CheckAutoPlaybackEnvironment())return;
-            if(autoPlay.Running && (autoPlay.Phase!=AutoPlaybackPhase.Playing||autoPlay.NodeId!=node.Id||!owner.EvaluateCommonAutoPlayNext().CurrentIsCommon))
-            {PauseAutoPlayback("当前播放不属于已确认的共同线，自动播放已暂停。");return;}
-            long ticket=audio.PlayTagged(path);
-            if(autoPlay.Running&&!autoPlay.BindAudio(autoPlay.Epoch,node.Id,ticket,SystemClock.ElapsedRealtime()))PauseAutoPlayback("播放请求已变化或等待超时，请重新确认自动播放位置。");
-        });
-        if(request!=playGeneration)return;
-        Status=string.IsNullOrWhiteSpace(node.Speaker)?"播放配音":node.Speaker+" · 播放配音";
-    }
     public void SaveProgress()
     {
         if(Engine?.Current==null)return;
@@ -196,21 +179,24 @@ public sealed partial class AppSession
         if(Engine==null||Engine.Mode==RunMode.Original)return;
         Invalidate();Engine.PauseForBrowse();PlayNode(Engine,node);Status="试听，不改变剧情位置。";Notify();
     }
-    public async Task ImportAsync(Stream stream,CancellationToken token)
+    public async Task<InstalledPackage?> ImportAsync(Stream stream,CancellationToken token,ImportedZipSource? source=null)
     {
-        if(IsImporting)throw new InvalidOperationException("一个章节正在导入，请等待完成。");
+        if(PackagesBusy)throw new InvalidOperationException("章节文件正在处理中，请等待完成。");
         // 导入原子替换音频目录前释放听书文件，更新后再次选择本章恢复独立进度。
         if(Listening.Pack!=null)Listening.Stop();
-        IsImporting=true;Status="正在读取章节 ZIP…";Notify();
+        IsImporting=true;Status="正在读取章节 ZIP…";ContentChanged?.Invoke();Notify();
         try
         {
             var progress=new Progress<PackageImportProgress>(p=>Post(()=>{Status=$"{p.Stage} · {p.CompletedFiles}/{p.TotalFiles} · {p.Bytes/1048576} MB";Notify();}));
             var installed=await Packages.ImportAsync(stream,token,progress);
+            if(source!=null){Settings.ImportedArchives[installed.PackId]=source;SaveSettings();}
+            else{Settings.ImportedArchives.Remove(installed.PackId);SaveSettings();}
             // 进度单独保存，原包只在所有校验完成后切换。
             Listening.PackageUpdated(installed.PackId);
             LoadPack(installed.PackId);Status=(installed.IsUpdate?"章节更新完成。":"章节导入完成。")+Status;
+            return installed;
         }
-        catch(OperationCanceledException){Status="已取消导入，原章节与进度保留。";}
+        catch(OperationCanceledException){Status="已取消导入，原章节与进度保留。";return null;}
         finally{IsImporting=false;ContentChanged?.Invoke();Notify();}
     }
     public void Command(Action<PlaybackEngine> action,bool confirmAfter=false)
@@ -291,7 +277,7 @@ public sealed partial class AppSession
     void StopGame(){Invalidate();audio.Stop();Engine?.PauseForBrowse();overlay.Hide();VoiceForegroundService.StopAll(context);_=UnloadOcrAfterStopAsync();SaveProgress();Status="已停止，进度已保存。";Notify();}
     void PrepareListening()
     {
-        if(IsImporting)throw new InvalidOperationException("配音包正在导入，请完成后再开始听书。");
+        if(PackagesBusy)throw new InvalidOperationException("章节文件正在处理中，请完成后再开始听书。");
         StopGame();
     }
     async Task UnloadOcrAfterStopAsync()

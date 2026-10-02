@@ -14,7 +14,7 @@
 主机回归（构建输出放外部，避免嵌套 obj 进入 Android 默认源文件扫描）：
 
 ```powershell
-& 'dotnet' run --project android\Tests\TapFollowGate\TapFollowGestureTests.csproj --artifacts-path '.artifacts\tap-follow-regression-20260928\artifacts' -- android\Tests\TapFollowGate\results.json
+& '<AndroidRoot>\runtime\dotnet\dotnet.exe' run --project android\Tests\TapFollowGate\TapFollowGestureTests.csproj --artifacts-path '<AndroidRoot>\temp\tap-follow-regression-20260928\artifacts' -- android\Tests\TapFollowGate\results.json
 ```
 
 24 项用例覆盖时间与距离边界、对角线、拖出再返回、多指、指针替换、系统取消、重挂去重、注入进行中、失败、旧 epoch、重复/迟到完成等。它们没有运行 Android 窗口、无障碍注入或游戏，不证明游戏一定接收点击。Android 原生 API 已对本地 .NET 10 Android 引用说明检查，应用编译和设备验证由集成方执行。
