@@ -118,3 +118,7 @@ docs/preview/                README 用的界面截图
 
 > 许可证**只覆盖作者原创的程序代码、工具与文档编排**，**不授予任何游戏内容的权利**。《战双帕弥什》的名称、角色、剧情文本、美术与音频的一切权利归库洛游戏所有。
 > 完整条款见 [`LICENSE.md`](LICENSE.md)。
+
+---
+
+**相关项目**：[pgr-voice-pack](https://github.com/abc85713344/pgr-voice-pack)（程序下载与校验清单） ｜ [pgr-voice-guide](https://github.com/abc85713344/pgr-voice-guide)（制作全流程复盘与教学工具包）
