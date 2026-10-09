@@ -4,7 +4,8 @@ namespace PgrVoice.AndroidApp;
 public sealed record AdvanceTapTarget(string GamePackage,int DisplayWidth,int DisplayHeight,int Rotation,
     float Left,float Top,float Width,float Height)
 {
-    public bool IsValid => !string.IsNullOrWhiteSpace(GamePackage) && DisplayWidth>0 && DisplayHeight>0 && Rotation is >=0 and <=3 &&
+    // GamePackage 仅用于兼容读取旧设置，区域按物理屏幕保存，不绑定客户端。
+    public bool IsValid => DisplayWidth>0 && DisplayHeight>0 && Rotation is >=0 and <=3 &&
         float.IsFinite(Left)&&float.IsFinite(Top)&&float.IsFinite(Width)&&float.IsFinite(Height)&&
         Left>=0&&Top>=0&&Width>0&&Height>0&&Left+Width<=1.001f&&Top+Height<=1.001f;
     public float CenterX=>(Left+Width/2)*DisplayWidth;

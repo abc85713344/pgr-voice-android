@@ -5,8 +5,11 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../AppSession.DefaultBranch.cs;../../DefaultBranchPolicy.cs" LinkBase="Production" />
     <Compile Include="Stub.cs.txt;Program.cs.txt" />
-    <Compile Include="../../AppSession.Autoplay.cs;../../AppSession.Playback.cs;../../AutoPlaybackCycle.cs;../../AppSettings.cs;../../AdvanceTapTarget.cs;../../DisplayRegionProfile.cs;../../Ocr/OcrInferenceSchedule.cs" LinkBase="App" />
+    <Compile Include="../../AppSession.OptionalBranchFollow.cs;../../BranchCommonResumePolicy.cs" LinkBase="Production" />
+    <Compile Include="../../AppSession.Autoplay.cs;../../AppSession.Playback.cs;../../AutoPlaybackCycle.cs;../../AppSettings.cs;../../AdvanceTapTarget.cs;../../DisplayRegionProfile.cs;../../Ocr/OcrInferenceSchedule.cs" LinkBase="Production" />
+    <Compile Include="../../AppSession.FollowTransitions.cs;../../AppSession.ClickFollow.cs;../../AppSession.BranchFollow.cs;../../BranchFollowPolicy.cs;../../BranchFollowAttemptGate.cs;../../TapFollowGestureGate.cs;../../Ocr/OcrTypes.cs;../../Platform/CapturedFrame.cs" LinkBase="Production" />
     <Compile Include="../../../core/**/*.cs" Exclude="../../../core/obj/**;../../../core/bin/**" LinkBase="Core" />
     <Compile Include="../../../src/Domain.cs;../../../src/Navigation.cs;../../../src/ObservedNavigation.cs;../../../src/ProgressStore.cs;../../../src/Matcher.cs;../../../src/DialogueFrameAnalysis.cs;../../../src/StateSaveQueue.cs" LinkBase="Core" />
   </ItemGroup>

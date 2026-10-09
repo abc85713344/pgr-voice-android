@@ -92,17 +92,18 @@ public sealed class ListeningForegroundService : Service
         if (destroyed || mediaSession == null) return;
         var session = Session;
         bool playing = session.IsPlaying;
+        var displayNode = session.PreviewNode ?? (session.HasBlockingNotice ? null : session.Current);
         using var metadata = new MediaMetadata.Builder()
             .PutString(MediaMetadata.MetadataKeyTitle, session.Chapter?.Title ?? "剧情听书")!
             .PutString(MediaMetadata.MetadataKeyArtist, session.PositionText)!
-            .PutString(MediaMetadata.MetadataKeyDisplaySubtitle, session.Current?.Speaker + " " + session.Current?.Text)!
-            .PutLong(MediaMetadata.MetadataKeyDuration, session.DurationMilliseconds)!.Build();
+            .PutString(MediaMetadata.MetadataKeyDisplaySubtitle, displayNode == null && session.HasBlockingNotice ? "等待确认续接" : displayNode?.Speaker + " " + displayNode?.Text)!
+            .PutLong(MediaMetadata.MetadataKeyDuration, session.IsPreviewing ? 0 : session.DurationMilliseconds)!.Build();
         mediaSession.SetMetadata(metadata);
         using var state = new PlaybackState.Builder()
             .SetActions(PlaybackState.ActionPlay | PlaybackState.ActionPause | PlaybackState.ActionPlayPause |
                 PlaybackState.ActionSkipToNext | PlaybackState.ActionSkipToPrevious | PlaybackState.ActionStop | PlaybackState.ActionSeekTo)!
             .SetState(playing ? PlaybackStateCode.Playing : PlaybackStateCode.Paused,
-                session.PositionMilliseconds, session.Speed, SystemClock.ElapsedRealtime())!.Build();
+                session.IsPreviewing ? 0 : session.PositionMilliseconds, session.Speed, SystemClock.ElapsedRealtime())!.Build();
         mediaSession.SetPlaybackState(state);
         if (playing) { if (wakeLock?.IsHeld != true) wakeLock?.Acquire(); }
         else if (wakeLock?.IsHeld == true) wakeLock.Release();
@@ -123,7 +124,7 @@ public sealed class ListeningForegroundService : Service
         var builder = new Notification.Builder(this, Channel)
             .SetSmallIcon(Android.Resource.Drawable.IcMediaPlay)
             .SetContentTitle(session.Chapter?.Title ?? "剧情听书")
-            .SetContentText(session.Choices.Count > 0 ? "请打开听书页选择支线" : session.PositionText)
+            .SetContentText(session.IsPreviewing ? "只试听当前一句 · 结束后停住" : session.Choices.Count > 0 ? "请打开听书页选择支线" : session.PositionText)
             .SetSubText(session.Status)
             .SetVisibility(NotificationVisibility.Public)
             .SetContentIntent(open).SetOnlyAlertOnce(true).SetOngoing(session.IsPlaying)

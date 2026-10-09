@@ -1,0 +1,33 @@
+using PgrVoice;
+
+static class OptionalBranchFixtures
+{
+    public static Pack Create()
+    {
+        string root = Path.GetFullPath(Path.Combine("android/Tests/OptionalBranchFollow/artifacts", Guid.NewGuid().ToString("N")));
+        Directory.CreateDirectory(root);
+        foreach (string id in new[] { "before", "left1", "left2", "right1", "right2", "common1", "common2" })
+            File.WriteAllBytes(Path.Combine(root, id + ".wav"), [0]);
+        var pack = new Pack {
+            Root = root, Id = "optional-branch-fixture", SchemaVersion = 3,
+            Chapters = [new() { Id = "c", Sections = [new() { Id = "s", Title = "暂停分支测试小节", StartId = "before" }] }],
+            Nodes = [
+                new() { Id = "before", SectionId = "s", Text = "共同剧情到此，请选择接下来的路线。", Audio = "before.wav", NextId = "menu" },
+                new() { Id = "menu", SectionId = "s", Kind = "choice", MenuType = "exclusive", Text = "请选择", Options = [
+                    new() { Id = "left", Label = "向左调查。", PathId = "leftPath", TargetId = "left1", BodyVerified = true, ExitVerified = true,
+                        BodyEvidence = ["fixture verified body"], ExitEvidence = ["fixture verified exit"], SegmentIds = ["left1", "left2"], ReturnId = "merge", MergeId = "merge" },
+                    new() { Id = "right", Label = "向右调查。", PathId = "rightPath", TargetId = "right1", BodyVerified = true, ExitVerified = true,
+                        BodyEvidence = ["fixture verified body"], ExitEvidence = ["fixture verified exit"], SegmentIds = ["right1", "right2"], ReturnId = "merge", MergeId = "merge" }
+                ] },
+                new() { Id = "left1", SectionId = "s", PathId = "leftPath", Text = "左路第一句。", Audio = "left1.wav", NextId = "left2" },
+                new() { Id = "left2", SectionId = "s", PathId = "leftPath", Text = "左路第二句。", Audio = "left2.wav", NextId = "merge" },
+                new() { Id = "right1", SectionId = "s", PathId = "rightPath", Text = "右路第一句。", Audio = "right1.wav", NextId = "right2" },
+                new() { Id = "right2", SectionId = "s", PathId = "rightPath", Text = "右路第二句。", Audio = "right2.wav", NextId = "merge" },
+                new() { Id = "merge", SectionId = "s", Kind = "merge", NextId = "common1" },
+                new() { Id = "common1", SectionId = "s", Speaker = "露西亚", Text = "我们已经会合，接下来一起前进。", Audio = "common1.wav", NextId = "common2" },
+                new() { Id = "common2", SectionId = "s", Text = "共同剧情继续。", Audio = "common2.wav" }
+            ]
+        };
+        pack.Validate(); return pack;
+    }
+}

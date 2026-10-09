@@ -3,7 +3,7 @@
 运行：
 
 ```powershell
-& '<AndroidRoot>/runtime/dotnet/dotnet.exe' run --project android/Tests/CommonAutoPlay/CommonAutoPlayRegression.csproj -- reports/android-common-autoplay-gate.json
+dotnet run --project android/Tests/CommonAutoPlay/CommonAutoPlayRegression.csproj -- reports/android-common-autoplay-gate.json
 ```
 
 第二个参数可指定真实章节目录，默认 `<数据目录>/主线第03-42章`。报告记录所读取的第 03、29 章 `pack.json` 校验值。

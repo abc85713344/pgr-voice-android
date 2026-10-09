@@ -9,7 +9,7 @@ public sealed class AndroidChapterStorage : IChapterStorage
     public AndroidChapterStorage(string root, PackageImportLimits? limits = null) => repository = new(root, limits);
     public IReadOnlyList<InstalledPackage> List() => repository.List();
     public InstalledPackage? Find(string packId) => repository.Find(packId);
-    public Pack Load(string packId) => repository.Load(packId);
+    public Pack Load(string packId) => BundledRouteRepairs.Apply(repository.Load(packId));
     public Task<InstalledPackage> ImportAsync(Stream zipStream, CancellationToken cancellationToken = default,
         IProgress<PackageImportProgress>? progress = null) => repository.ImportAsync(zipStream, cancellationToken, progress);
     public void CleanAbandonedImports() => repository.CleanAbandonedImports();

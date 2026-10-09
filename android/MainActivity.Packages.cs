@@ -19,7 +19,7 @@ public sealed partial class MainActivity
         var pack = session.Packages.Find(packId) ?? throw new IOException("章节已被删除。");
         var box = new LinearLayout(this) { Orientation = Orientation.Vertical };
         box.SetPadding(Dp(18), Dp(8), Dp(18), Dp(12));
-        box.AddView(Text(justImported ? "导入成功，已解压的章节可以独立播放。" : pack.Title, 15));
+        box.AddView(Text(justImported ? "导入成功，已解压的章节可以独立播放。" : PackTitle(pack.Title), 15));
         var location = Text("解压文件夹 · 点击进入\n" + System.IO.Path.GetDirectoryName(pack.PackFile), 12);
         location.SetTextColor(PgrTheme.Cyan); location.ContentDescription = "打开章节解压文件夹";
         location.Clickable = true; location.Focusable = true; box.AddView(location);
@@ -38,7 +38,7 @@ public sealed partial class MainActivity
         Button(box, "删除章节配音包", () =>
         {
             dialog?.Dismiss();
-            Confirm("删除章节配音包？", pack.Title + "\n\n将删除本章解压文件及旧版本音频，停止本章播放。\n保留游戏配音进度、听书记录和书签；原 ZIP 不会删除。\n再次播放需要重新导入。", () => DeletePackage(pack));
+            Confirm("删除章节配音包？", PackTitle(pack.Title) + "\n\n将删除本章解压文件及旧版本音频，停止本章播放。\n保留游戏配音进度、听书记录和书签；原 ZIP 不会删除。\n再次播放需要重新导入。", () => DeletePackage(pack));
         });
         var scroll = new ScrollView(this); scroll.AddView(box);
         var builder = new AlertDialog.Builder(this).SetTitle(justImported ? "章节导入完成" : "管理章节文件")!

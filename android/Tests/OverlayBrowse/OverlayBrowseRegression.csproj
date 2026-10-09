@@ -5,6 +5,7 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="../../../core/SectionOrder.json" LogicalName="PgrVoice.SectionOrder.json" />
     <Compile Include="Stub.cs.txt;Program.cs.txt" />
     <Compile Include="../../OverlayBrowseModels.cs;../../AppSession.OverlayBrowse.cs;../../AppSession.OcrReview.cs" LinkBase="App" />
     <Compile Include="../../../core/**/*.cs" Exclude="../../../core/obj/**;../../../core/bin/**" LinkBase="Core" />

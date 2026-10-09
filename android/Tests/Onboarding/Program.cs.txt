@@ -1,0 +1,144 @@
+using System.Text.Json;
+using PgrVoice;
+using PgrVoice.AndroidApp;
+
+var results=new List<object>();int failures=0;
+void Check(bool ok,string why){if(!ok)throw new Exception(why);}
+void Test(string name,Action run)
+{
+    try{run();results.Add(new{name,passed=true});Console.WriteLine("PASS "+name);}
+    catch(Exception ex){failures++;results.Add(new{name,passed=false,error=ex.ToString()});Console.WriteLine("FAIL "+name+": "+ex.Message);}
+}
+string artifacts=Path.Combine(Path.GetTempPath(),"pgr-onboarding-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(artifacts);
+string Area(){string dir=Path.Combine(artifacts,Guid.NewGuid().ToString("N"));Directory.CreateDirectory(dir);return dir;}
+OnboardingProgress Trial()
+{var p=new OnboardingProgress();p.Begin();p.SelectPurpose(OnboardingPurpose.Listening);p.SelectLine("p","c","n");return p;}
+Pack PackFixture(string root)
+{
+    File.WriteAllText(Path.Combine(root,"sample.wav"),"test");
+    var pack=new Pack{Id="p",Title="引导测试",Root=root,
+        Chapters=new(){new(){Id="c",Title="章节",Sections=new(){new(){Id="s",Title="小节",StartId="a"}}}},
+        Nodes=new(){new(){Id="a",SectionId="s",Kind="line",Speaker="角色甲",Text="第一句",Audio="sample.wav",NextId="b"},
+            new(){Id="b",SectionId="s",Kind="line",Speaker="角色乙",Text="第二句",Audio="sample.wav"}}};
+    pack.Validate();return pack;
+}
+void Ready(AppSession s,OnboardingPurpose purpose)
+{s.Onboarding.Begin();s.Onboarding.Progress.SelectPurpose(purpose);s.Onboarding.Progress.SelectLine("p","c","a");s.Onboarding.Progress.ConfirmHeard(true);}
+
+Test("新安装判定在设置自动写入前冻结，首次进入后不重复弹出",()=>
+{
+    string root=Area();var frozen=OnboardingInstallSnapshot.Capture(root);
+    Json.Save(Path.Combine(root,"settings.json"),new{volume=.85});
+    var store=new OnboardingStore(root,frozen,false);Check(store.OfferAutomatically,"自动保存误判老用户");
+    store.Begin();Check(!store.OfferAutomatically,"本进程二次自动弹出");
+    Check(!new OnboardingStore(root,OnboardingInstallSnapshot.Capture(root),false).OfferAutomatically,"重启重复弹出");
+});
+Test("老设置、备份设置、已有章节及旧 OnboardingShown 均不自动弹出",()=>
+{
+    foreach(string marker in new[]{"settings.json","settings.json.bak","chapters/p/pack.json"})
+    {string root=Area();string path=Path.Combine(root,marker);Directory.CreateDirectory(Path.GetDirectoryName(path)!);File.WriteAllText(path,"{}");
+        Check(!new OnboardingStore(root,OnboardingInstallSnapshot.Capture(root),false).OfferAutomatically,"旧用户误弹："+marker);}
+    Check(!new OnboardingStore(Area(),new(false,false),true).OfferAutomatically,"旧标记未兼容");
+});
+Test("跳过、关闭和完成均持久记录，设置重开可继续或重新开始",()=>
+{
+    foreach(bool skip in new[]{false,true})
+    {string root=Area();var store=new OnboardingStore(root,new(false,false),false);store.Begin();store.Progress.SelectPurpose(OnboardingPurpose.Game);store.Exit(skip);
+        store=new(root,new(false,false),false);Check(!store.OfferAutomatically,"退出后再自动弹");store.Begin();Check(store.Progress.Step==OnboardingStep.Package,"重开未保持步骤");}
+    var p=Trial();Check(p.ConfirmHeard(true)&&p.Complete(),"合法完成失败");p.Begin();Check(p.Step==OnboardingStep.Purpose&&!p.HeardConfirmed,"完成后重开没有从用途开始");
+});
+Test("试听前、失败或回退后不能跳过确认完成",()=>
+{
+    var p=Trial();Check(!p.ConfirmHeard(false)&&!p.Complete(),"未试听可以完成");Check(p.ConfirmHeard(true),"有效试听不能确认");
+    p.Back();Check(p.Step==OnboardingStep.Trial&&!p.HeardConfirmed&&!p.Complete(),"回退留下完成权限");
+});
+Test("文件选择与权限往返的步骤可持久恢复，退出和新一轮屏蔽旧回调",()=>
+{
+    string root=Area();var store=new OnboardingStore(root,new(false,false),false);store.Begin();store.Progress.SelectPurpose(OnboardingPurpose.Game);
+    long epoch=store.Progress.BeginExternal("import");int request=store.Progress.ExternalRequestCode;store.Save();store=new(root,new(false,false),false);
+    Check(store.Progress.AcceptExternal("import",epoch)&&store.Progress.Step==OnboardingStep.Package,"返回丢失原步骤");
+    Check(!store.Progress.AcceptExternal("overlay",epoch),"错误请求种类被接受");store.Exit(false);
+    Check(!store.Progress.AcceptExternal("import",epoch),"关闭后接收旧回调");store.Begin();store.Progress.BeginExternal("import");
+    Check(!store.Progress.AcceptExternal("import",epoch),"旧轮次作用于新引导");
+    Check(store.Progress.ExternalRequestCode!=request,"不同请求重复使用相同请求码，旧结果可能误触发");
+});
+Test("单句试听自然结束才可确认，结束不会追加第二次播放",()=>
+{
+    var output=new TestAudio();using var preview=new OnboardingPreview(output,()=>.5f,()=>true,_=>true);
+    preview.Start("sample");Check(output.Requests==1&&!preview.CanAcknowledge,"播放开始时就确认成功");
+    Check(output.Volume==.5f,"试听音量未传到真实音频边界");output.Finish(output.Ticket);
+    Check(preview.CanAcknowledge&&output.Requests==1&&!preview.IsPlaying,"单句结束行为错误");
+});
+Test("重复试听屏蔽旧完成，暂停后旧回调不能确认",()=>
+{
+    var output=new TestAudio();using var preview=new OnboardingPreview(output,()=>1,()=>true,_=>true);
+    preview.Start("a");long old=output.Ticket;preview.Start("b");output.Finish(old);
+    Check(!preview.CanAcknowledge,"旧音频完成误确认新试听");preview.Stop();output.Finish(output.Ticket);
+    Check(!preview.CanAcknowledge,"暂停后仍确认成功");
+});
+Test("缺音频、总量/角色静音与系统媒体静音阻止假成功",()=>
+{
+    bool exists=false,audible=true;float volume=1;var output=new TestAudio();
+    using var preview=new OnboardingPreview(output,()=>volume,()=>audible,_=>exists);
+    preview.Start("missing");Check(output.Requests==0&&!preview.CanAcknowledge,"缺文件调用播放器");
+    exists=true;volume=0;preview.Start("sample");Check(output.Requests==0,"静音仍试听");
+    volume=1;audible=false;preview.Start("sample");Check(output.Requests==0,"系统静音仍试听");
+    audible=true;preview.Start("sample");output.Finish(output.Ticket);Check(preview.CanAcknowledge,"重试不可恢复");
+    volume=0;Check(!preview.CanAcknowledge,"播放后设为静音仍可确认");volume=1;exists=false;Check(!preview.CanAcknowledge,"播放后文件消失仍可确认");
+});
+Test("同步播放失败、解码错误、音频中断与销毁均不能采纳",()=>
+{
+    var output=new TestAudio{SyncFailure="同步错误"};var preview=new OnboardingPreview(output,()=>1,()=>true,_=>true);
+    preview.Start("a");output.Finish(output.Ticket);Check(!preview.CanAcknowledge,"同步错误被计完成");
+    output.SyncFailure=null;preview.Start("a");output.Fail();output.Finish(output.Ticket);Check(!preview.CanAcknowledge,"解码失败被计完成");
+    preview.Start("a");output.Interrupt();output.Finish(output.Ticket);Check(!preview.CanAcknowledge,"音频中断被计完成");
+    preview.Start("a");preview.Dispose();output.Finish(output.Ticket);Check(!preview.CanAcknowledge,"销毁后回调仍生效");
+});
+Test("真实会话接线暂停两种播放并失效旧操作，选样不改变游戏位置",()=>
+{
+    string root=Area();var session=new AppSession(PackFixture(root),root);session.Engine!.Commit("b");
+    session.PauseForOnboarding();Check(!session.Listening.IsPlaying&&session.Invalidations==1&&session.HiddenOverlays==1,"未完整暂停会话");
+    Ready(session,OnboardingPurpose.Listening);var line=session.SelectedOnboardingLine();
+    Check(line?.Node.Id=="a"&&session.Engine.CurrentId=="b"&&session.AudioRequests==0&&session.GameLoads==0,"选样污染游戏位置或播放");
+});
+Test("真实会话完成听书仅打开所选大章，不覆盖游戏位置，不自动发声",()=>
+{
+    string root=Area();var session=new AppSession(PackFixture(root),root);session.Engine!.Commit("b");Ready(session,OnboardingPurpose.Listening);
+    session.OpenOnboardingChapter();Check(session.Listening.OpenedPack=="p"&&session.Listening.OpenedChapter=="c","听书章节未打开");
+    Check(session.Engine.CurrentId=="b"&&session.GameLoads==0&&session.AudioRequests==0,"完成听书更改游戏位置或播放");
+    Check(session.Onboarding.Progress.Status==OnboardingStatus.Completed,"完成状态未保存");
+});
+Test("真实会话游戏完成使用既有 LoadPack 语义，不确认试听句、不自动播放",()=>
+{
+    string root=Area();var session=new AppSession(PackFixture(root),root);Ready(session,OnboardingPurpose.Game);session.OpenOnboardingChapter();
+    Check(session.GameLoads==1&&session.Listening.OpenedPack==null&&session.AudioRequests==0,"游戏完成走错通道");
+    Check(session.Engine!.CurrentId==null&&session.SectionId=="s","把试听句当游戏定位或未浏览到所选大章");
+});
+Test("真实会话未确认、章节变化、音频失踪不得完成",()=>
+{
+    string root=Area();var session=new AppSession(PackFixture(root),root);session.Onboarding.Begin();
+    bool rejected=false;try{session.OpenOnboardingChapter();}catch(InvalidOperationException){rejected=true;}Check(rejected,"未确认允许完成");
+    Ready(session,OnboardingPurpose.Game);session.Onboarding.Progress.NodeId="gone";Check(session.SelectedOnboardingLine()==null,"旧台词误命中");
+    session.Onboarding.Progress.NodeId="a";File.Delete(Path.Combine(root,"sample.wav"));rejected=false;
+    try{session.OpenOnboardingChapter();}catch(InvalidOperationException){rejected=true;}Check(rejected&&session.GameLoads==0,"缺音频仍完成");
+});
+Test("生产入口接线：冻结早于设置写入，引导导入不打开游戏，生命周期暂停试听",()=>
+{
+    string? app=args.Length>1?args[1]:null;
+    for(var dir=new DirectoryInfo(Environment.CurrentDirectory);app==null&&dir!=null;dir=dir.Parent)
+        if(File.Exists(Path.Combine(dir.FullName,"android","AppSession.cs")))app=dir.FullName;
+    if(app==null)throw new Exception("请将播放器开发根作为第二参数传入");
+    string source=File.ReadAllText(Path.Combine(app,"android","AppSession.cs"));
+    Check(source.IndexOf("OnboardingInstallSnapshot.Capture(root)")<source.IndexOf("Json.ReadWithBackup<AppSettings>"),"快照发生在读取设置后");
+    Check(source.Contains("if(openAfterImport)LoadPack(installed.PackId);"),"普通导入与引导导入未隔离");
+    string main=File.ReadAllText(Path.Combine(app,"android","MainActivity.cs"));
+    Check(main.Contains("OnPause(){PauseOnboarding();")&&main.Contains("DestroyOnboarding();")&&main.Contains("RestoreOrStartOnboarding(savedInstanceState);"),"生命周期未接线");
+    string ui=File.ReadAllText(Path.Combine(app,"android","MainActivity.Onboarding.cs"));
+    Check(ui.Contains("openAfterImport:false")&&ui.Contains("Guide.Epoch!=epoch")&&ui.Contains("Guide.AcceptExternal(kind,epoch)"),"导入身份保护缺失");
+    Check(!ui.Contains("RequestCapture(")&&!ui.Contains("ExplainAutoPlaybackAccessibility("),"引导自动申请无关权限");
+});
+
+var report=new{passed=failures==0,tests=results.Count,failures,artifacts,results};
+string output=args.Length>0?Path.GetFullPath(args[0]):Path.Combine(Environment.CurrentDirectory,"results.json");
+Directory.CreateDirectory(Path.GetDirectoryName(output)!);File.WriteAllText(output,JsonSerializer.Serialize(report,new JsonSerializerOptions{WriteIndented=true}));
+Console.WriteLine($"{results.Count-failures}/{results.Count} passed; {output}");return failures==0?0:1;

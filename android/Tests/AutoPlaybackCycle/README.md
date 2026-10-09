@@ -3,7 +3,7 @@
 运行：
 
 ```powershell
-& '<AndroidRoot>/runtime/dotnet/dotnet.exe' run --project android/Tests/AutoPlaybackCycle/AutoPlaybackCycleRegression.csproj -- reports/android-autoplay-cycle.json
+dotnet run --project android/Tests/AutoPlaybackCycle/AutoPlaybackCycleRegression.csproj -- reports/android-autoplay-cycle.json
 ```
 
 独立工程只编译 `AutoPlaybackCycle.cs`，不构建安卓应用、不使用共享核心输出缓存。

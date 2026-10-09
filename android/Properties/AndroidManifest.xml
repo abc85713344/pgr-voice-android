@@ -8,6 +8,11 @@
   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
   <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
   <uses-permission android:name="android.permission.WAKE_LOCK" />
-  <queries><package android:name="com.kurogame.haru.hero" /></queries>
+  <queries>
+    <intent>
+      <action android:name="android.intent.action.MAIN" />
+      <category android:name="android.intent.category.HOME" />
+    </intent>
+  </queries>
   <application android:allowBackup="false" android:label="战双剧情配音" android:icon="@drawable/app_icon" android:theme="@style/AppTheme" android:supportsRtl="true" android:usesCleartextTraffic="false" />
 </manifest>

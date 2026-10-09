@@ -1,0 +1,65 @@
+using PgrVoice;
+using PgrVoice.AndroidApp.Contracts;
+
+namespace PgrVoice.AndroidApp;
+
+public sealed class TestAudio : IAudioOutput
+{
+    public AudioStrategy Strategy { get; set; }
+    public bool Playing { get; private set; }
+    public event Action? Completed;
+    public event Action<long>? PlaybackCompleted;
+    public event Action<string>? Error;
+    public event Action<string>? Interrupted;
+    public long Ticket { get; private set; }
+    public int Requests { get; private set; }
+    public int Stops { get; private set; }
+    public float Volume { get; private set; }
+    public string? SyncFailure;
+    public void Play(string file)=>PlayTagged(file);
+    public long PlayTagged(string file)
+    {
+        Requests++;Playing=true;Ticket++;
+        if(SyncFailure!=null){Playing=false;Error?.Invoke(SyncFailure);}
+        return Ticket;
+    }
+    public void Finish(long ticket){Playing=false;PlaybackCompleted?.Invoke(ticket);Completed?.Invoke();}
+    public void Fail()=>Error?.Invoke("模拟解码失败");
+    public void Interrupt()=>Interrupted?.Invoke("模拟音频焦点中断");
+    public void Stop(){Stops++;Playing=false;}
+    public void Pause()=>Stop();
+    public void SetVolume(float value)=>Volume=value;
+    public void Dispose()=>Stop();
+}
+public sealed class TestPackages(Pack pack)
+{
+    public Pack Load(string id)=>id==pack.Id?pack:throw new FileNotFoundException("找不到章节");
+}
+public sealed class TestListening
+{
+    public bool IsPlaying=true;
+    public string? OpenedPack,OpenedChapter;
+    public int Pauses;
+    public void Pause(){IsPlaying=false;Pauses++;}
+    public void Open(string pack,string chapter){OpenedPack=pack;OpenedChapter=chapter;IsPlaying=false;}
+}
+public sealed class TestOverlay { public int Hides; public void Hide()=>Hides++; }
+public sealed partial class AppSession
+{
+    readonly TestAudio audio=new();
+    readonly TestOverlay overlay=new();
+    public PlaybackEngine? Engine { get; private set; }
+    public TestPackages Packages { get; }
+    public TestListening Listening { get; }=new();
+    public int Invalidations,GameLoads;
+    public string SectionId { get; set; }="";
+    public int AudioRequests=>audio.Requests;
+    public int HiddenOverlays=>overlay.Hides;
+    public AppSession(Pack pack,string root)
+    {
+        Packages=new(pack);Engine=new(pack);Onboarding=new(root,new(false,false),false);
+    }
+    void Invalidate()=>Invalidations++;
+    void Notify(){}
+    public void LoadPack(string id){Engine=new(Packages.Load(id));GameLoads++;}
+}

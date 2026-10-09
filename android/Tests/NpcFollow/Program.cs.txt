@@ -1,0 +1,251 @@
+using PgrVoice;
+using PgrVoice.AndroidApp;
+using PgrVoice.AndroidApp.Platform;
+using PgrVoice.AndroidApp.Ui;
+using System.Security.Cryptography;
+using System.Text.Json;
+
+const string Section = "ch29-1dc1158611c810722709";
+const string RootMenu = Section + "-menu-000";
+string packPath = Environment.GetEnvironmentVariable("PGR_CH29_PACK") ?? "<数据目录>/全部配音/01_主线/第29章_源解信标/pack.json";
+string beforeHash = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(packPath)));
+var results = new List<object>(); int failures = 0;
+void Check(bool condition, string message) { if (!condition) throw new Exception(message); }
+void Test(string name, Action action)
+{
+    try { action(); results.Add(new { name, passed = true }); Console.WriteLine("PASS " + name); }
+    catch (Exception ex) { failures++; results.Add(new { name, passed = false, error = ex.ToString() }); Console.WriteLine("FAIL " + name + ": " + ex.Message); }
+}
+AppSession Session(string menuId = RootMenu, bool enabled = true)
+{
+    Android.OS.SystemClock.Now = 1_000;
+    var engine = new PlaybackEngine(Pack.Load(packPath));
+    Check(engine.OpenGameMenu(menuId, Section), engine.NavigationError);
+    var s = new AppSession(engine); s.Settings.BranchAutoFollow = enabled; s.SectionId = Section;
+    s.OpenBrowseForTest(OverlayBrowsePage.Branches); return s;
+}
+string Navigation(AppSession s) => JsonSerializer.Serialize(s.Engine!.ExportNavigation(), Json.Options);
+OverlayBrowseItem OptionItem(AppSession s, ChoiceOption option) => s.BrowseModel.Items.Single(i => i.Title.StartsWith(option.Label, StringComparison.Ordinal));
+void BrowseSelect(AppSession s, ChoiceOption option)
+{
+    var model = s.BrowseModel; s.ChooseBrowseForTest(model, OptionItem(s, option)); s.AdvanceClock(180);
+}
+void ConfirmPrompt(AppSession s, int index)
+{
+    s.Window.LatestBranch.Selected(index); s.AdvanceClock(180);
+}
+void RequireStoppedList(AppSession s, string menuId, int options)
+{
+    Check(s.Engine!.CurrentId == menuId && s.Engine.Mode == RunMode.Choice, "没有停在预期菜单：" + s.Engine.CurrentId);
+    Check(!s.ClickFollowRunning && !s.AutoPlaybackRunning && !s.BranchFollowRunning && TapFollowOverlay.VisibleCount == 0, "菜单出现后仍有推进触窗或自动播放");
+    Check(s.Window.ManualBranchVisible && s.Window.LatestBranch.Labels.Count == options && s.Window.LatestBranch.TapWindowsAtShow == 0, "菜单列表缺项或撤窗晚于列表出现");
+}
+void FinishLineSegment(AppSession s, int maximum = 100)
+{
+    int count = 0;
+    while (s.Engine!.Current is { Kind: "line" })
+    {
+        if (++count > maximum) throw new Exception("真实段落未在有限步内结束");
+        Check(s.ClickFollowRunning, "正文尚未结束却未恢复点按：" + s.Status);
+        int requests = s.GestureRequests;
+        s.AdvanceClock(350); s.TapNextForTest(); s.AdvanceClock(80);
+        Check(s.GestureRequests == requests + 1, "用户轻点没有恰好转发一次");
+        GameAdvanceAccessibilityService.CompleteOldestGesture(); s.AdvanceClock(180);
+    }
+}
+void OpenActorsBySecondary(AppSession s)
+{
+    var prompt = s.Window.LatestBranch;
+    Check(prompt.SecondaryAction != null && !string.IsNullOrWhiteSpace(prompt.SecondaryActionLabel), "话题列表没有人工换NPC入口");
+    int plays = s.PlayRequestedNodes.Count, taps = s.GestureRequests;
+    prompt.SecondaryAction!(); s.AdvanceClock(180);
+    RequireStoppedList(s, RootMenu, 8);
+    Check(s.PlayRequestedNodes.Count == plays && s.GestureRequests == taps, "换NPC额外发声或点击游戏");
+}
+ChoiceOption RootOption(AppSession s, int index) => s.Engine!.Pack.ById[RootMenu].Options[index];
+void SelectActorWithOpening(AppSession s, int index, bool fromRootPrompt = false)
+{
+    var option = RootOption(s, index);
+    if (fromRootPrompt) ConfirmPrompt(s, index); else BrowseSelect(s, option);
+    if (index is 0 or 1 or 2 or 3)
+    {
+        Check(!s.ClickFollowRunning && s.Engine!.CurrentId == RootMenu && s.Window.LatestBranch.Labels.Count == 2, "多段NPC应先静音选择当前内容");
+        ConfirmPrompt(s, 0);
+    }
+    Check(s.Engine!.CurrentId == option.TargetId && s.ClickFollowRunning, "确认开场后未到对应NPC首句：" + s.Status);
+}
+
+Test("真实29-1人物目录完整保留8项及卡朋特两个阶段，不默认选择", () => {
+    var s = Session(); var root = s.Engine!.Current!;
+    Check(root.Options.Count == 8 && s.BrowseModel.Items.Count == 8, "人物入口数量改变");
+    foreach (var option in root.Options) Check(s.BrowseModel.Items.Any(i => i.Title.Contains(option.Label)), "人物选项被隐藏：" + option.Label);
+    Check(s.BrowseModel.Items.Count(i => i.Title.Contains("卡朋特")) >= 2 && s.PlayRequestedNodes.Count == 0 && s.GestureRequests == 0 && s.Engine.Choices.Count == 0 && s.Engine.Facts.Count == 0 && s.Engine.Heard.Count == 0, "打开列表已推断人物、条件或完成");
+});
+Test("多段NPC入口和当前内容候选均静音，确认开场首句只播一次并沿用区域", () => {
+    foreach (int index in new[] { 0, 1, 2, 3 })
+    {
+        var s = Session(); var option = RootOption(s, index); var target = s.Settings.AdvanceTargetFor(s.Screen.DisplayState.RegionKey!);
+        string navigation = Navigation(s); BrowseSelect(s, option);
+        Check(Navigation(s) == navigation && s.PlayRequestedNodes.Count == 0 && s.GestureRequests == 0 && !s.ClickFollowRunning, "未选当前内容就改变进度或发声");
+        Check(s.Window.LatestBranch.Labels.Count == 2 && s.Window.LatestBranch.Labels.Any(l => l.Contains(s.Engine!.Pack.ById[option.TargetId].Text)), "没有显示真实开场全文供核对");
+        var entry = s.Window.LatestBranch; entry.Selected(0); entry.Selected(0); s.AdvanceClock(180);
+        Check(s.ClickFollowRunning && s.Engine!.CurrentId == option.TargetId && s.PlayRequestedNodes.SequenceEqual([option.TargetId]) && s.GestureRequests == 0, "首句重复、跳句或自动点击");
+        Check(s.Settings.AdvanceTargetFor(s.Screen.DisplayState.RegionKey!) == target, "没有复用保存的下一句区域");
+    }
+});
+Test("多段NPC选择当前话题菜单不播旧开场，具体话题仍由玩家确认", () => {
+    foreach (var pair in new[] { (Actor: 0, Menu: "006"), (Actor: 1, Menu: "012"), (Actor: 2, Menu: "011"), (Actor: 3, Menu: "002") })
+    {
+        var s = Session(); BrowseSelect(s, RootOption(s, pair.Actor)); ConfirmPrompt(s, 1);
+        RequireStoppedList(s, Section + "-menu-" + pair.Menu, 3);
+        Check(s.PlayRequestedNodes.Count == 0 && s.GestureRequests == 0 && s.Engine!.Facts.Count == 0 && s.Engine.Heard.Count == 0, "静音定位话题补写进度或播了开场");
+    }
+});
+Test("NPC直接指向话题菜单时保持静音，不误当首句或代选第一项", () => {
+    var s = Session(); var option = RootOption(s, 7); var facts = s.Engine!.Facts.ToArray();
+    BrowseSelect(s, option);
+    RequireStoppedList(s, Section + "-menu-019", 2);
+    Check(s.PlayRequestedNodes.Count == 0 && s.GestureRequests == 0 && s.Engine.Facts.SetEquals(facts) && s.Engine.Heard.Count == 0, "choice目标被当对白或补写条件");
+});
+Test("带前置条件NPC只接受玩家明确指认，不补写camp.started", () => {
+    foreach (int index in new[] { 6, 7 })
+    {
+        var s = Session(); var option = RootOption(s, index);
+        Check(!s.Engine!.ConditionsKnown(option), "真实样本不再缺条件");
+        BrowseSelect(s, option);
+        Check(!s.Engine.Facts.Contains("camp.started") && s.Engine.Choices.GetValueOrDefault(RootMenu) == option.PathId, "显式指认被替换为伪造任务完成");
+        if (index == 6) Check(s.ClickFollowRunning && s.Engine.CurrentId == option.TargetId && s.PlayRequestedNodes.SequenceEqual([option.TargetId]), "已见人物指认不能安全播放核实正文");
+    }
+});
+Test("两个单段NPC读完重新展示8人物且撤点按，已聊人物仍能再次确认播放", () => {
+    foreach (int index in new[] { 4, 5 })
+    {
+        var s = Session(); var option = RootOption(s, index); BrowseSelect(s, option);
+        Check(s.ClickFollowRunning && s.PlayRequestedNodes.SequenceEqual([option.TargetId]), "单段NPC首句未只播放一次");
+        FinishLineSegment(s); RequireStoppedList(s, RootMenu, 8);
+        Check(s.Engine!.Heard.Contains(option.PathId) && s.Window.LatestBranch.Labels[index].Contains("已聊"), "已核单段返回没有展示已聊");
+        int plays = s.PlayRequestedNodes.Count, taps = s.GestureRequests;
+        ConfirmPrompt(s, index);
+        Check(s.ClickFollowRunning && s.Engine.CurrentId == option.TargetId && s.PlayRequestedNodes.Count == plays + 1 && s.PlayRequestedNodes.Last() == option.TargetId && s.GestureRequests == taps, "已聊单段NPC被禁用/隐藏或再次确认多播");
+    }
+});
+Test("现有分支目录明确打开人物菜单后显示选择窗，静音且不代选NPC", () => {
+    var s = Session(Section + "-menu-006");
+    var directory = s.BrowseModel.Actions!.Single(a => a.Title == "人物、话题与分支目录");
+    s.ChooseBrowseForTest(s.BrowseModel, directory);
+    var target = s.Engine!.GetStoryMenus(Section).Single(t => t.MenuId == RootMenu);
+    s.ChooseBrowseForTest(s.BrowseModel, s.BrowseModel.Items.Single(i => i.Title == target.Label)); s.AdvanceClock(180);
+    RequireStoppedList(s, RootMenu, 8);
+    Check(s.PlayRequestedNodes.Count == 0 && s.GestureRequests == 0 && s.Engine.Choices.Count == 0 && s.Engine.Facts.Count == 0 && s.Engine.Heard.Count == 0, "人物目录定位时就完成或播放了路线");
+});
+Test("三个真实话题菜单九个已核选项逐句点按，返回列表前撤销点击区域", () => {
+    foreach (string number in new[] { "006", "011", "012" })
+    foreach (int index in Enumerable.Range(0, 3))
+    {
+        string menuId = Section + "-menu-" + number;
+        var s = Session(menuId); var option = s.Engine!.Current!.Options[index];
+        Check(option.BodyVerified && option.ExitVerified, "真实样本不再已核");
+        BrowseSelect(s, option);
+        Check(s.ClickFollowRunning && s.Engine.CurrentId == option.TargetId && s.PlayRequestedNodes.SequenceEqual([option.TargetId]), "话题首句没有只播一次");
+        FinishLineSegment(s);
+        RequireStoppedList(s, option.ReturnId!, index == 2 ? 8 : 3);
+        Check(s.Engine.Heard.Contains(option.PathId), "已核实际返回未记录该话题");
+        Check(s.PlayRequestedNodes.Distinct().Count() == s.PlayRequestedNodes.Count, "单次话题演练发生重复正文播放");
+        if (index < 2) Check(s.Window.LatestBranch.Labels[index].Contains("已聊"), "完成话题没有单独标记已聊");
+        Check(s.Window.LatestBranch.SecondaryAction != null || index == 2, "同NPC话题返回缺换NPC入口");
+    }
+});
+Test("只读完NPC开场不等于全部话题已聊，显示0/2且已聊选项仍可重选", () => {
+    var s = Session(); var actor = RootOption(s, 0); SelectActorWithOpening(s, 0); FinishLineSegment(s);
+    RequireStoppedList(s, Section + "-menu-006", 3);
+    Check(s.Engine!.Heard.Contains(actor.PathId), "真实core开场Heard前提不成立");
+    OpenActorsBySecondary(s);
+    string label = s.Window.LatestBranch.Labels[0];
+    Check(label.Contains("0/2") && !label.Contains("全部已聊") && !label.Contains("全已聊"), "将父Heard误当全部NPC话题完成：" + label);
+    ConfirmPrompt(s, 0); Check(s.Window.LatestBranch.Labels.Count == 2, "回访NPC被隐藏禁用或直接复播开场");
+});
+Test("同NPC两话题逐个返回并累计2/2，退出后仍保持人物可回访", () => {
+    var s = Session(Section + "-menu-006");
+    for (int i = 0; i < 2; i++)
+    {
+        var option = s.Engine!.Current!.Options[i];
+        if (i == 0) BrowseSelect(s, option); else ConfirmPrompt(s, i);
+        FinishLineSegment(s); RequireStoppedList(s, Section + "-menu-006", 3);
+    }
+    ConfirmPrompt(s, 2); FinishLineSegment(s); RequireStoppedList(s, RootMenu, 8);
+    Check(s.Window.LatestBranch.Labels[0].Contains("2/2"), "两条话题未正确累计");
+    int plays = s.PlayRequestedNodes.Count; ConfirmPrompt(s, 0);
+    Check(s.PlayRequestedNodes.Count == plays && s.Window.LatestBranch.Labels.Count == 2 && !s.ClickFollowRunning, "已聊NPC回访自动跳过或重复旧开场");
+});
+Test("A到B再到A回访保持可选，多阶段候选静音且玩家决定开场或当前话题", () => {
+    var s = Session(); SelectActorWithOpening(s, 0); FinishLineSegment(s); OpenActorsBySecondary(s);
+    SelectActorWithOpening(s, 1, fromRootPrompt: true); FinishLineSegment(s); RequireStoppedList(s, Section + "-menu-012", 3); OpenActorsBySecondary(s);
+    string navigation = Navigation(s); int plays = s.PlayRequestedNodes.Count, taps = s.GestureRequests;
+    ConfirmPrompt(s, 0);
+    Check(Navigation(s) == navigation && s.PlayRequestedNodes.Count == plays && s.GestureRequests == taps && s.Window.LatestBranch.Labels.Count == 2 && !s.ClickFollowRunning, "A→B→A回访未经确认改进度");
+    ConfirmPrompt(s, 1); RequireStoppedList(s, Section + "-menu-006", 3);
+    Check(s.PlayRequestedNodes.Count == plays && s.GestureRequests == taps, "选择当前话题却重播了A开场");
+    var option = s.Engine!.Current!.Options[1]; ConfirmPrompt(s, 1);
+    Check(s.ClickFollowRunning && s.Engine.CurrentId == option.TargetId && s.PlayRequestedNodes.Last() == option.TargetId && s.PlayRequestedNodes.Count == plays + 1, "回访具体话题未只播放一次");
+});
+Test("栗西未知出口保留Gap、不冒称已聊完、不自动回人物或下一项", () => {
+    string menuId = Section + "-menu-002"; var s = Session(menuId); var option = s.Engine!.Current!.Options[1];
+    Check(option.BodyVerified && !option.ExitVerified, "未知出口样本前提变化");
+    BrowseSelect(s, option); FinishLineSegment(s);
+    Check(s.Engine.Mode == RunMode.Gap && s.Engine.CurrentId == option.BoundaryId && !s.ClickFollowRunning && TapFollowOverlay.VisibleCount == 0 && !s.AutoPlaybackRunning, "未知出口越界或继续拦截3D点击");
+    string label = BranchFollowPolicy.InteractionOptionLabel(s.Engine, s.Engine.Pack.ById[menuId], option);
+    Check(!label.Contains("已聊"), "未知出口被标记已聊完成：" + label);
+});
+Test("话题换NPC静音且冻结旧话题按钮，旧回调不得选后来菜单", () => {
+    var s = Session(); BrowseSelect(s, RootOption(s, 0)); ConfirmPrompt(s, 1); var old = s.Window.LatestBranch;
+    int plays = s.PlayRequestedNodes.Count; OpenActorsBySecondary(s); old.Selected(1); s.AdvanceClock(180);
+    RequireStoppedList(s, RootMenu, 8);
+    Check(s.PlayRequestedNodes.Count == plays && s.GestureRequests == 0, "旧话题按钮污染人物菜单");
+});
+Test("多段当前内容候选取消后旧确认不改变导航、不播音", () => {
+    var s = Session(); BrowseSelect(s, RootOption(s, 0)); var prompt = s.Window.LatestBranch; string navigation = Navigation(s);
+    prompt.Cancelled(); prompt.Selected(0); s.AdvanceClock(1_000);
+    Check(Navigation(s) == navigation && !s.ClickFollowRunning && !s.Window.ManualBranchVisible && s.PlayRequestedNodes.Count == 0 && s.GestureRequests == 0, "取消候选后旧回调仍执行");
+});
+Test("回访候选期间临时离开游戏后返回，真实失效票据不能复活", () => {
+    var s = Session(); BrowseSelect(s, RootOption(s, 1)); var prompt = s.Window.LatestBranch; string navigation = Navigation(s);
+    Action invalidation = s.CaptureFollowInvalidationForTest("前台改变"); invalidation(); prompt.Selected(0); s.AdvanceClock(180);
+    Check(Navigation(s) == navigation && s.PlayRequestedNodes.Count == 0 && !s.ClickFollowRunning && s.GestureRequests == 0, "旧候选在切出后复活");
+});
+Test("已显示NPC选项重排后旧索引不能选中另一个人物", () => {
+    var s = Session(Section + "-menu-006"); BrowseSelect(s, s.Engine!.Current!.Options[2]); FinishLineSegment(s);
+    RequireStoppedList(s, RootMenu, 8); var prompt = s.Window.LatestBranch;
+    var options = s.Engine.Pack.ById[RootMenu].Options; string expected = options[4].TargetId; (options[4], options[5]) = (options[5], options[4]);
+    int count = s.PlayRequestedNodes.Count; prompt.Selected(4); s.AdvanceClock(180);
+    Check(s.PlayRequestedNodes.Count == count || s.PlayRequestedNodes.Count == count + 1 && s.PlayRequestedNodes.Last() == expected, "旧行号选择了换位后的另一NPC");
+});
+Test("选择NPC不依赖录屏，已有点按区域与前台授权足够", () => {
+    var s = Session(); s.Screen.CaptureActive = false; var option = RootOption(s, 4); BrowseSelect(s, option);
+    Check(s.ClickFollowRunning && s.Engine!.CurrentId == option.TargetId && s.PlayRequestedNodes.SequenceEqual([option.TargetId]) && s.OcrRequests == 0 && s.GestureRequests == 0, "人工NPC跟随仍依赖捕获或发自动点击");
+});
+Test("已开辅助但当前前台或下一句区域不可用时消费NPC确认，不回退播放开场", () => {
+    foreach (string change in new[] { "foreground", "target", "overlay", "app" })
+    {
+        var s = Session(); var option = RootOption(s, 0); string navigation = Navigation(s);
+        if (change == "foreground") GameAdvanceAccessibilityService.Availability = GameAdvanceAccessibilityService.Availability with { TargetForeground = false };
+        if (change == "target") s.Settings.AdvanceTargets.Clear();
+        if (change == "overlay") s.Window.CanShow = false;
+        if (change == "app") s.SetForeground(true);
+        BrowseSelect(s, option);
+        Check(Navigation(s) == navigation && s.PlayRequestedNodes.Count == 0 && s.GestureRequests == 0 && !s.ClickFollowRunning && !s.AutoPlaybackRunning, "环境不具备时回退SelectBranch播放旧开场：" + change);
+    }
+});
+
+string afterHash = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(packPath)));
+Test("真实第29章pack全程只读保持原SHA", () => Check(beforeHash == afterHash, "正式pack被修改"));
+string output = Path.GetFullPath(args.FirstOrDefault() ?? "reports/android-npc-follow-20261009/host-npc-follow.json");
+var report = new {
+    createdUtc = DateTimeOffset.UtcNow, count = results.Count, failures, passed = failures == 0, packPath, packSha256 = beforeHash,
+    tests = results,
+    sources = new[] { "AppSession.FollowTransitions.cs", "AppSession.OverlayBrowse.cs", "AppSession.ClickFollow.cs", "AppSession.BranchFollow.cs", "BranchFollowPolicy.cs" }
+        .ToDictionary(name => name, name => Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes("android/" + name)))),
+    scope = "独立直编真实AppSession人物/话题、浏览、分支和点按partial与当前剧情核心，读取真实第29章29-1图。Android音频/窗口/时钟/无障碍仅受控边缘stub；播放请求记实际生产事件，不解码、不发真实系统触摸。没有启动OCR，不将此主机验证等同安卓设备或游戏实测。"
+};
+Directory.CreateDirectory(Path.GetDirectoryName(output)!); File.WriteAllText(output, JsonSerializer.Serialize(report, Json.Options));
+Console.WriteLine($"NpcFollow: {results.Count - failures}/{results.Count} passed; report={output}");
+return failures == 0 ? 0 : 1;

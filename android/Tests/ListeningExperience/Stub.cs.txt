@@ -1,0 +1,64 @@
+using PgrVoice;
+using PgrVoice.AndroidApp.Contracts;
+
+namespace Android.Content
+{
+    public sealed class Context(string directory)
+    {
+        public DirectoryRef FilesDir { get; } = new(directory);
+        public sealed record DirectoryRef(string AbsolutePath);
+    }
+}
+namespace Android.OS
+{
+    public static class Looper { public static object MainLooper { get; } = new(); }
+    public static class SystemClock { public static long ElapsedRealtime() => Environment.TickCount64; }
+    public sealed class Handler(object looper)
+    {
+        public void Post(Action action) => action();
+        public void PostDelayed(Action action, long delay) { }
+        public void RemoveCallbacks(Action action) { }
+    }
+}
+namespace PgrVoice.AndroidApp
+{
+    public sealed class SessionDiagnostics
+    {
+        public List<string> Entries { get; } = new();
+        public void Log(string kind, string message) => Entries.Add(kind + ": " + message);
+    }
+}
+namespace PgrVoice.AndroidApp.Platform
+{
+    public static class ListeningForegroundService
+    {
+        public static void EnsureStarted(Android.Content.Context context, Action ready) => ready();
+        public static void StopService() { }
+        public static void Refresh() { }
+    }
+    public sealed class AndroidAudioPlayer(Android.Content.Context context) : IDisposable
+    {
+        public static AndroidAudioPlayer? Latest;
+        long serial;
+        public event Action<long>? PlaybackCompleted;
+        public event Action<string>? Error;
+        public event Action<string>? Interrupted;
+        public AudioStrategy Strategy { get; set; }
+        public bool Playing { get; private set; }
+        public long PositionMilliseconds { get; set; }
+        public long DurationMilliseconds => 10_000;
+        public long LastStart { get; private set; }
+        public float Volume { get; private set; }
+        public List<(string File, long Offset, float Volume)> Requests { get; } = new();
+        public void SetVolume(float volume) => Volume = volume;
+        public void SetSpeed(float speed) { }
+        public long PlayTagged(string file, long position)
+        {
+            Latest = this; LastStart = PositionMilliseconds = position; Playing = true;
+            Requests.Add((file, position, Volume)); return ++serial;
+        }
+        public void Complete() { Playing = false; PlaybackCompleted?.Invoke(serial); }
+        public void Stop() => Playing = false;
+        public void Dispose() => Stop();
+    }
+}

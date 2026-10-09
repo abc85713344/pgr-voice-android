@@ -130,6 +130,15 @@ Test("第29章真实关于现状支线选择后显示两句，人工下一句到
     s.Choose(s.Model,NextAction(s));Check(e.CurrentId==end&&e.Mode==RunMode.Choice&&s.Plays==2&&s.ManualSteps==2,"真实段尾越过或未到菜单");
     Check(s.Model.Items.Count==3&&s.Model.Items.Any(i=>i.Title.Contains("小队"))&&s.Model.Items.Any(i=>i.Title.Contains("你们的车"))&&s.Model.Items.Any(i=>i.Title.Contains("说回刚刚")),"真实菜单选项不完整");
 });
+Test("定位片段显示根名和正文预览，同组翻段不改原定位",()=>
+{
+    var p=new Pack{Id="section-display-overlay",SchemaVersion=1,Chapters=[new(){Id="c",Sections=[new(){Id="root",Title="鬣狗",StartId="a"},new(){Id="next",Title="扳手",StartId="c"},new(){Id="root-position-123456abcdef",Title="鬣狗 · 当前画面定位",StartId="b"}]}],Nodes=[new(){Id="a",SectionId="root",Text="第一段正文"},new(){Id="b",SectionId="root-position-123456abcdef",Text="后段原文仍可核对"},new(){Id="c",SectionId="next",Text="下个小节"}]};
+    p.Validate();var engine=new PlaybackEngine(p);engine.Commit("a");var s=new AppSession(engine);s.Open(OverlayBrowsePage.Lines);
+    var next=s.Model.Actions!.Single(a=>a.Title=="下一段");Check(next.Detail.Contains("后段原文仍可核对")&&!next.Detail.Contains("当前画面定位"),"片段预览仍是重复标题");
+    s.Choose(s.Model,next);Check(s.Model.Title=="鬣狗 · 第 2 段 · 台词"&&s.Model.Items.Single().Title.Contains("后段原文仍可核对"),"未显示后段正文");
+    Check(engine.CurrentId=="a"&&s.SectionId=="root"&&s.Plays==0,"翻段改变了剧情位置或发声");
+    Check(s.Model.Actions!.Any(a=>a.Title=="上一段")&&s.Model.Actions!.Any(a=>a.Title=="下一小节"),"同组片段与下个小节未区分");
+});
 var report=new{passed=failures==0,count=results.Count,failures,tests=results,scope="实际AppSession.OverlayBrowse与AppSession.OcrReview分部、生产Matcher及核心源码；包含正式第29章关于现状路线。外部host stub代替Android主线程/音频/窗口及ManualOverlayStep接入，只验证该入口被调用，不等同Android界面、音频解码或点按转发端到端测试。"};
 string json=JsonSerializer.Serialize(report,new JsonSerializerOptions{WriteIndented=true,Encoder=System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping});
 string output=Path.GetFullPath(args.ElementAtOrDefault(0)??"reports/overlay-pages-034/host-browse-ocr-review.json");

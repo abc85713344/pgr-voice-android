@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../AppSession.DefaultBranch.cs;../../DefaultBranchPolicy.cs" LinkBase="Production" />
+    <EmbeddedResource Include="../../../core/SectionOrder.json" LogicalName="PgrVoice.SectionOrder.json" />
+    <Compile Include="Stub.cs.txt;Program.cs.txt;Fixtures.cs.txt" />
+    <Compile Include="../../AppSession.OptionalBranchFollow.cs;../../BranchCommonResumePolicy.cs" LinkBase="Production" />
+    <Compile Include="../../AppSession.Autoplay.cs;../../AppSession.Playback.cs;../../AppSession.FollowTransitions.cs;../../AppSession.ClickFollow.cs;../../AppSession.BranchFollow.cs;../../AppSession.OverlayBrowse.cs;../../OverlayBrowseModels.cs;../../BranchFollowPolicy.cs;../../BranchFollowAttemptGate.cs;../../TapFollowGestureGate.cs;../../AutoPlaybackCycle.cs;../../AppSettings.cs;../../AdvanceTapTarget.cs;../../DisplayRegionProfile.cs;../../Ocr/OcrInferenceSchedule.cs;../../Ocr/OcrTypes.cs;../../Platform/CapturedFrame.cs" LinkBase="Production" />
+    <Compile Include="../../../core/**/*.cs" Exclude="../../../core/obj/**;../../../core/bin/**" LinkBase="Core" />
+    <Compile Include="../../../src/Domain.cs;../../../src/Navigation.cs;../../../src/ObservedNavigation.cs;../../../src/ProgressStore.cs;../../../src/Matcher.cs;../../../src/DialogueFrameAnalysis.cs;../../../src/StateSaveQueue.cs" LinkBase="Core" />
+  </ItemGroup>
+</Project>

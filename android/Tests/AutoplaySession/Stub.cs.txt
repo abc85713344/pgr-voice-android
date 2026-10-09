@@ -35,11 +35,42 @@ namespace Android.Widget
     public enum ToastLength { Short, Long }
     public sealed class Toast { public static Toast MakeText(object context, string message, ToastLength length) => new(); public void Show() { } }
 }
-namespace PgrVoice.AndroidApp.Ocr { public enum OcrEngineKind { Paddle, MlKit } }
+namespace Android.Graphics
+{
+    // 本工程不执行图像识别；意外进入像素路径即失败，不能用假的 OCR 结果代替设备证据。
+    public sealed class Bitmap : IDisposable
+    {
+        public int Width => throw new NotSupportedException("Pixels are outside this session regression");
+        public int Height => throw new NotSupportedException("Pixels are outside this session regression");
+        public sealed class Config { public static Config Argb8888 { get; } = new(); }
+        public Bitmap Copy(Config config, bool mutable) => throw new NotSupportedException();
+        public static Bitmap CreateBitmap(Bitmap source, int x, int y, int width, int height) => throw new NotSupportedException();
+        public void Dispose() { }
+    }
+}
+namespace PgrVoice.AndroidApp.Ocr
+{
+    public sealed class OcrEngineManager
+    {
+        public long CreateRequest() => throw new NotSupportedException("OCR is outside this session regression");
+        public Task<OcrResult> RecognizeAsync(OcrEngineKind kind, Android.Graphics.Bitmap bitmap, long request, CancellationToken token) => throw new NotSupportedException();
+    }
+}
 namespace PgrVoice.AndroidApp.Ui
 {
+    public sealed class TapFollowOverlay(object context, int width, int height, ScreenRegion region, Action<float, float> tapped, bool showHint = true) : IDisposable
+    {
+        public void Show() { }
+        public void Suspend() { }
+        public void Resume() { }
+        public void Dispose() { }
+    }
     public sealed class AdvanceRegionOverlay(object context, int width, int height, Action<ScreenRegion?> callback) : IDisposable
-    { public void Show() { } public void Dispose() { } }
+    {
+        public static Action<ScreenRegion?>? Latest;
+        public void Show() => Latest = callback;
+        public void Dispose() { }
+    }
 }
 namespace PgrVoice.AndroidApp.Platform
 {
@@ -47,7 +78,7 @@ namespace PgrVoice.AndroidApp.Platform
     { public static void EnsureStarted(object context, Action ready) => ready(); }
     public sealed record GameAdvanceAvailability(bool Connected, bool TargetForeground, bool ScreenReady,
         int DisplayWidth, int DisplayHeight, int Rotation, string Reason)
-    { public bool CanTap => Connected && TargetForeground && ScreenReady; public string? DisplayKey { get; init; } }
+    { public bool CanTap => Connected && TargetForeground && ScreenReady; public string? DisplayKey { get; init; } public string? ForegroundPackage { get; init; } }
     public sealed record GameAdvanceTapResult(bool Completed, string Reason);
     public static class GameAdvanceAccessibilityService
     {
@@ -55,18 +86,21 @@ namespace PgrVoice.AndroidApp.Platform
         public static GameAdvanceAvailability Availability = null!;
         public static string LastFailureReason => "test service unavailable";
         public static int BeginCount, TapCount, CancelCount;
+        public static long ActiveToken;
         static long nextToken;
         static readonly Queue<TaskCompletionSource<GameAdvanceTapResult>> gestures = new();
         public static void Reset(ScreenDisplayState display)
         {
-            Availability = new(true, true, true, 2400, 1080, 1, "") { DisplayKey = display.RegionKey };
-            BeginCount = TapCount = CancelCount = 0; nextToken = 0; gestures.Clear();
+            Availability = new(true, true, true, 2400, 1080, 1, "") { DisplayKey = display.RegionKey, ForegroundPackage = "test.channel.a" };
+            BeginCount = TapCount = CancelCount = 0; nextToken = ActiveToken = 0; gestures.Clear();
         }
-        public static GameAdvanceAvailability GetAvailability(string package) => Availability;
+        public static GameAdvanceAvailability GetForegroundAvailability() => Availability;
+        public static GameAdvanceAvailability GetAvailability(string package) => package == Availability.ForegroundPackage ? Availability :
+            Availability with { TargetForeground = false, Reason = "游戏已离开前台" };
         public static long BeginSession(string package, int width, int height, int rotation)
-        { BeginCount++; return Availability.CanTap ? ++nextToken : 0; }
-        public static void CancelSession() { CancelCount++; }
-        public static Task<GameAdvanceTapResult> TapAsync(long token, float x, float y)
+        { BeginCount++; return ActiveToken = Availability.CanTap ? ++nextToken : 0; }
+        public static void CancelSession(string reason = "") { CancelCount++; ActiveToken = 0; }
+        public static Task<GameAdvanceTapResult> TapAsync(long token, float x, float y, CancellationToken cancellation = default)
         {
             TapCount++;
             var result = new TaskCompletionSource<GameAdvanceTapResult>(); gestures.Enqueue(result); return result.Task;
@@ -85,10 +119,11 @@ namespace PgrVoice.AndroidApp
         readonly AudioStub audio = new();
         readonly OverlayStub overlay = new();
         readonly OcrInferenceSchedule ocrSchedule = new();
+        readonly OcrEngineManager ocr = new();
         readonly PendingStub pendingFrame = new();
         readonly SubtitleStability stability = new();
         long ocrEpoch, playGeneration, captureNotBefore;
-        bool manualOcr, uiVisible;
+        bool manualOcr, uiVisible, overlayBrowseDirectory;
         byte[]? lastMask;
         bool HasConfirmedRegion => true;
         public PlaybackEngine? Engine { get; private set; }
@@ -101,9 +136,12 @@ namespace PgrVoice.AndroidApp
         public event Action? ContentChanged;
         public List<string> PlayedNodes { get; } = new();
         public int OcrRequests { get; private set; }
+        public int ObservedFrameCount { get; private set; }
         public OverlayStub Window => overlay;
         public int GestureRequests => GameAdvanceAccessibilityService.TapCount;
         public long BoundAudioTicket => autoPlay.AudioTicket;
+        public float PlaybackVolume => audio.Volume;
+        public void PreviewForTest(Node node) { Invalidate(); Engine?.PauseForBrowse(); PlayNode(Engine!, node); }
         public long AutoEpoch => autoPlay.Epoch;
         public AppSession(PlaybackEngine engine)
         {
@@ -122,6 +160,15 @@ namespace PgrVoice.AndroidApp
             engine.Changed += Notify;
         }
         public void BeginFromOverlay() => StartAutoPlayback();
+        public void BeginClickFollowForTest() => StartClickFollow();
+        // 使用生产事件捕获方法：测试控制事件送达顺序，不重写对象/epoch失效规则。
+        public Action CaptureFollowInvalidationForTest(string message) => CaptureFollowSessionInvalidation(message);
+        public void TapNextForTest()
+        {
+            var target = clickTarget ?? throw new Exception("No production click-follow target");
+            OnClickFollowTap(target.CenterX, target.CenterY);
+        }
+        public void SelectRegionFromOverlay() => SelectAdvanceRegion();
         public void LeaveOverlay(string reason) => PauseAutoPlaybackForOverlayExit(reason);
         public void AdvanceClock(long milliseconds) => main.Advance(milliseconds);
         public void CompleteAudio(long? ticket = null) => OnAutoAudioCompleted(ticket ?? autoPlay.AudioTicket);
@@ -135,15 +182,28 @@ namespace PgrVoice.AndroidApp
         }
         string BrowseSectionTitle(PlaybackEngine engine, string section) =>
             engine.Pack.Chapters.SelectMany(c => c.Sections).First(s => s.Id == section).Title;
+        static string BrowseSpeaker(Node node) => string.IsNullOrWhiteSpace(node.Speaker) ? "旁白" : node.Speaker;
         public void Post(Action action) => action();
-        void Invalidate()
-        { CancelAutoPlayback(); ocrEpoch++; playGeneration++; pendingFrame.Clear(); manualOcr = false; ocrSchedule.Reset(); overlay.SetCaptureHidden(false); }
+        void Invalidate(bool clearCandidates = true, bool clearPreview = true, bool preserveBranchIntent = false)
+        {
+            CancelBranchFollow(preserveBranchIntent); CancelClickFollow(); CancelAutoPlayback();
+            ocrEpoch++; playGeneration++; pendingFrame.Clear(); manualOcr = false; ocrSchedule.Reset(); overlay.SetCaptureHidden(false);
+        }
+        public void Command(Action<PlaybackEngine> action, bool confirmAfter = false)
+        {
+            if (Listening.IsPlaying) Listening.Pause();
+            Invalidate(); action(Engine!); SectionId = Engine!.Current?.SectionId ?? SectionId;
+            ContentChanged?.Invoke(); Notify();
+        }
+        static byte[] TextMask(Android.Graphics.Bitmap bitmap) => throw new NotSupportedException("Pixels are outside this session regression");
         void Notify() { }
         void SaveSettings() { }
         public sealed class AudioStub
         {
             long nextTicket;
             public Action<string>? Played;
+            public float Volume { get; private set; } = 1;
+            public void SetVolume(float value) => Volume = value;
             public long PlayTagged(string path) { Played?.Invoke(path); return ++nextTicket; }
             public void Stop() { }
         }
@@ -153,6 +213,9 @@ namespace PgrVoice.AndroidApp
         {
             public bool CaptureActive = true;
             public long SessionId = 1;
+            public int StopRequests;
+            // 故意不立即结束旧捕获，证明生产选择逻辑能屏蔽异步释放前的旧画面。
+            public void Stop() => StopRequests++;
             public ScreenDisplayState DisplayState = new(new PhysicalDisplayProfile(0, 1080, 2400, 1), 1);
         }
         public sealed class DiagnosticsStub
@@ -161,13 +224,19 @@ namespace PgrVoice.AndroidApp
             public int Advances;
             public void Log(string kind, string message) => Entries.Add(kind + ": " + message);
             public void Advance() => Advances++;
+            public void Frame(bool repeated) { }
+            public void Ocr(double elapsed) { }
         }
         public sealed class OverlayStub
         {
-            public sealed record Confirmation(string Text, Action Confirmed, Action Locate, Action Cancelled);
+            public sealed record Confirmation(string Text, Action Confirmed, Action Locate, Action Cancelled, bool IsCommonReturn);
+            public sealed record BranchConfirmation(string Text, IReadOnlyList<string> Labels, Action<int> Selected, Action Cancelled);
             public List<Confirmation> Confirmations { get; } = new();
+            public List<BranchConfirmation> BranchConfirmations { get; } = new();
             public Confirmation Latest => Confirmations.Last();
+            public BranchConfirmation LatestBranch => BranchConfirmations.Last();
             public bool CanShow = true, Hidden, Expanded, BlocksTarget;
+            public bool ManualBranchVisible;
             public long CurrentCaptureControlGeneration { get; private set; }
             public string PauseReason = "";
             public void SetCaptureHidden(bool hidden, bool keepStopControl = false)
@@ -176,11 +245,16 @@ namespace PgrVoice.AndroidApp
             public void ClearAutoPlaybackPaused() => PauseReason = "";
             public void ShowAutoPlaybackPaused(string reason) => PauseReason = reason;
             public void ShowNotice(string reason) => PauseReason = reason;
-            public void ShowAutoPlaybackStart(string text, Action confirmed, Action locate, Action cancelled) =>
-                Confirmations.Add(new(text, confirmed, locate, cancelled));
+            public void ShowAutoPlaybackStart(string text, Action confirmed, Action locate, Action cancelled, bool isCommonReturn = false) =>
+                Confirmations.Add(new(text, confirmed, locate, cancelled, isCommonReturn));
+            public void ShowManualBranchSelection(string text, IReadOnlyList<string> optionLabels, Action<int> selected, Action cancelled,
+                string? title = null, string? instruction = null, string? buttonPrefix = null, string? secondaryActionLabel = null, Action? secondaryAction = null)
+            { ManualBranchVisible = true; BranchConfirmations.Add(new(text, optionLabels.ToArray(), selected, cancelled)); }
+            public void ClearManualBranchSelection() => ManualBranchVisible = false;
             public void Hide() { }
             public void Show() { }
             public bool ContainsPoint(float x, float y) => BlocksTarget;
+            public bool IntersectsRectangle(float left, float top, float right, float bottom) => BlocksTarget;
         }
     }
 }

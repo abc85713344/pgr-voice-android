@@ -1,0 +1,251 @@
+using PgrVoice;
+using PgrVoice.AndroidApp;
+using PgrVoice.AndroidApp.Platform;
+using PgrVoice.AndroidApp.Ui;
+using System.Security.Cryptography;
+using System.Text.Json;
+
+var results = new List<object>(); int failures = 0;
+void Check(bool condition, string message) { if (!condition) throw new Exception(message); }
+void Test(string name, Action action)
+{
+    try { action(); results.Add(new { name, passed = true }); Console.WriteLine("PASS " + name); }
+    catch (Exception ex) { failures++; results.Add(new { name, passed = false, error = ex.ToString() }); Console.WriteLine("FAIL " + name + ": " + ex.Message); }
+}
+AppSession Session(bool followBranch = false, Action<Pack>? configure = null)
+{
+    Android.OS.SystemClock.Now = 1_000;
+    var pack = OptionalBranchFixtures.Create(); configure?.Invoke(pack); pack.Validate();
+    var engine = new PlaybackEngine(pack); engine.Commit("before"); engine.PauseForBrowse();
+    var s = new AppSession(engine); s.Settings.BranchAutoFollow = followBranch; return s;
+}
+string Navigation(AppSession s) => JsonSerializer.Serialize(s.Engine!.ExportNavigation(), Json.Options);
+void StartAuto(AppSession s)
+{
+    s.BeginFromOverlay(); s.Window.Latest.Confirmed(); s.AdvanceClock(180);
+    Check(s.AutoPlaybackRunning && s.PlayRequestedNodes.SequenceEqual(["before"]), "前句未真实开启自动播放：" + s.Status);
+}
+void EnterWait(AppSession s, bool automatic)
+{
+    if (automatic) { StartAuto(s); s.CompleteAudio(); }
+    else
+    {
+        s.BeginClickFollowForTest(); s.TapNextForTest(); s.AdvanceClock(80);
+        Check(s.GestureRequests == 1 && s.Engine!.CurrentId == "before", "点按未等待一次用户手势完成");
+        GameAdvanceAccessibilityService.CompleteOldestGesture();
+    }
+    Check(!s.AutoPlaybackRunning && !s.ClickFollowRunning && !s.BranchFollowRunning && TapFollowOverlay.VisibleCount == 0, "等待期间仍自动/点按跟随");
+    Check(s.Engine!.CurrentId == (automatic ? "before" : "menu") && s.GestureRequests == (automatic ? 0 : 1), "暂停模式自动跨进菜单或导航错位");
+    Check(s.Window.ManualBranchVisible && s.Window.LatestBranch.Labels.Count == 1 && s.Window.LatestBranch.TapWindowsAtShow == 0, "没有静音显示共同线单项确认或未先撤触窗");
+    Check(s.Engine.Choices.Count == 0 && s.Engine.Facts.Count == 0 && s.Engine.Heard.Count == 0, "等待阶段伪造了分支经历");
+}
+void ConfirmWait(AppSession s)
+{
+    s.Window.LatestBranch.Selected(0); s.AdvanceClock(180);
+}
+void CheckNoBranchHistory(AppSession s)
+{
+    Check(!s.PlayRequestedNodes.Any(id => id.StartsWith("left") || id.StartsWith("right")), "播放了本应暂停的支线");
+    Check(s.Engine!.Choices.Count == 0 && s.Engine.Facts.Count == 0 && s.Engine.Heard.Count == 0, "恢复共同线时补写分支选择/任务/已聊状态");
+}
+
+Test("旧设置true仍是分支跟随，缺失或false字段保留分支暂停", () => {
+    var missing = JsonSerializer.Deserialize<AppSettings>("{}", Json.Options)!;
+    var enabled = JsonSerializer.Deserialize<AppSettings>("{\"branchAutoFollow\":true}", Json.Options)!;
+    Check(!missing.BranchAutoFollow && enabled.BranchAutoFollow, "升级设置默认或既有选择改变");
+    var s = Session(); s.SetBranchAutoFollow(true);
+    Check(s.Settings.BranchAutoFollow && !s.AutoPlaybackRunning && !s.ClickFollowRunning && s.GestureRequests == 0 && s.PlayRequestedNodes.Count == 0, "改设置顺带启动播放");
+});
+Test("两条真实已核路线统一汇合后返回具体共同线候选，policy不改变原导航", () => {
+    var s = Session(); s.Engine!.OpenGameMenu("menu", "s"); string snapshot = Navigation(s);
+    Check(BranchCommonResumePolicy.TryGetCommonLine(s.Engine, "menu", out var candidate, out string reason), reason);
+    Check(candidate?.Id == "common1" && Navigation(s) == snapshot && s.PlayRequestedNodes.Count == 0 && s.GestureRequests == 0, "只读候选探测改变了剧情或发声");
+});
+Test("缺出口、不同汇合、条件、事实、循环、嵌套和互动菜单不得猜共同线", () => {
+    foreach (string scenario in new[] { "unverified", "evidence", "different-merge", "requires", "excludes", "facts", "cycle", "nested", "interaction", "topics", "schema", "archived", "cross-section" })
+    {
+        var s = Session(); var p = s.Engine!.Pack; var menu = p.ById["menu"];
+        s.Engine.OpenGameMenu("menu", "s");
+        if (scenario == "unverified") menu.Options[1].ExitVerified = false;
+        if (scenario == "evidence") menu.Options[1].ExitEvidence.Clear();
+        if (scenario == "different-merge") menu.Options[1].MergeId = "other-merge";
+        if (scenario == "requires") menu.Options[1].Requires.Add("task.ready");
+        if (scenario == "excludes") menu.Options[1].Excludes.Add("task.done");
+        if (scenario == "facts") p.ById["left2"].SetFacts.Add("task.done");
+        if (scenario == "cycle") p.ById["right2"].NextId = "right1";
+        if (scenario == "nested") p.ById["right2"].Kind = "choice";
+        if (scenario is "interaction" or "topics") menu.MenuType = scenario;
+        if (scenario == "schema") p.SchemaVersion = 1;
+        if (scenario == "archived") p.ById["common1"].Archived = true;
+        if (scenario == "cross-section") p.ById["common1"].SectionId = "other";
+        string snapshot = Navigation(s);
+        Check(!BranchCommonResumePolicy.TryGetCommonLine(s.Engine, "menu", out _, out _), "不可靠图仍给恢复候选：" + scenario);
+        Check(Navigation(s) == snapshot && s.PlayRequestedNodes.Count == 0, "拒绝时改变导航：" + scenario);
+    }
+});
+Test("自动播放模式B在分支前一句自然结束就停，零自动Tap且不进支线", () => {
+    var s = Session(); EnterWait(s, true);
+    Check(s.PlayRequestedNodes.SequenceEqual(["before"]) && s.Window.LatestBranch.Labels[0].Contains("我们已经会合，接下来一起前进。"), "没展示具体共同线台词或已播放分支");
+    CheckNoBranchHistory(s);
+});
+Test("点按模式B在玩家这次真实点击到菜单后停，撤下触窗等待共同线", () => {
+    var s = Session(); EnterWait(s, false);
+    Check(s.PlayRequestedNodes.Count == 0 && s.GestureRequests == 1 && s.OcrRequests == 0, "用户点按后自动补点、播支线或启动OCR");
+    CheckNoBranchHistory(s);
+});
+Test("等待玩家完成分支可持续五分钟，未确认前零新声音、点击和导航", () => {
+    foreach (bool automatic in new[] { true, false })
+    {
+        var s = Session(); EnterWait(s, automatic); string snapshot = Navigation(s); var sounds = s.PlayRequestedNodes.ToArray(); int taps = s.GestureRequests;
+        s.CompleteAudio(1); s.AdvanceClock(300_000);
+        Check(s.Window.ManualBranchVisible && Navigation(s) == snapshot && s.PlayRequestedNodes.SequenceEqual(sounds) && s.GestureRequests == taps && s.OcrRequests == 0, "分支等待过期、推进或偷偷识别");
+    }
+});
+Test("确认具体共同线后只恢复此前自动播放，当前共同句只播一次且不Next", () => {
+    var s = Session(); EnterWait(s, true); var prompt = s.Window.LatestBranch;
+    prompt.Selected(0); prompt.Selected(0); s.AdvanceClock(179);
+    Check(s.Engine!.CurrentId == "before" && s.PlayRequestedNodes.SequenceEqual(["before"]), "确认后未等待窗口撤销");
+    s.AdvanceClock(1);
+    Check(s.AutoPlaybackRunning && !s.ClickFollowRunning && s.Engine.CurrentId == "common1" && s.PlayRequestedNodes.SequenceEqual(["before", "common1"]) && s.GestureRequests == 0, "恢复auto重复播、跳句或额外点击");
+    CheckNoBranchHistory(s);
+    s.CompleteAudio(); Check(s.GestureRequests == 1, "共同句结束后未正常自动推进");
+    GameAdvanceAccessibilityService.CompleteOldestGesture(); s.AdvanceClock(450);
+    Check(s.Engine.CurrentId == "common2" && s.PlayRequestedNodes.SequenceEqual(["before", "common1", "common2"]), "自动恢复后共同线顺序错误");
+});
+Test("确认具体共同线后只恢复此前点按跟随，不自动点下一句", () => {
+    var s = Session(); EnterWait(s, false); ConfirmWait(s);
+    Check(s.ClickFollowRunning && !s.AutoPlaybackRunning && s.Engine!.CurrentId == "common1" && s.PlayRequestedNodes.SequenceEqual(["common1"]) && s.GestureRequests == 1, "click恢复变成auto或首句多播");
+    CheckNoBranchHistory(s); s.CompleteAudio(); s.AdvanceClock(2_000);
+    Check(s.Engine!.CurrentId == "common1" && s.GestureRequests == 1, "点按恢复后音频结束自动点击");
+    s.TapNextForTest(); s.AdvanceClock(80); GameAdvanceAccessibilityService.CompleteOldestGesture();
+    Check(s.Engine.CurrentId == "common2" && s.PlayRequestedNodes.SequenceEqual(["common1", "common2"]) && s.GestureRequests == 2, "玩家下一次点击未正常推进");
+});
+Test("点按来源未授权录屏也可等待并明确确认共同线，不启动OCR", () => {
+    var s = Session(); s.Screen.CaptureActive = false; EnterWait(s, false); ConfirmWait(s);
+    Check(s.ClickFollowRunning && s.Engine!.CurrentId == "common1" && s.OcrRequests == 0 && s.PlayRequestedNodes.SequenceEqual(["common1"]), "人工恢复click仍误依赖捕获");
+});
+Test("取消共同线等待保留原位置，旧按钮和音频完成不重启", () => {
+    foreach (bool automatic in new[] { true, false })
+    {
+        var s = Session(); EnterWait(s, automatic); var prompt = s.Window.LatestBranch; string snapshot = Navigation(s); var sounds = s.PlayRequestedNodes.ToArray(); int taps = s.GestureRequests;
+        prompt.Cancelled(); prompt.Selected(0); s.CompleteAudio(); s.AdvanceClock(1_000);
+        Check(Navigation(s) == snapshot && !s.AutoPlaybackRunning && !s.ClickFollowRunning && !s.Window.ManualBranchVisible && s.PlayRequestedNodes.SequenceEqual(sounds) && s.GestureRequests == taps, "取消等待仍恢复");
+    }
+});
+Test("确认已按下但180ms期间主动停止，旧延迟不能继续", () => {
+    var s = Session(); EnterWait(s, true); s.Window.LatestBranch.Selected(0); s.StopAutoPlayback(); s.AdvanceClock(1_000);
+    Check(!s.AutoPlaybackRunning && !s.ClickFollowRunning && s.Engine!.CurrentId == "before" && s.PlayRequestedNodes.SequenceEqual(["before"]) && s.GestureRequests == 0, "停止后执行了旧确认");
+});
+Test("等待时前台、屏幕、捕获、区域、开关、引擎或位置变化均拒绝旧确认", () => {
+    foreach (string change in new[] { "foreground", "app", "display", "session", "capture", "target", "setting", "same-setting", "engine", "position" })
+    {
+        var s = Session(); EnterWait(s, true); var prompt = s.Window.LatestBranch;
+        if (change == "foreground") GameAdvanceAccessibilityService.Availability = GameAdvanceAccessibilityService.Availability with { ForegroundPackage = "another.game" };
+        if (change == "app") s.SetForeground(true);
+        if (change == "display") s.Screen.DisplayState = s.Screen.DisplayState with { Revision = 2 };
+        if (change == "session") s.Screen.SessionId++;
+        if (change == "capture") s.Screen.CaptureActive = false;
+        if (change == "target") s.Settings.AdvanceTargets.Clear();
+        if (change == "setting") s.SetBranchAutoFollow(true);
+        if (change == "same-setting") s.SetBranchAutoFollow(false);
+        if (change == "engine") { var e = new PlaybackEngine(OptionalBranchFixtures.Create()); e.Commit("before"); e.PauseForBrowse(); s.ReplaceEngine(e); }
+        if (change == "position") s.MoveCurrent("common2");
+        string current = s.Engine!.CurrentId!; var sounds = s.PlayRequestedNodes.ToArray(); int taps = s.GestureRequests;
+        prompt.Selected(0); s.AdvanceClock(1_000);
+        Check(s.Engine.CurrentId == current && !s.AutoPlaybackRunning && !s.ClickFollowRunning && s.PlayRequestedNodes.SequenceEqual(sounds) && s.GestureRequests == taps, "旧确认跨变化生效：" + change);
+    }
+});
+Test("等待期间临时切出再返回仍撤销旧确认，迟到事件不误伤新等待对象", () => {
+    var s = Session(); EnterWait(s, true); var old = s.Window.LatestBranch;
+    Check(GameAdvanceAccessibilityService.ActiveToken != 0, "等待时没有保留前台失效监听");
+    var invalidation = s.CaptureFollowInvalidationForTest("切出游戏"); invalidation(); old.Selected(0); s.AdvanceClock(180);
+    Check(!s.AutoPlaybackRunning && s.Engine!.CurrentId == "before" && s.PlayRequestedNodes.Count == 1, "切出返回旧票据复活");
+    s.BeginFromOverlay(); s.Window.Latest.Confirmed(); s.AdvanceClock(180); s.CompleteAudio(); var current = s.Window.LatestBranch;
+    Check(!ReferenceEquals(old, current), "没有新建等待对象");
+    invalidation(); current.Selected(0); s.AdvanceClock(180);
+    Check(s.AutoPlaybackRunning && s.Engine.CurrentId == "common1" && s.PlayRequestedNodes.SequenceEqual(["before", "before", "common1"]), "旧事件取消了新等待");
+});
+Test("候选显示后已核出口发生变化，旧确认不能提交过时共同句", () => {
+    var s = Session(); EnterWait(s, true); s.Engine!.Pack.ById["menu"].Options[1].ExitVerified = false;
+    s.Window.LatestBranch.Selected(0); s.AdvanceClock(180);
+    Check(s.Engine.CurrentId == "before" && !s.AutoPlaybackRunning && s.PlayRequestedNodes.SequenceEqual(["before"]) && s.GestureRequests == 0, "使用过时共同线图提交");
+});
+Test("共同句缺音时确认不移动、不补点、不假装自动恢复", () => {
+    var s = Session(configure: p => p.ById["common1"].Audio = "missing.wav"); EnterWait(s, true); ConfirmWait(s);
+    Check(!s.AutoPlaybackRunning && s.Engine!.CurrentId == "before" && s.GestureRequests == 0 && s.PlayRequestedNodes.SequenceEqual(["before"]), "缺音共同句仍被提前提交");
+});
+Test("真实29-1人物与未知出口话题不产生可猜测共同线", () => {
+    string path = Environment.GetEnvironmentVariable("PGR_CH29_PACK") ?? "<数据目录>/全部配音/01_主线/第29章_源解信标/pack.json";
+    var p = Pack.Load(path); const string section = "ch29-1dc1158611c810722709";
+    foreach (string id in new[] { "000", "002", "006", "011", "012", "019" })
+    {
+        var e = new PlaybackEngine(p); string menu = section + "-menu-" + id; Check(e.OpenGameMenu(menu, section), e.NavigationError);
+        string snapshot = JsonSerializer.Serialize(e.ExportNavigation(), Json.Options);
+        Check(!BranchCommonResumePolicy.TryGetCommonLine(e, menu, out _, out _), "NPC或话题被当作普通统一汇合分支：" + id);
+        Check(JsonSerializer.Serialize(e.ExportNavigation(), Json.Options) == snapshot, "NPC只读判断补写路线");
+    }
+});
+Test("真实32-6进行链接与再等等保留未知出口限制，不猜共同线", () => {
+    string path = Environment.GetEnvironmentVariable("PGR_CH32_PACK") ?? "<数据目录>/全部配音/01_主线/第32章_遥行循星/pack.json";
+    var p = Pack.Load(path); const string section = "ch32-71fcf055b68c2cfb1350";
+    var e = new PlaybackEngine(p); string menu = section + "-menu-004";
+    Check(e.OpenGameMenu(menu, section), e.NavigationError); string snapshot = JsonSerializer.Serialize(e.ExportNavigation(), Json.Options);
+    Check(p.ById[menu].Options[0].Label == "进行链接。" && p.ById[menu].Options[0].ExitVerified &&
+        p.ById[menu].Options[1].Label == "再等等。" && !p.ById[menu].Options[1].ExitVerified, "真实32-6来源条件已变化，需重新核证");
+    Check(!BranchCommonResumePolicy.TryGetCommonLine(e, menu, out _, out _), "两项同MergeId掩盖再等等的未知出口");
+    Check(JsonSerializer.Serialize(e.ExportNavigation(), Json.Options) == snapshot, "拒绝未知出口时改写真实导航");
+});
+Test("真实32章已核两出口菜单可求共同句，返回标记SegmentIds按真实schema通过", () => {
+    string path = Environment.GetEnvironmentVariable("PGR_CH32_PACK") ?? "<数据目录>/全部配音/01_主线/第32章_遥行循星/pack.json";
+    var p = Pack.Load(path);
+    foreach (var expected in new[] {
+        (Menu: "ch32-71fcf055b68c2cfb1350-menu-003", Common: "ch32-71fcf055b68c2cfb1350-67e68a3450558e84bb5f"),
+        (Menu: "ch32-782b137489a669098935-menu-011", Common: "ch32-782b137489a669098935-a669655dca03a7baa19b") })
+    {
+        foreach (bool fromMenu in new[] { true, false })
+        {
+            var e = new PlaybackEngine(p); var menu = p.ById[expected.Menu];
+            if (fromMenu) Check(e.OpenGameMenu(menu.Id, menu.SectionId), e.NavigationError);
+            else { e.Commit(p.Nodes.Single(n => !n.Archived && n.Kind == "line" && n.NextId == menu.Id).Id); e.PauseForBrowse(); }
+            int sounds = 0; e.PlayRequested += _ => sounds++; string snapshot = JsonSerializer.Serialize(e.ExportNavigation(), Json.Options);
+            Check(BranchCommonResumePolicy.TryGetCommonLine(e, menu.Id, out var candidate, out string reason), menu.Id + ": " + reason);
+            Check(candidate?.Id == expected.Common && JsonSerializer.Serialize(e.ExportNavigation(), Json.Options) == snapshot && sounds == 0,
+                "真实出口候选不符，或只读检查播放/改变当前位置");
+        }
+    }
+});
+Test("模式A保留普通选项弹窗，选同项后首句一次并恢复点按", () => {
+    var s = Session(true); StartAuto(s); s.CompleteAudio(); Check(s.GestureRequests == 1, "模式A未沿用进入菜单的单击");
+    GameAdvanceAccessibilityService.CompleteOldestGesture(); s.AdvanceClock(450);
+    Check(s.Engine!.CurrentId == "menu" && s.Window.LatestBranch.Labels.Count == 2, "模式A错误显示共同线等待");
+    ConfirmWait(s);
+    Check(s.ClickFollowRunning && !s.AutoPlaybackRunning && s.Engine.CurrentId == "left1" && s.PlayRequestedNodes.SequenceEqual(["before", "left1"]) && s.GestureRequests == 1, "模式A选择后行为回归");
+});
+Test("模式B无可靠共同线时正常暂停且不弹任一路线或猜测首句", () => {
+    foreach (bool automatic in new[] { true, false })
+    {
+        var s = Session(configure: p => {
+            var option = p.ById["menu"].Options[1]; option.ExitVerified = false; option.ExitEvidence.Clear(); option.BoundaryId = "gap";
+            p.ById["right2"].NextId = "gap"; p.Nodes.Add(new() { Id = "gap", SectionId = "s", PathId = "rightPath", Kind = "gap" });
+        });
+        if (automatic) { StartAuto(s); s.CompleteAudio(); }
+        else { s.BeginClickFollowForTest(); s.TapNextForTest(); s.AdvanceClock(80); GameAdvanceAccessibilityService.CompleteOldestGesture(); }
+        Check(!s.AutoPlaybackRunning && !s.ClickFollowRunning && !s.Window.ManualBranchVisible && s.Window.BranchConfirmations.Count == 0 && s.GestureRequests == (automatic ? 0 : 1), "不可靠共同线仍给跳过/恢复选项");
+        CheckNoBranchHistory(s);
+    }
+});
+
+string output = Path.GetFullPath(args.FirstOrDefault() ?? "reports/android-optional-branch-20261009/host-optional-branch.json");
+var report = new {
+    createdUtc = DateTimeOffset.UtcNow, count = results.Count, failures, passed = failures == 0, tests = results,
+    sources = new[] { "AppSession.OptionalBranchFollow.cs", "BranchCommonResumePolicy.cs", "AppSession.FollowTransitions.cs", "AppSession.Autoplay.cs", "AppSession.ClickFollow.cs", "AppSettings.cs" }
+        .ToDictionary(name => name, name => Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes("android/" + name)))),
+    realPackSha256 = new[] {
+        Environment.GetEnvironmentVariable("PGR_CH29_PACK") ?? "<数据目录>/全部配音/01_主线/第29章_源解信标/pack.json",
+        Environment.GetEnvironmentVariable("PGR_CH32_PACK") ?? "<数据目录>/全部配音/01_主线/第32章_遥行循星/pack.json"
+    }.ToDictionary(path => path, path => Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(path)))),
+    scope = "独立直编真实AppSession自动/点按/可选分支partial和真实core；Android时钟/音频/手势/窗口仅边缘stub。检查生产UI回调、实际导航与声音请求，未运行真实Android触摸或音频解码。真实29章菜单拒绝；真实32-6菜单004因再等等出口未核拒绝，32-6菜单003及32-2菜单011从前句/菜单均可求已核共同句。不修改正式包。"
+};
+Directory.CreateDirectory(Path.GetDirectoryName(output)!); File.WriteAllText(output, JsonSerializer.Serialize(report, Json.Options));
+Console.WriteLine($"OptionalBranchFollow: {results.Count - failures}/{results.Count} passed; report={output}");
+return failures == 0 ? 0 : 1;

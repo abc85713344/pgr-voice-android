@@ -25,18 +25,27 @@ public sealed partial class AppSession
         overlayBrowseActions.Clear(); overlayBrowseStamp = null; overlayBrowseDirty = true;
     }
 
+    void OnOverlayBrowseRefreshRequested() => Post(() =>
+    {
+        // 重新显露旧页只刷新模型，不改变位置、目录层级或跟随意图。
+        overlayBrowseDirty = true;
+        RefreshOverlayBrowseIfNeeded();
+    });
+
     void OnOverlayBrowseRequested(OverlayBrowsePage page) => Post(() =>
     {
         if (!Enum.IsDefined(page)) return;
+        var continuation = page == OverlayBrowsePage.Branches ? CaptureBranchBrowseSource() : null;
         overlayBrowseChanging++;
         try
         {
             if (Listening.IsPlaying) Listening.Pause();
             overlayBrowsePage = page; overlayBrowseDirectory = false;
             // 菜单仍保持 Choice/Gap，原声仍冻结；只暂停音频和跟随，不抹去 OCR 候选。
-            Invalidate(false); audio.Stop(); Engine?.PauseForBrowse();
+            Invalidate(false, preserveBranchIntent: page == OverlayBrowsePage.Branches); audio.Stop(); Engine?.PauseForBrowse();
             overlayBrowseDirty = true;
             Status = Engine == null ? "请先在应用中导入并打开一个章节。" : "已暂停跟随，可在悬浮页中核对台词、分支或记录。";
+            BeginBranchBrowseContinuation(continuation);
         }
         finally { overlayBrowseChanging--; }
         RefreshOverlayBrowseIfNeeded(); Notify();
@@ -116,22 +125,25 @@ public sealed partial class AppSession
     static bool BrowseNodeValid(PlaybackEngine engine, Node node) => !node.Archived &&
         engine.Pack.ById.TryGetValue(node.Id, out var current) && ReferenceEquals(current, node);
     static string BrowseSectionTitle(PlaybackEngine engine, string? id) =>
-        engine.Pack.Chapters.SelectMany(c => c.Sections).FirstOrDefault(s => s.Id == id)?.Title ?? "当前小节";
+        engine.Pack.Chapters.SelectMany(c => c.Sections).Any(s => s.Id == id)
+            ? SectionDisplay.Title(engine.Pack.Chapters.SelectMany(c => c.Sections), id!) : "当前小节";
     static string BrowseExcerpt(string text, int limit) => text.Length <= limit ? text : text[..limit].TrimEnd() + "…";
 
     void BuildOverlayLines(PlaybackEngine engine, List<OverlayBrowseItem> items, List<OverlayBrowseItem> actions,
         out string title, out string hint)
     {
-        var sections = engine.Pack.Chapters.SelectMany(c => c.Sections).ToList();
+        var groups = SectionDisplay.Groups(engine.Pack.Chapters.SelectMany(c => c.Sections));
+        var sections = groups.SelectMany(g => g.Sections).ToList();
         string desired = overlayBrowseSection ?? SectionId;
         int sectionIndex = sections.FindIndex(s => s.Id == desired);
         if (sectionIndex < 0) sectionIndex = sections.FindIndex(s => s.Id == engine.Current?.SectionId);
         if (sectionIndex < 0) sectionIndex = 0;
         if (sections.Count == 0) { title = "当前台词"; hint = "本章没有可浏览的小节。"; return; }
         var section = sections[sectionIndex]; overlayBrowseSection = section.Id;
+        var group = groups.First(g => g.Sections.Any(s => s.Id == section.Id));
         var lines = engine.Pack.Nodes.Where(n => !n.Archived && n.Kind == "line" && n.SectionId == section.Id).ToList();
-        title = section.Title + " · 台词";
-        hint = $"共 {lines.Count} 句。选句后核对游戏画面再确认；翻阅小节不会改变播放位置。";
+        title = group.Title + (group.Sections.Count > 1 ? $" · 第 {group.Sections.ToList().FindIndex(s => s.Id == section.Id) + 1} 段" : "") + " · 台词";
+        hint = (group.Sections.Count > 1 ? SectionDisplay.SegmentLabel(engine.Pack, group, section) + "\n" : "") + $"共 {lines.Count} 句。选句后核对游戏画面再确认；翻阅小节不会改变播放位置。";
         bool original = engine.Mode == RunMode.Original;
         foreach (var (node, index) in lines.Select((n, i) => (n, i)))
         {
@@ -142,11 +154,17 @@ public sealed partial class AppSession
                 confirmationTitle: original ? "结束原声并从这里续接？" : "确认游戏当前台词",
                 confirmationText: BrowseSpeaker(node) + "：" + node.Text + "\n\n" + context + "\n\n请确保与游戏当前画面一致。"));
         }
-        void AddSectionAction(string label, string sectionId) => actions.Add(BrowseItem(label, BrowseSectionTitle(engine, sectionId),
-            () => { overlayBrowseSection = sectionId; overlayBrowseDirty = true; },
-            () => engine.Pack.Chapters.SelectMany(c => c.Sections).Any(s => s.Id == sectionId), confirmation: false));
-        if (sectionIndex > 0) AddSectionAction("上一小节", sections[sectionIndex - 1].Id);
-        if (sectionIndex + 1 < sections.Count) AddSectionAction("下一小节", sections[sectionIndex + 1].Id);
+        void AddSectionAction(string label, string sectionId)
+        {
+            var targetGroup = groups.First(g => g.Sections.Any(s => s.Id == sectionId));
+            var target = targetGroup.Sections.First(s => s.Id == sectionId);
+            string preview = targetGroup.Title + (targetGroup.Sections.Count > 1 ? "\n" + SectionDisplay.SegmentLabel(engine.Pack, targetGroup, target) : "");
+            actions.Add(BrowseItem(label, preview,
+                () => { overlayBrowseSection = sectionId; overlayBrowseDirty = true; },
+                () => engine.Pack.Chapters.SelectMany(c => c.Sections).Any(s => s.Id == sectionId), confirmation: false));
+        }
+        if (sectionIndex > 0) AddSectionAction(group.Sections.Contains(sections[sectionIndex - 1]) ? "上一段" : "上一小节", sections[sectionIndex - 1].Id);
+        if (sectionIndex + 1 < sections.Count) AddSectionAction(group.Sections.Contains(sections[sectionIndex + 1]) ? "下一段" : "下一小节", sections[sectionIndex + 1].Id);
         if (engine.Current is { } current && current.SectionId != section.Id) AddSectionAction("回到当前小节", current.SectionId);
     }
 
@@ -175,11 +193,15 @@ public sealed partial class AppSession
     }
 
     // 目录只是浏览状态。打开一个菜单后必须退出目录，否则选择后的选项会一直被总目录遮住。
-    void OpenOverlayGameMenu(string id, string section) => Command(e =>
+    void OpenOverlayGameMenu(string id, string section)
     {
-        if (!e.OpenGameMenu(id, section)) throw new InvalidOperationException(e.NavigationError);
-        overlayBrowseDirectory = false;
-    });
+        Command(e =>
+        {
+            if (!e.OpenGameMenu(id, section)) throw new InvalidOperationException(e.NavigationError);
+            overlayBrowseDirectory = false;
+        });
+        if (Engine is { } engine) TryBeginInteractionFromOverlay(engine);
+    }
 
     (Node Menu, ChoiceOption Option)? CurrentOverlayBranch(PlaybackEngine engine)
     {
@@ -197,7 +219,9 @@ public sealed partial class AppSession
         List<OverlayBrowseItem> actions, out string hint)
     {
         bool verified = engine.Pack.SchemaVersion == 3 ? option.BodyVerified : option.Verified;
-        hint = verified
+        hint = verified && Settings.AutoPlayConfirmBranch
+            ? "这里显示当前已选路线的台词。可核对当前位置后开启自动播放，后续遇到选项再确认对白。"
+            : verified
             ? "这里是所选支线的台词。游戏显示下一句后，点“下一句”推进配音；也可在控制页开启点按跟随。支线不自动连播。"
             : "这段台词的先后连接尚未核对。请按游戏画面点选对应句，确认后只播放这一句。";
         var lines = engine.Pack.Nodes.Where(n => !n.Archived && n.Kind == "line" && n.SectionId == engine.Current!.SectionId &&
@@ -238,11 +262,26 @@ public sealed partial class AppSession
         }
         else if (!overlayBrowseDirectory && engine.Mode == RunMode.Choice)
         {
+            if (Settings.AutoPlayConfirmBranch && ConfirmedBranchPolicy.Create(engine).Cards.Count > 0)
+                actions.Add(BrowseItem("按选后对白确认并继续自动播放", "先在游戏选好，再点对应的选项与对白卡片。", StartAutoPlayback, confirmation: false));
+            if (branchBrowseContinuation is { } continuation && BranchBrowseContinuationValid(continuation))
+                hint = continuation.Source.Intent.DefaultOption > 0 ? "先在游戏中选择默认分支，再确认同项；确认后自动续播，不必再次开启。" :
+                    "已到分支，请先在游戏中选择，再确认并开启点按跟随。无需再到控制页开启。";
+            else if (branchBrowseStopped is { } stopped && ReferenceEquals(stopped.Engine, engine) && ReferenceEquals(stopped.Menu, engine.Current))
+                hint = stopped.Reason + " 下面的确认只播放所选分支，不会自动重开跟随。";
+            actions.Add(BrowseItem("游戏选好后，识别下一句", "只识别本次完整对白，请核对台词与路线；未核连接仍等待。", RequestBranchAnchorOcr, confirmation: false));
             foreach (var option in engine.AvailableOptions)
-                items.Add(BrowseItem(option.ToString(), option.Reason,
-                    () => Command(e => { int i = e.AvailableOptions.FindIndex(o => ReferenceEquals(o, option)); if (i < 0) throw new InvalidOperationException("分支选项已变化。"); overlayBrowseDirectory = false; e.SelectBranch(i); }, true),
+            {
+                string displayDescription = DefaultBranchBrowseDisplayDescription(engine, option);
+                items.Add(BrowseItem(engine.Current?.MenuType is "interaction" or "topics" ?
+                    BranchFollowPolicy.InteractionOptionLabel(engine, engine.Current, option) : option.ToString(),
+                    string.IsNullOrEmpty(displayDescription) ? option.Reason : displayDescription,
+                    () => SelectOverlayBranch(engine, option),
                     () => engine.Mode == RunMode.Choice && engine.AvailableOptions.Any(o => ReferenceEquals(o, option)),
-                    confirmationTitle: "确认与游戏相同的分支", confirmationText: option.Label + "\n\n" + option.Reason));
+                    confirmationTitle: branchBrowseContinuation == null ? "确认与游戏相同的分支" : "确认分支并继续跟随", confirmationText: option.Label + "\n\n" + option.Reason +
+                        (branchBrowseContinuation == null ? "" : "\n\n请先在游戏中选好；确认后直接恢复本次跟随。") +
+                        (string.IsNullOrEmpty(displayDescription) ? "" : "\n\n" + displayDescription)));
+            }
         }
         else if (!overlayBrowseDirectory && engine.Mode == RunMode.Gap && engine.ResumeMenus.Count > 0)
         {
@@ -277,7 +316,8 @@ public sealed partial class AppSession
                 () => { overlayBrowseDirectory = false; overlayBrowseDirty = true; }, confirmation: false));
         if (engine.RecentChoices.Count > 0)
             actions.Add(BrowseItem("重选最近一次分支", "恢复最近一次实际选择前的位置，不代替游戏进行选择。",
-                () => Command(e => { if (!e.ReselectLastChoice()) throw new InvalidOperationException(e.NavigationError); overlayBrowseDirectory = false; }), confirmationTitle: "重新选择最近分支"));
+                () => { Command(e => { if (!e.ReselectLastChoice()) throw new InvalidOperationException(e.NavigationError); overlayBrowseDirectory = false; });
+                    if (Settings.AutoPlayConfirmBranch && Engine?.Mode == RunMode.Choice) StartAutoPlayback(); }, confirmationTitle: "重新选择最近分支"));
     }
 
     void BuildOverlayHistory(PlaybackEngine engine, List<OverlayBrowseItem> items, List<OverlayBrowseItem> actions, out string hint)

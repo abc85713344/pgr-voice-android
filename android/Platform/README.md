@@ -32,6 +32,6 @@ Android 15 x86_64 模拟器已实测整屏授权和真实截图、持续捕获�
 
 发布前至少验证：Android 10 与当前系统的授权/取消/通知停止；真实战双画面能否捕获；X Fold5 内外屏和横竖屏；两种声音策略下游戏是否暂停或降音量；有线耳机/蓝牙切换、来电和 VoIP；连续使用的原生内存、耗电及发热；后台被厂商终止后进度是否正常恢复。拒绝任何非必要权限时，手动播放必须仍可用。
 
-主发布包使用 `arm64-v8a`，模拟器使用 `x86_64`；它们的原生运行库必须分别检查。发布检查脚本（作者本机工具，未包含在本仓库）验证 APK 内 ELF 的 16 KB 加载对齐及未压缩原生库的 ZIP 对齐，可同时调用 SDK 的 `zipalign`。通过检查表示打包满足这些对齐条件，不表示已在 16 KB 内核真机完成全部运行测试。
+主发布包使用 `arm64-v8a`，模拟器使用 `x86_64`；它们的原生运行库必须分别检查。`android/tools/check_apk.py` 验证 APK 内 ELF 的 16 KB 加载对齐及未压缩原生库的 ZIP 对齐，可同时调用 SDK 的 `zipalign`。通过检查表示打包满足这些对齐条件，不表示已在 16 KB 内核真机完成全部运行测试。
 
 官方资料：[MediaProjection](https://developer.android.com/media/grow/media-projection)、[前台服务类型](https://developer.android.com/develop/background-work/services/fgs/service-types)、[音频焦点](https://developer.android.com/media/optimize/audio-focus)、[16 KB 页兼容](https://developer.android.com/guide/practices/page-sizes)。

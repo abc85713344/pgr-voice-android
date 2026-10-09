@@ -11,16 +11,17 @@ using PgrVoice.AndroidApp.Ui;
 
 namespace PgrVoice.AndroidApp.Platform;
 
-public enum OverlayCommand { Pause, Replay, Previous, Next, Branch, Original, Ocr, OpenApp, History, Chapters, Hide, AutoPlay, AdvanceRegion, ConfirmPosition, ClickFollow }
+public enum OverlayCommand { Pause, Replay, Previous, Next, Branch, Original, Ocr, OpenApp, History, Chapters, Hide, AutoPlay, AdvanceRegion, ConfirmPosition, ClickFollow, Feedback }
 
 /// <summary>Owns only our controls; it never intercepts or injects touches outside its window.</summary>
-public sealed class OverlayController : IDisposable
+public sealed partial class OverlayController : IDisposable
 {
     private readonly Context context;
     private readonly IWindowManager windows;
     private readonly Handler main = new(Looper.MainLooper!);
     private float density;
     private float uiScale = 1;
+    private float displayFontScale = 1;
     private int displayWidth, displayHeight;
     private readonly DisplayManager? displays;
     private readonly DisplayListener displayListener;
@@ -44,9 +45,12 @@ public sealed class OverlayController : IDisposable
     private int browseRenderSerial;
     private bool browseHintExpanded;
     private const int BrowsePageSize = 12;
-    private AlertDialog? confirmationDialog;
+    private Dialog? confirmationDialog;
     private ContextThemeWrapper? confirmationTheme;
     private Action? confirmationCancelled;
+    private bool confirmationIsManualBranch;
+    private bool confirmationIsPauseNotice;
+    private bool confirmationIsAutoStart;
     private ScrollView? actionScroll;
     private LinearLayout? autoPlaybackPausedCard;
     private string autoPlaybackPausedReason = "";
@@ -72,6 +76,7 @@ public sealed class OverlayController : IDisposable
     private string currentSpeaker = "", currentText = "";
     public event Action<OverlayCommand>? Command;
     public event Action<OverlayBrowsePage>? BrowseRequested;
+    public event Action? BrowseRefreshRequested;
     public event Action<long, string>? BrowseItemSelected;
     public event Action<bool>? CompactButtonsChanged;
     public event Action<bool>? CompactControlsChanged;
@@ -125,6 +130,7 @@ public sealed class OverlayController : IDisposable
     {
         if (disposed) return;
         captureHidden = hidden;
+        if (!hidden) ClearDefaultBranchWait();
         captureKeepStopControl = hidden && keepStopControl;
         if (CaptureStopVisible)
         {
@@ -155,16 +161,17 @@ public sealed class OverlayController : IDisposable
     public void ShowBrowsePage(OverlayBrowsePage page) => OnMain(() =>
     {
         if (disposed) return;
-        DismissConfirmation();
         browsePage = page;
         browseModel = null;
         browsePageIndex = 0;
         browseHintExpanded = false;
         Show();
         if (!showing) return;
-        SetExpanded(true);
-        RenderBrowse();
+        SetExpandedCore(true, refreshBrowse: false);
+        // 先让会话接管有效的分支等待，再关闭旧提示；关闭回调不能抢先丢掉原跟随意图。
         BrowseRequested?.Invoke(page);
+        DismissConfirmation();
+        RenderBrowse();
     });
 
     public void ShowControlPage() => OnMain(() =>
@@ -328,58 +335,302 @@ public sealed class OverlayController : IDisposable
         if (!item.RequiresConfirmation) { BrowseItemSelected?.Invoke(model.Revision, item.Id); return; }
         try
         {
-            var themed = new ContextThemeWrapper(context, global::Android.Resource.Style.ThemeMaterialNoActionBar);
-            confirmationTheme = themed;
-            var builder = new AlertDialog.Builder(themed);
-            var body = new LinearLayout(themed) { Orientation = Orientation.Vertical };
-            body.SetPadding(ReadDp(15), ReadDp(10), ReadDp(15), ReadDp(3));
-            var title = new TextView(themed) { Text = item.ConfirmationTitle, TextSize = 16 };
-            title.SetTextColor(PgrTheme.Foreground); title.SetPadding(0, 0, 0, ReadDp(8));
-            body.AddView(title, new LinearLayout.LayoutParams(-1, -2));
-            var messageScroll = new ScrollView(themed);
-            var message = new TextView(themed)
+            string message = string.IsNullOrWhiteSpace(item.ConfirmationText) ? item.Title + "\n\n" + item.Detail : item.ConfirmationText;
+            ShowGameNotification(message, new[] { message }, _ =>
             {
-                Text = string.IsNullOrWhiteSpace(item.ConfirmationText) ? item.Title + "\n\n" + item.Detail : item.ConfirmationText,
-                TextSize = 14
-            };
-            message.SetTextColor(PgrTheme.Foreground); message.SetLineSpacing(Dp(2), 1);
-            messageScroll.AddView(message, new ScrollView.LayoutParams(-1, -2));
-            var safe = ScreenArea();
-            body.AddView(messageScroll, new LinearLayout.LayoutParams(-1, Math.Min(ReadDp(220), (int)((safe.Bottom - safe.Top) * .45f))));
-            builder.SetView(body);
-            builder.SetNegativeButton("取消", (_, _) => DismissConfirmation());
-            AlertDialog? dialog = null;
-            builder.SetPositiveButton("确认采用", (_, _) =>
-            {
-                if (!ReferenceEquals(confirmationDialog, dialog)) return;
-                bool valid = BrowseItemIsCurrent(model, item);
-                DismissConfirmation();
+                // Only this consumed notification may confirm a still-current frozen browse model.
+                // The reading panel is intentionally collapsed, so its visibility is not a validity condition here.
+                bool valid = !disposed && !captureHidden && showing && browsePage == model.Page &&
+                    browseModel is { } current && ReferenceEquals(current, model) && current.Revision == model.Revision &&
+                    (current.Items.Any(i => i.Id == item.Id) || current.Actions?.Any(i => i.Id == item.Id) == true);
                 if (valid) BrowseItemSelected?.Invoke(model.Revision, item.Id);
                 else if (browsePage is { } page) ShowBrowsePage(page);
-            });
-            dialog = builder.Create() ?? throw new InvalidOperationException("无法创建确认窗口。"); confirmationDialog = dialog;
-            dialog.Window!.SetType(WindowManagerTypes.ApplicationOverlay);
-            dialog.SetCanceledOnTouchOutside(false);
-            dialog.DismissEvent += (_, _) =>
-            {
-                if (ReferenceEquals(confirmationDialog, dialog))
-                { confirmationDialog = null; dialog.Dispose(); confirmationTheme?.Dispose(); confirmationTheme = null; }
-            };
-            dialog.Show();
-            dialog.Window?.SetBackgroundDrawable(PgrTheme.Surface(context, PgrTheme.Raised));
-            dialog.Window?.SetLayout(Math.Min(ReadDp(420), safe.Right - safe.Left), ViewGroup.LayoutParams.WrapContent);
-            foreach (var which in new[] { (int)DialogButtonType.Positive, (int)DialogButtonType.Negative })
-            {
-                var button = dialog.GetButton(which);
-                if (button == null) continue;
-                button.TextSize = 13; button.SetMinHeight(ReadDp(36)); button.SetMinimumHeight(ReadDp(36));
-                button.SetTextColor(which == (int)DialogButtonType.Positive ? PgrTheme.Cyan : PgrTheme.Secondary);
-            }
+            }, item.ConfirmationTitle, null, null, null, null, null, singleConfirmationLabel: "确认采用", previewText: item.Title);
         }
-        catch (Exception ex) { DismissConfirmation(); Error?.Invoke("无法显示确认窗口：" + ex.Message); }
+        catch (Exception ex) { DismissConfirmation(); Error?.Invoke("无法显示确认通知：" + ex.Message); }
     }
 
-    public void ShowAutoPlaybackStart(string text, Action confirmed, Action locate, Action cancelled) => OnMain(() =>
+    public void ShowConfirmedBranchSelection(string text, IReadOnlyList<string> labels, Action<int> selected, Action cancelled) =>
+        ShowManualBranchSelection(text, labels, selected, cancelled,
+            title: "请对照游戏确认当前台词",
+            instruction: "先在游戏中选择，等对白出现，再点对应卡片确认。将从这句继续自动播放。",
+            buttonPrefix: "确认并继续配音：", anchorCards: true, choiceConfirmationLabel: "确认并继续配音", dialogueCards: true);
+
+    public void ShowManualBranchSelection(string text, IReadOnlyList<string> optionLabels, Action<int> selected, Action cancelled,
+        string? title = null, string? instruction = null, string? buttonPrefix = null,
+        string? secondaryActionLabel = null, Action? secondaryAction = null, bool anchorCards = false,
+        string? additionalActionLabel = null, Action? additionalAction = null, string? choiceConfirmationLabel = null,
+        bool dialogueCards = false) => OnMain(() =>
+    {
+        if (disposed || captureHidden) { NotifyConfirmationCancelled(cancelled); return; }
+        Show();
+        if (!showing) { NotifyConfirmationCancelled(cancelled); return; }
+        DismissConfirmation();
+        confirmationIsManualBranch = true;
+        confirmationCancelled = cancelled;
+        try
+        {
+            ShowGameNotification(text, optionLabels, selected, title ?? "游戏中选择后，再确认同项",
+                instruction ?? "先在游戏中选好，再确认相同人物、话题或选项。", secondaryActionLabel,
+                secondaryAction, additionalActionLabel, additionalAction, anchorCards: anchorCards,
+                choiceActionLabel: choiceConfirmationLabel ?? (anchorCards || buttonPrefix == "确认并开启跟随：" ? "确认并开启点按跟随" : null),
+                dialogueCards: dialogueCards);
+        }
+        catch (Exception ex) { DismissConfirmation(); Error?.Invoke("无法显示分支通知：" + ex.Message); }
+    });
+
+    private void ShowGameNotification(string section, IReadOnlyList<string> labels, Action<int> selected,
+        string? heading, string? instruction, string? optionActionLabel, Action? optionAction,
+        string? ocrActionLabel, Action? ocrAction, bool anchorCards = false, string? singleConfirmationLabel = null, string? previewText = null,
+        string? choiceActionLabel = null, bool dialogueCards = false)
+    {
+        // Collapse only the old reading/control surface. Do not call SetExpanded(false),
+        // because that would cancel the notification callback installed by our caller.
+        expanded = false;
+        RefreshPresentation(); UpdateSize(); UpdateLayout(); ClampPosition();
+        var themed = new ContextThemeWrapper(context, global::Android.Resource.Style.ThemeMaterialNoActionBar);
+        confirmationTheme = themed;
+        var safe = ScreenArea();
+        int width = safe.Right - safe.Left;
+        float fontScale = Math.Max(1f, context.Resources?.Configuration?.FontScale ?? 1f);
+        int barHeight = ReadDp(48);
+        int rowHeight = ReadDp(dialogueCards ? Math.Max(72f, 13f * fontScale * 4.1f + 10f) : Math.Max(52f, 13f * fontScale * 2.6f + 10f));
+        int cardRows = singleConfirmationLabel != null ? 1 : dialogueCards ? Math.Clamp((labels.Count + 1) / 2, 1, 2) : 2;
+        int fullHeight = barHeight + rowHeight * cardRows + ReadDp(4);
+        int compactHeight = ReadDp(Math.Max(64f, 13f * fontScale * 2.6f + 12f));
+        var body = new LinearLayout(themed) { Orientation = Orientation.Vertical };
+        body.SetPadding(ReadDp(3), ReadDp(2), ReadDp(3), ReadDp(2));
+        body.SetBackgroundColor(PgrTheme.Raised);
+        Dialog? dialog = null;
+        bool collapsed = true;
+        bool detailsShown = false;
+        int page = 0;
+        string expandedTitle = heading ?? "请对照游戏确认";
+        string preview = previewText ?? string.Join(" / ", labels.Take(2).Select(value => dialogueCards
+            ? string.Join(" ", value.ReplaceLineEndings("\n").Split('\n').Take(2))
+            : value.ReplaceLineEndings(" ")));
+        string compactTitle = expandedTitle + "\n" + preview;
+        bool Current() => !disposed && !captureHidden && dialog != null && ReferenceEquals(confirmationDialog, dialog);
+        void ResizeNotice(int height)
+        {
+            var currentWindow = dialog?.Window;
+            if (currentWindow == null) return;
+            var bounds = ScreenArea();
+            int shownHeight = Math.Min(height, bounds.Bottom - bounds.Top);
+            currentWindow.SetLayout(bounds.Right - bounds.Left, shownHeight);
+            var position = currentWindow.Attributes!;
+            position.X = bounds.Left;
+            position.Y = Math.Clamp(position.Y, bounds.Top, Math.Max(bounds.Top, bounds.Bottom - shownHeight));
+            currentWindow.Attributes = position;
+        }
+        Button SmallButton(string label, Action action)
+        {
+            var button = new Button(themed) { Text = label, TextSize = 12 };
+            button.SetAllCaps(false); button.SetTextColor(PgrTheme.Cyan);
+            button.SetMinHeight(0); button.SetMinimumHeight(0); button.SetMinWidth(0); button.SetMinimumWidth(0);
+            button.SetPadding(ReadDp(4), 0, ReadDp(4), 0); button.SetMaxLines(1);
+            button.Click += (_, _) => { if (Current()) action(); };
+            return button;
+        }
+        void Confirm(int choice)
+        {
+            if (!Current()) return;
+            DismissConfirmation(notifyCancellation: false);
+            try { selected(choice); }
+            catch (Exception ex) { Error?.Invoke("确认未完成：" + ex.Message); }
+        }
+        void RunAction(Action action)
+        {
+            if (!Current()) return;
+            DismissConfirmation(notifyCancellation: false);
+            try { action(); }
+            catch (Exception ex) { Error?.Invoke("切换对话未完成：" + ex.Message); }
+        }
+        var toolbar = new LinearLayout(themed) { Orientation = Orientation.Horizontal };
+        var dragTitle = new TextView(themed) { Text = compactTitle, TextSize = 13, Gravity = GravityFlags.CenterVertical };
+        dragTitle.SetTextColor(PgrTheme.Foreground); dragTitle.SetMaxLines(2);
+        dragTitle.SetPadding(ReadDp(6), 0, ReadDp(6), 0);
+        dragTitle.Ellipsize = Android.Text.TextUtils.TruncateAt.End;
+        toolbar.AddView(dragTitle, new LinearLayout.LayoutParams(0, -1, 1));
+        Button? collapseButton = null;
+        var content = new LinearLayout(themed) { Orientation = Orientation.Vertical };
+        var footer = new LinearLayout(themed) { Orientation = Orientation.Horizontal };
+        var toolsScroll = new HorizontalScrollView(themed) { HorizontalScrollBarEnabled = true, FillViewport = false };
+        toolsScroll.AddView(footer, new HorizontalScrollView.LayoutParams(-2, -1));
+        toolbar.AddView(toolsScroll, new LinearLayout.LayoutParams(0, -1, 1));
+        void RefreshExpansion()
+        {
+            content.Visibility = toolsScroll.Visibility = collapsed ? ViewStates.Gone : ViewStates.Visible;
+            collapseButton!.Text = collapsed ? "展开" : "收起";
+            dragTitle.LayoutParameters = collapsed ? new LinearLayout.LayoutParams(0, -1, 1) : new LinearLayout.LayoutParams(ReadDp(112), -1);
+            dragTitle.SetMaxLines(collapsed ? 2 : 1);
+            dragTitle.Text = collapsed ? compactTitle : detailsShown ? "核对完整内容 · 可拖动" : expandedTitle;
+            toolbar.LayoutParameters = new LinearLayout.LayoutParams(-1, collapsed ? compactHeight - ReadDp(4) : barHeight);
+            ResizeNotice(collapsed ? compactHeight : detailsShown ? Math.Min(ReadDp(280), (int)((safe.Bottom - safe.Top) * .6f)) : fullHeight);
+        }
+        collapseButton = SmallButton("展开", () =>
+        {
+            collapsed = !collapsed;
+            RefreshExpansion();
+        });
+        toolbar.AddView(collapseButton, new LinearLayout.LayoutParams(ReadDp(Math.Max(52, 24 * fontScale + 12)), -1));
+        toolbar.AddView(SmallButton("取消", () => DismissConfirmation()), new LinearLayout.LayoutParams(ReadDp(Math.Max(48, 24 * fontScale + 12)), -1));
+        body.AddView(toolbar, new LinearLayout.LayoutParams(-1, compactHeight - ReadDp(4)));
+        body.AddView(content, new LinearLayout.LayoutParams(-1, 0, 1));
+        void FooterButton(string label, Action action, bool enabled = true)
+        {
+            var button = SmallButton(label, action); button.Enabled = enabled;
+            footer.AddView(button, new LinearLayout.LayoutParams(ReadDp(Math.Max(48, label.Length * 12 * fontScale + 16)), -1));
+        }
+        void ShowDetail(int choice)
+        {
+            if (!Current()) return;
+            detailsShown = true;
+            content.RemoveAllViews(); footer.RemoveAllViews();
+            toolsScroll.ScrollTo(0, 0);
+            var scroll = new ScrollView(themed);
+            var detail = new TextView(themed) { Text = labels[choice] + (labels[choice] == section ? "" : "\n\n" + section) + "\n" + instruction, TextSize = 15 };
+            detail.SetTextColor(PgrTheme.Foreground); detail.SetPadding(ReadDp(8), ReadDp(5), ReadDp(8), ReadDp(5));
+            scroll.AddView(detail); content.AddView(scroll, new LinearLayout.LayoutParams(-1, -1));
+            FooterButton("返回通知", () => { collapsed = true; RenderCards(); });
+            FooterButton(singleConfirmationLabel ?? choiceActionLabel ?? "确认就是这句", () => Confirm(choice));
+            RefreshExpansion();
+        }
+        void RenderCards()
+        {
+            detailsShown = false;
+            content.RemoveAllViews(); footer.RemoveAllViews();
+            toolsScroll.ScrollTo(0, 0);
+            expandedTitle = (heading ?? "请对照游戏确认") + (labels.Count > 4 ? $" · {page + 1}/{(labels.Count + 3) / 4}" : "");
+            int start = page * 4;
+            for (int row = 0; row < cardRows; row++)
+            {
+                var cardRow = new LinearLayout(themed) { Orientation = Orientation.Horizontal };
+                content.AddView(cardRow, new LinearLayout.LayoutParams(-1, 0, 1));
+                for (int column = 0; column < (singleConfirmationLabel != null ? 1 : 2); column++)
+                {
+                    int choice = start + row * 2 + column;
+                    var cell = new LinearLayout(themed) { Orientation = Orientation.Horizontal };
+                    cell.SetPadding(ReadDp(2), ReadDp(1), ReadDp(2), ReadDp(1));
+                    cardRow.AddView(cell, new LinearLayout.LayoutParams(0, -1, 1));
+                    if (choice >= labels.Count) continue;
+                    if (dialogueCards)
+                    {
+                        // 选项和实际对白各占自己的空间，长选项不能挤掉要核对的对白。
+                        var parts = labels[choice].Split('\n', 3);
+                        var dialogueCard = new LinearLayout(themed)
+                        {
+                            Orientation = Orientation.Vertical,
+                            Clickable = true, LongClickable = true,
+                            ContentDescription = labels[choice] + "。确认并继续配音。长按或点全文核对完整台词。"
+                        };
+                        dialogueCard.SetGravity(GravityFlags.CenterVertical);
+                        dialogueCard.SetPadding(ReadDp(6), ReadDp(3), ReadDp(6), ReadDp(3));
+                        var optionText = new TextView(themed) { Text = parts[0], TextSize = 11 };
+                        optionText.SetTextColor(PgrTheme.Cyan); optionText.SetMaxLines(1);
+                        optionText.Ellipsize = Android.Text.TextUtils.TruncateAt.End;
+                        var dialogueText = new TextView(themed) { Text = parts.Length > 1 ? parts[1] : parts[0], TextSize = 13 };
+                        dialogueText.SetTextColor(PgrTheme.Foreground); dialogueText.SetMaxLines(2);
+                        dialogueText.Ellipsize = Android.Text.TextUtils.TruncateAt.End;
+                        dialogueCard.AddView(optionText, new LinearLayout.LayoutParams(-1, -2));
+                        dialogueCard.AddView(dialogueText, new LinearLayout.LayoutParams(-1, -2));
+                        dialogueCard.Click += (_, _) => Confirm(choice);
+                        dialogueCard.LongClick += (_, e) => { if (Current()) ShowDetail(choice); e.Handled = true; };
+                        cell.AddView(dialogueCard, new LinearLayout.LayoutParams(0, -1, 1));
+                        cell.AddView(SmallButton("全文", () => ShowDetail(choice)), new LinearLayout.LayoutParams(ReadDp(48), -1));
+                        continue;
+                    }
+                    var card = SmallButton(labels[choice], () => { if (singleConfirmationLabel != null) ShowDetail(choice); else Confirm(choice); });
+                    card.TextSize = 13; card.SetMaxLines(2); card.Ellipsize = Android.Text.TextUtils.TruncateAt.End;
+                    card.SetPadding(ReadDp(6), 0, ReadDp(6), 0);
+                    card.SetIncludeFontPadding(false);
+                    card.Gravity = GravityFlags.CenterVertical | GravityFlags.Left;
+                    card.ContentDescription = labels[choice] + (choiceActionLabel == null ? "" : "。" + choiceActionLabel) + "。长按或点全文核对完整台词。";
+                    card.LongClick += (_, e) => { if (Current()) ShowDetail(choice); e.Handled = true; };
+                    cell.AddView(card, new LinearLayout.LayoutParams(0, -1, 1));
+                    cell.AddView(SmallButton("全文", () => ShowDetail(choice)), new LinearLayout.LayoutParams(ReadDp(48), -1));
+                }
+            }
+            if (singleConfirmationLabel != null) FooterButton(singleConfirmationLabel, () => Confirm(0));
+            if (optionAction != null) FooterButton(optionActionLabel == "按选项核对" ? "按选项" : optionActionLabel ?? "更多", () => RunAction(optionAction));
+            if (ocrAction != null) FooterButton(anchorCards ? "识别下一句" : ocrActionLabel ?? "重新定位", () => RunAction(ocrAction));
+            if (labels.Count > 4)
+            {
+                FooterButton("上一页", () => { page--; RenderCards(); }, page > 0);
+                FooterButton("下一页", () => { page++; RenderCards(); }, start + 4 < labels.Count);
+            }
+            RefreshExpansion();
+        }
+        RenderCards();
+        dialog = new Dialog(themed);
+        dialog.RequestWindowFeature((int)WindowFeatures.NoTitle);
+        dialog.SetContentView(body);
+        confirmationDialog = dialog;
+        var window = dialog.Window!;
+        window.SetType(WindowManagerTypes.ApplicationOverlay);
+        // ScreenArea already excludes system bars and cutouts. Use screen coordinates
+        // throughout so a floating Dialog parent does not apply those insets twice.
+        window.AddFlags(WindowManagerFlags.NotFocusable | WindowManagerFlags.NotTouchModal | WindowManagerFlags.LayoutInScreen);
+        var screenCoordinates = window.Attributes!;
+        if (OperatingSystem.IsAndroidVersionAtLeast(30))
+        {
+            screenCoordinates.FitInsetsTypes = 0;
+            screenCoordinates.LayoutInDisplayCutoutMode = LayoutInDisplayCutoutMode.Always;
+        }
+        else if (OperatingSystem.IsAndroidVersionAtLeast(28))
+            screenCoordinates.LayoutInDisplayCutoutMode = LayoutInDisplayCutoutMode.Never;
+        window.Attributes = screenCoordinates;
+        window.ClearFlags(WindowManagerFlags.DimBehind);
+        dialog.SetCanceledOnTouchOutside(false);
+        dialog.DismissEvent += (_, _) =>
+        {
+            if (!ReferenceEquals(confirmationDialog, dialog)) return;
+            var onCancelled = confirmationCancelled; confirmationCancelled = null;
+            var theme = confirmationTheme; confirmationTheme = null;
+            confirmationDialog = null; confirmationIsManualBranch = false; confirmationIsPauseNotice = false; confirmationIsAutoStart = false; dialog.Dispose(); theme?.Dispose();
+            NotifyConfirmationCancelled(onCancelled);
+        };
+        dialog.Show();
+        window.SetBackgroundDrawable(new Android.Graphics.Drawables.ColorDrawable(Color.Transparent));
+        window.DecorView.SetPadding(0, 0, 0, 0);
+        window.DecorView.Elevation = 0;
+        window.SetLayout(width, compactHeight);
+        window.SetGravity(GravityFlags.Top | GravityFlags.Left);
+        var attributes = window.Attributes!;
+        attributes.X = safe.Left;
+        attributes.Y = safe.Top; window.Attributes = attributes;
+        float downX = 0, downY = 0; int originX = 0, originY = 0; bool dragged = false;
+        dragTitle.Touch += (_, e) =>
+        {
+            if (e.Event == null || !Current()) return;
+            if (e.Event.ActionMasked == MotionEventActions.Down)
+            { downX = e.Event.RawX; downY = e.Event.RawY; originX = window.Attributes!.X; originY = window.Attributes!.Y; dragged = false; }
+            else if (e.Event.ActionMasked == MotionEventActions.Move)
+            {
+                if (Math.Abs(e.Event.RawX - downX) + Math.Abs(e.Event.RawY - downY) > ReadDp(6)) dragged = true;
+                if (!dragged) { e.Handled = true; return; }
+                var bounds = ScreenArea(); var moved = window.Attributes!;
+                moved.X = Math.Clamp(originX + (int)(e.Event.RawX - downX), bounds.Left, Math.Max(bounds.Left, bounds.Right - window.DecorView.Width));
+                moved.Y = Math.Clamp(originY + (int)(e.Event.RawY - downY), bounds.Top, Math.Max(bounds.Top, bounds.Bottom - window.DecorView.Height));
+                window.Attributes = moved;
+            }
+            else if (e.Event.ActionMasked == MotionEventActions.Up && !dragged && collapsed)
+            { collapsed = false; RefreshExpansion(); }
+            e.Handled = true;
+        };
+    }
+
+    public void ClearManualBranchSelection() => OnMain(() =>
+    {
+        if (confirmationIsManualBranch) DismissConfirmation(notifyCancellation: false);
+    });
+
+    public void ClearAutoStartConfirmation() => OnMain(() =>
+    {
+        if (confirmationIsAutoStart) DismissConfirmation(notifyCancellation: false);
+    });
+
+    public void ShowAutoPlaybackStart(string text, Action confirmed, Action locate, Action cancelled, bool isCommonReturn = false) => OnMain(() =>
     {
         if (disposed || captureHidden) { NotifyConfirmationCancelled(cancelled); return; }
         Show();
@@ -388,76 +639,22 @@ public sealed class OverlayController : IDisposable
         confirmationCancelled = cancelled;
         try
         {
-            var themed = new ContextThemeWrapper(context, global::Android.Resource.Style.ThemeMaterialNoActionBar);
-            confirmationTheme = themed;
-            var builder = new AlertDialog.Builder(themed);
-            var body = new LinearLayout(themed) { Orientation = Orientation.Vertical };
-            body.SetPadding(ReadDp(15), ReadDp(10), ReadDp(15), ReadDp(3));
-            var title = new TextView(themed) { Text = "核对自动播放起点", TextSize = 16 };
-            title.SetTextColor(PgrTheme.Foreground);
-            title.SetTypeface(Typeface.Default, TypefaceStyle.Bold);
-            title.SetPadding(0, 0, 0, ReadDp(8));
-            body.AddView(title, new LinearLayout.LayoutParams(-1, -2));
-            var messageScroll = new ScrollView(themed) { VerticalScrollBarEnabled = true };
-            var message = new TextView(themed)
-            {
-                Text = text + "\n\n请确认上面的当前句与游戏一致。开始后会从这句重新播放，读完再自动点击游戏下一句；遇到分支、缺音或未知连接时会暂停。\n\n如果位置不一致，请取消并选句，或点“重新 OCR 定位”。",
-                TextSize = 14
-            };
-            message.SetTextColor(PgrTheme.Foreground);
-            message.SetLineSpacing(ReadDp(2), 1);
-            messageScroll.AddView(message, new ScrollView.LayoutParams(-1, -2));
-            var safe = ScreenArea();
-            body.AddView(messageScroll, new LinearLayout.LayoutParams(-1, Math.Min(ReadDp(240), (int)((safe.Bottom - safe.Top) * .4f))));
-            builder.SetView(body);
-            AlertDialog? dialog = null;
-            void Consume(Action action)
-            {
-                if (disposed || captureHidden || dialog == null || !ReferenceEquals(confirmationDialog, dialog)) return;
-                // Consume the exact window before invoking session code, which may show a new one.
-                DismissConfirmation(notifyCancellation: false);
-                try { action(); }
-                catch (Exception ex) { Error?.Invoke("操作未完成：" + ex.Message); }
-            }
-            builder.SetPositiveButton("从这句开始", (_, _) => Consume(confirmed));
-            builder.SetNeutralButton("重新 OCR 定位", (_, _) => Consume(locate));
-            builder.SetNegativeButton("取消", (_, _) =>
-            {
-                if (dialog != null && ReferenceEquals(confirmationDialog, dialog)) DismissConfirmation();
-            });
-            dialog = builder.Create() ?? throw new InvalidOperationException("无法创建起点核对窗口。");
-            confirmationDialog = dialog;
-            dialog.Window!.SetType(WindowManagerTypes.ApplicationOverlay);
-            dialog.SetCanceledOnTouchOutside(false);
-            dialog.DismissEvent += (_, _) =>
-            {
-                if (!ReferenceEquals(confirmationDialog, dialog)) return;
-                var onCancelled = confirmationCancelled; confirmationCancelled = null;
-                var theme = confirmationTheme; confirmationTheme = null;
-                confirmationDialog = null;
-                dialog.Dispose();
-                theme?.Dispose();
-                NotifyConfirmationCancelled(onCancelled);
-            };
-            dialog.Show();
-            dialog.Window?.SetBackgroundDrawable(PgrTheme.Surface(context, PgrTheme.Raised));
-            dialog.Window?.SetLayout(Math.Min(ReadDp(460), safe.Right - safe.Left), ViewGroup.LayoutParams.WrapContent);
-            foreach (var which in new[] { (int)DialogButtonType.Positive, (int)DialogButtonType.Neutral, (int)DialogButtonType.Negative })
-            {
-                var button = dialog.GetButton(which);
-                if (button == null) continue;
-                button.TextSize = 13; button.SetAllCaps(false); button.SetSingleLine(true);
-                button.SetMinWidth(0); button.SetMinimumWidth(0);
-                button.SetMinHeight(ReadDp(40)); button.SetMinimumHeight(ReadDp(40));
-                button.SetPadding(ReadDp(6), ReadDp(4), ReadDp(6), ReadDp(4));
-                button.SetTextColor(which == (int)DialogButtonType.Positive ? PgrTheme.Cyan : PgrTheme.Secondary);
-            }
+            ShowGameNotification(text, new[] { text }, _ => confirmed(),
+                isCommonReturn ? "已到共同线，请核对当前句" : "核对自动播放起点",
+                "先核对游戏当前台词；确认后从这句配音，读完再自动点击。缺音或未知连接仍暂停。",
+                null, null, "重新 OCR 定位", locate,
+                singleConfirmationLabel: isCommonReturn ? "确认继续" : "从这句开始",
+                previewText: text.Split('\n', StringSplitOptions.RemoveEmptyEntries).LastOrDefault()?.Trim());
+            confirmationIsAutoStart = true;
         }
-        catch (Exception ex) { DismissConfirmation(); Error?.Invoke("无法显示起点核对窗口：" + ex.Message); }
+        catch (Exception ex) { DismissConfirmation(); Error?.Invoke("无法显示起点通知：" + ex.Message); }
     });
 
     private void DismissConfirmation(bool notifyCancellation = true)
     {
+        confirmationIsManualBranch = false;
+        confirmationIsPauseNotice = false;
+        confirmationIsAutoStart = false;
         var dialog = confirmationDialog; confirmationDialog = null;
         var onCancelled = confirmationCancelled; confirmationCancelled = null;
         var theme = confirmationTheme; confirmationTheme = null;
@@ -536,6 +733,7 @@ public sealed class OverlayController : IDisposable
     {
         if (disposed || appForeground == foreground) return;
         appForeground = foreground;
+        if (foreground) DismissConfirmation();
         RefreshPresentation();
         ClampPosition();
     });
@@ -545,7 +743,7 @@ public sealed class OverlayController : IDisposable
         if (playbackModeView != null)
         {
             playbackModeView.Text = clickFollowing ? "当前模式 · 点按跟随" : autoPlaying
-                ? "当前模式 · 共同线自动播放" : "当前模式 · 手动播放";
+                ? "当前模式 · 自动播放" : "当前模式 · 手动播放";
             playbackModeView.SetTextColor(clickFollowing || autoPlaying ? PgrTheme.Cyan : PgrTheme.Secondary);
             playbackModeView.ContentDescription = playbackModeView.Text;
         }
@@ -576,7 +774,7 @@ public sealed class OverlayController : IDisposable
         if (autoPlayButton != null)
         {
             autoPlayButton.Text = autoPlaying ? "停止自动" : "自动播放";
-            autoPlayButton.ContentDescription = autoPlaying ? "停止自动播放" : "开始共同线自动播放";
+            autoPlayButton.ContentDescription = autoPlaying ? "停止自动播放" : "开始自动播放";
             if (autoChanged)
             {
                 PgrTheme.StyleButton(autoPlayButton, primary: autoPlaying);
@@ -600,33 +798,60 @@ public sealed class OverlayController : IDisposable
             x < location[0] + root.Width && y < location[1] + root.Height;
     }
 
+    /// <summary>分支选项的整个触碰范围不得挡住现有悬浮控制。</summary>
+    public bool IntersectsRectangle(float left, float top, float right, float bottom)
+    {
+        if (!float.IsFinite(left) || !float.IsFinite(top) || !float.IsFinite(right) || !float.IsFinite(bottom) ||
+            right <= left || bottom <= top) return true;
+        if (captureHidden && !captureKeepStopControl || !showing || disposed || root == null ||
+            !root.IsAttachedToWindow || root.Visibility != ViewStates.Visible) return false;
+        var location = new int[2];
+        root.GetLocationOnScreen(location);
+        return left < location[0] + root.Width && right > location[0] &&
+            top < location[1] + root.Height && bottom > location[1];
+    }
+
     public void ShowNotice(string message) => OnMain(() =>
     {
-        if (disposed || string.IsNullOrWhiteSpace(message)) return;
+        if (disposed || captureHidden || string.IsNullOrWhiteSpace(message)) return;
         status = message;
-        ShowControlPage();
+        Show();
+        if (!showing) return;
+        DismissConfirmation();
         UpdateStatus(message, playbackPaused, autoPlaying);
+        try
+        {
+            ShowGameNotification(message, new[] { message }, _ => { }, "配音提示", null,
+                null, null, null, null, singleConfirmationLabel: "知道了");
+        }
+        catch (Exception ex) { DismissConfirmation(); Error?.Invoke("无法显示提示通知：" + ex.Message); }
     });
 
     public void ShowAutoPlaybackPaused(string reason) => OnMain(() =>
     {
-        if (disposed || string.IsNullOrWhiteSpace(reason)) return;
+        if (disposed || captureHidden || string.IsNullOrWhiteSpace(reason)) return;
         autoPlaybackPausedReason = reason.Trim();
         long revision = ++autoPlaybackPausedRevision;
-        ShowControlPage();
+        Show();
+        if (!showing) return;
+        DismissConfirmation();
         RefreshAutoPlaybackPaused();
-        var scroll = actionScroll;
-        scroll?.Post(() =>
+        try
         {
-            if (!disposed && showing && expanded && !browsePage.HasValue &&
-                revision == autoPlaybackPausedRevision && ReferenceEquals(scroll, actionScroll))
-                scroll.ScrollTo(0, 0);
-        });
+            confirmationCancelled = () => { if (revision == autoPlaybackPausedRevision) ClearAutoPlaybackPaused(); };
+            ShowGameNotification(autoPlaybackPausedReason, new[] { autoPlaybackPausedReason }, _ =>
+                { if (revision == autoPlaybackPausedRevision) ClearAutoPlaybackPaused(); },
+                "自动播放已暂停", "关闭提示不会恢复自动播放。", null, null, null, null,
+                singleConfirmationLabel: "知道了");
+            confirmationIsPauseNotice = true;
+        }
+        catch (Exception ex) { DismissConfirmation(); Error?.Invoke("无法显示暂停通知：" + ex.Message); }
     });
 
     public void ClearAutoPlaybackPaused() => OnMain(() =>
     {
         if (disposed) return;
+        if (confirmationIsPauseNotice) DismissConfirmation(notifyCancellation: false);
         autoPlaybackPausedReason = "";
         autoPlaybackPausedRevision++;
         RefreshAutoPlaybackPaused();
@@ -671,17 +896,22 @@ public sealed class OverlayController : IDisposable
         card.AddView(reason, new LinearLayout.LayoutParams(-1, -2));
     }
 
-    public void SetExpanded(bool value) => OnMain(() =>
+    public void SetExpanded(bool value) => OnMain(() => SetExpandedCore(value));
+
+    private void SetExpandedCore(bool value, bool refreshBrowse = true)
     {
         if (disposed) return;
+        bool revealBrowse = refreshBrowse && value && !expanded && browsePage.HasValue && showing;
         if (!value) DismissConfirmation();
         expanded = value;
+        // 同一主线程内先取得当前章节的模型，再让收起的阅读页重新可见。
+        if (revealBrowse) BrowseRefreshRequested?.Invoke();
         RefreshPresentation();
         UpdateSize();
         UpdateLayout();
         ClampPosition();
         if (value && autoPlaying) actionScroll?.Post(() => actionScroll?.ScrollTo(0, 0));
-    });
+    }
 
     private void RefreshPresentation()
     {
@@ -899,6 +1129,7 @@ public sealed class OverlayController : IDisposable
         AddRow(actionRows, true, false, ("上一句", OverlayCommand.Previous), ("重播", OverlayCommand.Replay), ("下一句", OverlayCommand.Next));
         AddRow(actionRows, false, false, (playbackPaused ? "继续" : "暂停", OverlayCommand.Pause), ("分支", OverlayCommand.Branch), ("原声", OverlayCommand.Original));
         AddRow(actionRows, false, false, ("识别定位", OverlayCommand.Ocr), ("历史", OverlayCommand.History), ("章节", OverlayCommand.Chapters));
+        AddRow(actionRows, false, false, ("反馈这句", OverlayCommand.Feedback));
         browseShell = new LinearLayout(context) { Orientation = Orientation.Horizontal, Visibility = ViewStates.Gone };
         var sidebar = new LinearLayout(context) { Orientation = Orientation.Vertical };
         sidebar.SetPadding(ReadDp(3), ReadDp(4), ReadDp(3), ReadDp(4));
@@ -1002,7 +1233,7 @@ public sealed class OverlayController : IDisposable
             if (item.Action == OverlayCommand.AutoPlay)
             {
                 autoPlayButton = button;
-                button.ContentDescription = autoPlaying ? "停止自动播放" : "开始共同线自动播放";
+                button.ContentDescription = autoPlaying ? "停止自动播放" : "开始自动播放";
             }
             if (item.Action == OverlayCommand.ClickFollow)
             {
@@ -1091,11 +1322,12 @@ public sealed class OverlayController : IDisposable
         if (disposed) return;
         var safe = ScreenArea();
         float nextDensity = context.Resources!.DisplayMetrics!.Density;
+        float nextFontScale = context.Resources.Configuration?.FontScale ?? 1f;
         int width = safe.Right - safe.Left, height = safe.Bottom - safe.Top;
         float heightDp = height / Math.Max(.1f, nextDensity);
         float nextScale = heightDp < 450 ? Math.Clamp(heightDp / 500f, .72f, 1f) : 1f;
-        bool changed = displayWidth != width || displayHeight != height || Math.Abs(density - nextDensity) > .01f || Math.Abs(uiScale - nextScale) > .01f;
-        displayWidth = width; displayHeight = height; density = nextDensity; uiScale = nextScale;
+        bool changed = displayWidth != width || displayHeight != height || Math.Abs(density - nextDensity) > .01f || Math.Abs(uiScale - nextScale) > .01f || Math.Abs(displayFontScale - nextFontScale) > .01f;
+        displayWidth = width; displayHeight = height; density = nextDensity; uiScale = nextScale; displayFontScale = nextFontScale;
         if (!changed) { if (showing) ClampPosition(); return; }
         DismissConfirmation();
         if (root == null) return;
@@ -1118,6 +1350,8 @@ public sealed class OverlayController : IDisposable
     }
     private void HideCore(bool immediate = false, bool preserveCaptureRound = false)
     {
+        ClearBranchEntered();
+        ClearDefaultBranchWait();
         DismissConfirmation();
         if (preserveCaptureRound) captureCancelGesture.ResetPresentation();
         else captureCancelGesture.End();

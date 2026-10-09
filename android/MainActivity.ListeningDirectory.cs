@@ -111,18 +111,29 @@ public sealed partial class MainActivity
         bool currentChanged = listeningHighlightedItem != player.CurrentItem?.Id;
         listeningHighlightedItem = player.CurrentItem?.Id;
         if (!listeningBrowsePinned)
+        {
             listeningSelectedKey = rows.FirstOrDefault(e => e.ItemId != null && e.ItemId == listeningHighlightedItem)?.Key;
+            if (player.HasBlockingNotice && currentSection == listeningBrowseSection)
+            {
+                var previous = player.Items.TakeWhile(x => x.Id != player.CurrentItem?.Id)
+                    .LastOrDefault(x => x.Kind == PgrVoice.Listening.ListeningItemKind.Line && x.SectionId == currentSection);
+                listeningSelectedKey = rows.FirstOrDefault(e => previous != null && e.NodeId == previous.NodeId)?.Key
+                    ?? rows.FirstOrDefault(e => e.IsPreview)?.Key;
+            }
+        }
         if (!rows.Any(e => e.Key == listeningSelectedKey)) listeningSelectedKey = rows.FirstOrDefault()?.Key;
         listeningDirectoryAdapter!.NotifyDataSetChanged();
         var section = player.Chapter.Sections.First(s => s.Id == listeningBrowseSection);
-        listeningSectionButton!.Text = "小节：" + section.Title + "  ▾";
+        string sectionTitle = SectionDisplay.Title(player.Chapter.Sections, section.Id);
+        listeningSectionButton!.Text = "小节：" + sectionTitle + "  ▾";
         listeningDirectoryCount!.Text = $"完整正文 {listeningDirectory.LineCount} 条（含动作提示）· 浏览不播放";
         listeningBrowseHint!.Text = currentSection != null && currentSection != listeningBrowseSection
-            ? "正在浏览：" + section.Title + "；收听仍在：" + player.CurrentItem!.SectionTitle
+            ? "正在浏览：" + sectionTitle + "；收听仍在：" + SectionDisplay.Title(player.Chapter.Sections, player.CurrentItem!.SectionId)
+            : player.HasBlockingNotice ? "当前路线等待确认。正文仍可阅读，未接入句可单句试听；目录顺序不代表游戏下一句。"
             : listeningBrowsePinned ? "浏览位置已保留；点“回到正在听”跟回当前句。" : "红色标记当前收听句，点台词可选中。";
         var selected = rows.FirstOrDefault(e => e.Key == listeningSelectedKey);
         listeningLocateButton!.Text = selected?.IsChoice == true ? "打开选中互动" : selected?.IsPreview == true
-            ? listeningDirectory.PendingItemId != null ? "打开后续剧情选项" : "查看收听说明" : "定位到选中台词";
+            ? "只试听选中台词" : "定位到选中台词";
         listeningLocateButton.Enabled = selected != null;
         listeningPendingButton!.Visibility = listeningDirectory.PendingItemId == null ? ViewStates.Gone : ViewStates.Visible;
         if (scrollToSelection || (!listeningBrowsePinned && (newOwner || changed || currentChanged)))
@@ -154,6 +165,18 @@ public sealed partial class MainActivity
     {
         if (!ListeningDirectoryOwnerMatches() || key == null || listeningBrowseSection == null) return;
         var player = session.Listening;
+        var entry = player.ReadDirectory(listeningBrowseSection)?.Entries.FirstOrDefault(x => x.Key == key);
+        if (entry?.IsPreview == true)
+        {
+            var owner = player.Pack; string sectionId = listeningBrowseSection;
+            player.Pause();
+            Confirm("只试听这一句", entry.Speaker + "：" + entry.Text + "\n\n这句尚未接入当前路线。只播放选中的一句，结束后停住；原收听位置与选择保持。", () =>
+            {
+                if (!ReferenceEquals(owner, player.Pack) || !ListeningDirectoryOwnerMatches()) return;
+                RequestNotifications(); player.PreviewDirectoryEntry(sectionId, key);
+            });
+            return;
+        }
         if (!player.LocateDirectoryEntry(listeningBrowseSection, key))
         { Info("这句仅供阅读", player.Status); return; }
         listeningBrowsePinned = false; UpdateListeningDirectory(true); ScrollToListeningDirectory(); OpenDirectoryChoices();
@@ -201,7 +224,7 @@ public sealed partial class MainActivity
             heading.SetTextColor(current ? PgrTheme.Red : entry.IsChoice ? PgrTheme.Cyan : PgrTheme.Secondary);
             ((TextView)row.GetChildAt(1)!).Text = entry.Text;
             var note = (TextView)row.GetChildAt(2)!;
-            note.Text = entry.IsPreview ? owner.listeningDirectory?.PendingItemId != null ? "待选择后收听" : "未接入当前收听路线" : "";
+            note.Text = entry.IsPreview ? "未接入当前路线 · 可选中后只试听这句" : "";
             note.SetTextColor(PgrTheme.Secondary); note.Visibility = entry.IsPreview ? ViewStates.Visible : ViewStates.Gone;
             return row;
         }

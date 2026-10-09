@@ -12,7 +12,7 @@ public sealed partial class MainActivity
     TextView? listeningPosition, listeningSpeaker, listeningDialogue, listeningStatus, listeningResume;
     Button? listeningPlay, listeningPolicy, listeningSpeed, listeningSleep, listeningBookmark;
     SeekBar? listeningSeek;
-    TextView? listeningTime;
+    TextView? listeningTime, listeningRemainingTime;
     LinearLayout? listeningChoices, listeningBookmarks;
     string? renderedListeningPack, renderedListeningChapter;
     string renderedListeningChoices = "", renderedListeningBookmarks = "";
@@ -26,7 +26,7 @@ public sealed partial class MainActivity
         ClearListeningDirectoryViews();
         listeningPosition = listeningSpeaker = listeningDialogue = listeningStatus = listeningResume = null;
         listeningPlay = listeningPolicy = listeningSpeed = listeningSleep = listeningBookmark = null;
-        listeningSeek = null; listeningTime = null; listeningSeeking = false;
+        listeningSeek = null; listeningTime = listeningRemainingTime = null; listeningSeeking = false;
         listeningChoices = listeningBookmarks = null;
         renderedListeningPack = renderedListeningChapter = null;
         renderedListeningChoices = renderedListeningBookmarks = "";
@@ -95,6 +95,8 @@ public sealed partial class MainActivity
         listeningSeek.ProgressTintList = global::Android.Content.Res.ColorStateList.ValueOf(PgrTheme.Red);
         listeningSeek.ThumbTintList = global::Android.Content.Res.ColorStateList.ValueOf(PgrTheme.Foreground);
         listeningSeek.ContentDescription = "当前这一句的播放进度";
+        listeningRemainingTime = Text(player.RemainingTimeText, 12);
+        listeningRemainingTime.SetTextColor(PgrTheme.Secondary); playing.AddView(listeningRemainingTime);
         listeningSeek.StartTrackingTouch += (_, _) =>
         { if (!ReferenceEquals(listeningSeek, seek)) return; listeningSeeking = true; listeningSeekNode = player.Current?.Id; listeningSeekDuration = player.DurationMilliseconds; };
         listeningSeek.StopTrackingTouch += (_, _) => Safe(() =>
@@ -111,6 +113,7 @@ public sealed partial class MainActivity
         var shortcuts = Row(playing);
         ButtonIcon(Button(shortcuts, "小节目录", ShowListeningSections), "story");
         listeningBookmark = Button(shortcuts, "记下这句", AddListeningBookmark); ButtonIcon(listeningBookmark, "bookmark");
+        Button(playing, "反馈这句", FeedbackCurrentListeningLine);
 
         listeningChoices = new LinearLayout(this) { Orientation = Orientation.Vertical };
         content.AddView(listeningChoices);
@@ -127,6 +130,12 @@ public sealed partial class MainActivity
         var options = Row(settings);
         listeningSpeed = Button(options, "", ChooseListeningSpeed);
         listeningSleep = Button(options, "", ChooseListeningSleep);
+        var smartResume = new Switch(this) { Text = "智能续听", Checked = player.SmartResumeEnabled, TextSize = 14 };
+        smartResume.SetTextColor(PgrTheme.Foreground); smartResume.SetMinimumHeight(Dp(48));
+        smartResume.CheckedChange += (_, e) => player.SetSmartResume(e.IsChecked); settings.AddView(smartResume);
+        var smartHelp = Text("暂停满 5 分钟后，从本句开头继续；短暂停留保持原位置。手动定位和恢复书签仍按你选的位置播放。", 12);
+        smartHelp.SetTextColor(PgrTheme.Secondary); settings.AddView(smartHelp);
+        Button(settings, "角色音量", ShowSpeakerVolumes);
 
         var bookmarkHeading = Row(content); bookmarkHeading.SetGravity(GravityFlags.CenterVertical);
         var bookmarksLabel = Text("我的书签", 17); bookmarksLabel.SetTypeface(Typeface.Default, TypefaceStyle.Bold); bookmarkHeading.AddView(bookmarksLabel, new LinearLayout.LayoutParams(0, -2, 1));
@@ -149,7 +158,7 @@ public sealed partial class MainActivity
         var body = new LinearLayout(this) { Orientation = Orientation.Vertical }; body.SetPadding(Dp(17), Dp(11), Dp(14), Dp(11));
         var caption = Text("声音档案  /  离线听书", 11); caption.SetTextColor(PgrTheme.Cyan); caption.SetPadding(0, 0, 0, Dp(7)); body.AddView(caption);
         var heading = Text(session.Listening.Chapter?.Title ?? "故事，在耳边继续", CompactLayout ? 22 : 25); heading.SetTypeface(Typeface.Default, TypefaceStyle.Bold); heading.SetMaxLines(2); heading.Ellipsize = global::Android.Text.TextUtils.TruncateAt.End; heading.SetPadding(0, 0, 0, Dp(6)); body.AddView(heading);
-        var detail = Text(session.Listening.Chapter is { } chapter ? $"{chapter.Sections.Count:00} 个小节  /  按顺序连续播放" : "选一章 · 戴上耳机 · 从上回继续", 11); detail.SetTextColor(Color.ParseColor("#C3C7CE")); detail.SetPadding(0, 0, 0, 0); body.AddView(detail);
+        var detail = Text(session.Listening.Chapter is { } chapter ? $"{SectionDisplay.Groups(chapter.Sections).Count:00} 个小节  /  按顺序连续播放" : "选一章 · 戴上耳机 · 从上回继续", 11); detail.SetTextColor(Color.ParseColor("#C3C7CE")); detail.SetPadding(0, 0, 0, 0); body.AddView(detail);
         hero.AddView(body, new FrameLayout.LayoutParams(-1, -1)); content.AddView(hero, new LinearLayout.LayoutParams(-1, Dp(height)) { TopMargin = Dp(5), BottomMargin = Dp(3) });
     }
 
@@ -167,14 +176,15 @@ public sealed partial class MainActivity
         if (listeningPosition == null) return;
         UpdateListeningDirectory();
         listeningPosition.Text = player.PositionText;
-        listeningSpeaker!.Text = player.Current is { Kind: "line" } node ? (string.IsNullOrWhiteSpace(node.Speaker) ? "旁白" : node.Speaker) : player.Choices.Count > 0 ? "选择下一段故事" : "声音档案";
-        listeningDialogue!.Text = player.Current?.Text ?? "选择一段故事，准备开始收听。";
+        var displayNode = player.PreviewNode ?? (player.HasBlockingNotice ? null : player.Current);
+        listeningSpeaker!.Text = displayNode is { Kind: "line" } node ? (string.IsNullOrWhiteSpace(node.Speaker) ? "旁白" : node.Speaker) : player.Choices.Count > 0 ? "选择下一段故事" : player.HasBlockingNotice ? "等待确认续接" : "声音档案";
+        listeningDialogue!.Text = displayNode?.Text ?? (player.HasBlockingNotice ? player.CurrentItem?.Notice : "选择一段故事，准备开始收听。");
         listeningStatus!.Text = player.Status;
         listeningResume!.Text = player.ResumeText;
         string playText = player.IsPlaying ? "暂停" : "播放";
         if (listeningPlay!.Text != playText) { listeningPlay.Text = playText; ButtonIcon(listeningPlay, player.IsPlaying ? "pause" : "play", true); }
-        listeningPlay.Enabled = player.Choices.Count == 0;
-        listeningBookmark!.Enabled = player.Current?.Kind == "line";
+        listeningPlay.Enabled = player.IsPreviewing || player.Choices.Count == 0;
+        listeningBookmark!.Enabled = !player.IsPreviewing && !player.HasBlockingNotice && player.Current?.Kind == "line";
         listeningPolicy!.Text = "分支 · " + (player.Policy == ListeningBranchPolicy.All ? "全部听取" : player.Policy == ListeningBranchPolicy.Manual ? "手动选择" : "默认第一个");
         listeningSpeed!.Text = $"倍速 · {player.Speed:0.##}×";
         UpdateListeningProgress();
@@ -230,11 +240,13 @@ public sealed partial class MainActivity
         if (listeningTime == null || listeningSeek == null) return;
         var player = session.Listening;
         long duration = player.DurationMilliseconds, position = player.PositionMilliseconds;
+        if (listeningRemainingTime != null) listeningRemainingTime.Text = player.RemainingTimeText;
         if (!listeningSeeking)
         {
-            listeningSeek.Enabled = duration > 0;
+            listeningSeek.Enabled = !player.IsPreviewing && !player.HasBlockingNotice && duration > 0;
             listeningSeek.Progress = duration > 0 ? (int)Math.Clamp(position * 1000 / duration, 0, 1000) : 0;
             listeningTime.Text = "本句  " + ListeningClock(position) + (duration > 0 ? " / " + ListeningClock(duration) : " · 播放后可拖动进度");
+            if (player.IsPreviewing) listeningTime.Text = "单句试听中 · 结束后停住，原位置保持";
         }
         if (listeningSleep != null) listeningSleep.Text = "定时 · " + (player.SleepText == "定时关闭未开启" ? "未开启" : player.SleepText);
     }
@@ -248,14 +260,19 @@ public sealed partial class MainActivity
     void ChooseListeningChapter()
     {
         var packages = session.Packages.List();
-        if (packages.Count == 0) { Info("先导入配音包", "请返回章节页，导入章节 ZIP 后再收听。听书和游戏配音共用同一份音频。"); return; }
-        Choose("选择大章节配音包", packages.Select(p => p.Title).ToArray(), i =>
+        var categories = ChapterCategories(packages);
+        Choose("选择分类", categories, category =>
         {
-            var pack = session.Packages.Load(packages[i].PackId);
-            if (pack.Chapters.Count == 0) { Info("没有章节", "这个配音包中没有可收听的大章节。"); return; }
-            void OpenChapter(int index) { session.Listening.Open(pack.Id, pack.Chapters[index].Id); ShowPage(5); }
-            if (pack.Chapters.Count == 1) OpenChapter(0);
-            else Choose("选择大章节", pack.Chapters.Select(c => c.Title).ToArray(), OpenChapter);
+            var chapters = packages.Where(p => ChapterCatalog.Category(p.PackId, p.Title) == categories[category]).ToArray();
+            if (chapters.Length == 0) { Info(categories[category], "暂无章节"); return; }
+            Choose(categories[category], chapters.Select(p => PackTitle(p.Title)).ToArray(), i =>
+            {
+                var pack = session.Packages.Load(chapters[i].PackId);
+                if (pack.Chapters.Count == 0) { Info("没有章节", "这个配音包中没有可收听的大章节。"); return; }
+                void OpenChapter(int index) { session.Listening.Open(pack.Id, pack.Chapters[index].Id); ShowPage(5); }
+                if (pack.Chapters.Count == 1) OpenChapter(0);
+                else Choose("选择大章节", pack.Chapters.Select(c => c.Title).ToArray(), OpenChapter);
+            });
         });
     }
 
@@ -265,10 +282,10 @@ public sealed partial class MainActivity
         if (player.Chapter == null) return;
         var owner = player.Pack; var chapter = player.Chapter;
         var sections = player.Chapter.Sections;
-        Choose("浏览小节 · 不改变收听位置", sections.Select((s, i) => $"{i + 1:00}  {s.Title}" + (player.Current?.SectionId == s.Id ? "  · 正在听" : "")).ToArray(), i =>
+        ChooseDisplayedSection(owner!, sections, "浏览小节 · 不改变收听位置",
+            () => ReferenceEquals(owner, player.Pack) && ReferenceEquals(chapter, player.Chapter), section =>
         {
-            if (!ReferenceEquals(owner, player.Pack) || !ReferenceEquals(chapter, player.Chapter)) return;
-            listeningBrowsePinned = true; listeningBrowseSection = sections[i].Id; listeningSelectedKey = null;
+            listeningBrowsePinned = true; listeningBrowseSection = section.Id; listeningSelectedKey = null;
             UpdateListeningDirectory(true); ScrollToListeningDirectory();
         });
     }

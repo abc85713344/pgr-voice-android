@@ -19,7 +19,7 @@ public sealed class TapFollowOverlay : IDisposable
     bool wanted, suspended, attached, disposed;
     public bool IsVisible => attached;
 
-    public TapFollowOverlay(Context context, int displayWidth, int displayHeight, ScreenRegion region, Action<float, float> tapped)
+    public TapFollowOverlay(Context context, int displayWidth, int displayHeight, ScreenRegion region, Action<float, float> tapped, bool showHint = true)
     {
         ArgumentNullException.ThrowIfNull(context); ArgumentNullException.ThrowIfNull(region); ArgumentNullException.ThrowIfNull(tapped);
         if (displayWidth <= 0 || displayHeight <= 0 || !float.IsFinite(region.Left) || !float.IsFinite(region.Top) ||
@@ -32,7 +32,7 @@ public sealed class TapFollowOverlay : IDisposable
         int y = Math.Clamp((int)(region.Top * displayHeight), 0, displayHeight - 1);
         int width = Math.Clamp((int)(region.Width * displayWidth), 1, displayWidth - x);
         int height = Math.Clamp((int)(region.Height * displayHeight), 1, displayHeight - y);
-        surface = new TouchSurface(context, tapped);
+        surface = new TouchSurface(context, tapped, showHint);
         parameters = new WindowManagerLayoutParams(width, height, WindowManagerTypes.ApplicationOverlay,
             WindowManagerFlags.NotFocusable | WindowManagerFlags.NotTouchModal | WindowManagerFlags.LayoutInScreen,
             Format.Translucent) { Gravity = GravityFlags.Top | GravityFlags.Left, X = x, Y = y };
@@ -94,11 +94,13 @@ public sealed class TapFollowOverlay : IDisposable
         readonly Paint paint = new(PaintFlags.AntiAlias);
         readonly TapFollowGestureGate? gestures;
         readonly Action<float, float>? tapped;
+        readonly bool showHint = true;
         readonly float density = 1, textSize = 12;
 
-        public TouchSurface(Context context, Action<float, float> tapped) : base(context)
+        public TouchSurface(Context context, Action<float, float> tapped, bool showHint = true) : base(context)
         {
             this.tapped = tapped;
+            this.showHint = showHint;
             density = context.Resources?.DisplayMetrics?.Density ?? 1;
             textSize = Android.Util.TypedValue.ApplyDimension(Android.Util.ComplexUnitType.Sp, 12, context.Resources!.DisplayMetrics);
             gestures = new TapFollowGestureGate(12 * density);
@@ -111,6 +113,13 @@ public sealed class TapFollowOverlay : IDisposable
         protected override void OnDraw(Canvas canvas)
         {
             base.OnDraw(canvas);
+            if (!showHint)
+            {
+                // 分支识别框位于 OCR 文字矩形之外，只画细线，不把提示字或底色送回 OCR。
+                paint.Color = Color.Argb(220, 70, 215, 205); paint.SetStyle(Paint.Style.Stroke); paint.StrokeWidth = 1.5f;
+                canvas.DrawRect(.75f, .75f, Math.Max(.75f, Width - .75f), Math.Max(.75f, Height - .75f), paint);
+                return;
+            }
             canvas.DrawColor(Color.Argb(9, 170, 25, 43));
             paint.Color = Color.Argb(120, 215, 75, 86); paint.SetStyle(Paint.Style.Stroke); paint.StrokeWidth = density;
             canvas.DrawRect(density, density, Math.Max(density, Width - density), Math.Max(density, Height - density), paint);

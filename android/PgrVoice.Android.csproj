@@ -7,8 +7,8 @@
     <RootNamespace>PgrVoice.AndroidApp</RootNamespace>
     <ApplicationId>cn.pgrvoice.player</ApplicationId>
     <ApplicationTitle>战双剧情配音</ApplicationTitle>
-    <ApplicationVersion>18</ApplicationVersion>
-    <ApplicationDisplayVersion>0.3.14</ApplicationDisplayVersion>
+    <ApplicationVersion>38</ApplicationVersion>
+    <ApplicationDisplayVersion>0.3.34</ApplicationDisplayVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
@@ -23,6 +23,9 @@
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="RouteRepairs.20261009.json.gz" LogicalName="PgrVoice.RouteRepairs.20261009.json.gz" Condition="Exists('RouteRepairs.20261009.json.gz')" />
+    <EmbeddedResource Include="SourceChoices.20261009.json" LogicalName="PgrVoice.SourceChoices.20261009.json" Condition="Exists('SourceChoices.20261009.json')" />
+    <EmbeddedResource Include="StoryReference.20261009.zip" LogicalName="PgrVoice.StoryReference.20261009.zip" Condition="Exists('StoryReference.20261009.zip')" />
     <ProjectReference Include="../core/PgrVoice.Core.csproj" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.30.0" />
     <PackageReference Include="Xamarin.AndroidX.Media3.ExoPlayer" Version="1.11.0" />

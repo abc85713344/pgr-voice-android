@@ -1,0 +1,111 @@
+using System.Text.Json;
+using PgrVoice;
+using PgrVoice.Listening;
+using PgrVoice.Packages;
+using PgrVoice.AndroidApp.Contracts;
+using PgrVoice.AndroidApp.Platform;
+using AndroidSession = PgrVoice.AndroidApp.ListeningSession;
+using CoreSession = PgrVoice.Listening.ListeningSession;
+
+var results = new List<object>(); int failures = 0;
+void Check(bool value, string message) { if (!value) throw new Exception(message); }
+void Test(string name, Action action)
+{
+    try { action(); results.Add(new { name, passed = true }); Console.WriteLine("PASS " + name); }
+    catch (Exception ex) { failures++; results.Add(new { name, passed = false, error = ex.ToString() }); Console.WriteLine("FAIL " + name + ": " + ex.Message); }
+}
+
+Test("真实适配层：长停恢复只回本句一次，重复暂停与存盘保留原暂停时间", () =>
+{
+    var fixture = new Fixture(); var old = DateTimeOffset.UtcNow.AddMinutes(-8); fixture.Seed(2700, old);
+    var session = fixture.Open(); session.Pause(); session.SaveResume(); session.Pause();
+    Check(fixture.Saved().PausedUtc == old, "重复暂停或保存刷新了旧暂停时刻");
+    Check(session.PositionMilliseconds == 2700, "打开界面就改变播放位置");
+    session.Play(); Check(AndroidAudioPlayer.Latest!.LastStart == 0, "长停没有从本句开始");
+    AndroidAudioPlayer.Latest.PositionMilliseconds = 1800; session.Pause();
+    Check(fixture.Saved().PausedUtc > old, "真实播放后暂停未记录新时刻");
+    session.Play(); Check(AndroidAudioPlayer.Latest.LastStart == 1800, "同一次恢复被再次回绕");
+    session.Stop();
+});
+Test("真实适配层：短停原位置，关闭开关后长停也原位置且开关可持久恢复", () =>
+{
+    var fixture = new Fixture(); fixture.Seed(2300, DateTimeOffset.UtcNow.AddMinutes(-1));
+    var session = fixture.Open(); session.Play(); Check(AndroidAudioPlayer.Latest!.LastStart == 2300, "短停被回绕"); session.Stop();
+    fixture.Seed(3400, DateTimeOffset.UtcNow.AddMinutes(-8)); session = fixture.Open(); session.SetSmartResume(false);
+    session = fixture.Open(); Check(!session.SmartResumeEnabled, "开关没有持久保存");
+    session.Play(); Check(AndroidAudioPlayer.Latest!.LastStart == 3400, "关闭后仍回绕"); session.Stop();
+});
+Test("真实适配层：旧存档使用 UpdatedUtc，重开和重复暂停不刷新它对应的离开时刻", () =>
+{
+    var fixture = new Fixture(); var old = DateTimeOffset.UtcNow.AddMinutes(-9); fixture.Seed(4100, null, updatedUtc: old);
+    var session = fixture.Open(); session.Pause(); session = fixture.Open(); session.Pause();
+    Check(fixture.Saved().PausedUtc == old, "旧文件离开时间被界面保存覆盖");
+    session.Play(); Check(AndroidAudioPlayer.Latest!.LastStart == 0, "旧长停记录没有智能恢复"); session.Stop();
+});
+Test("真实适配层：显式拖动后重开仍尊重位置，播放后消费显式标记", () =>
+{
+    var fixture = new Fixture(); fixture.Seed(2000, DateTimeOffset.UtcNow.AddMinutes(-10));
+    var session = fixture.Open(); session.SeekMilliseconds(6300); session.Pause();
+    Check(fixture.Saved().ExactResumePosition, "拖动未保存显式位置标记");
+    session = fixture.Open(); session.Play(); Check(AndroidAudioPlayer.Latest!.LastStart == 6300, "显式拖动被旧暂停时刻回绕");
+    Check(!fixture.Saved().ExactResumePosition, "播放没有消费显式标记"); session.Stop();
+});
+Test("真实适配层：书签恢复跨重开不被智能续听改写", () =>
+{
+    var fixture = new Fixture(); var session = fixture.Open(); session.SeekMilliseconds(3700); session.AddBookmark("这一句");
+    string id = session.Bookmarks.Single().Id; session.SeekMilliseconds(7100); session.RestoreBookmark(id);
+    Check(session.PositionMilliseconds == 3700 && fixture.Saved().ExactResumePosition, "恢复书签丢失句内位置或保护标记");
+    session = fixture.Open(); session.Pause(); session.Play();
+    Check(AndroidAudioPlayer.Latest!.LastStart == 3700, "重开后书签位置被改写"); session.Stop();
+});
+Test("真实适配层：按每个实际角色乘总音量，连续下一句与即时设置均生效", () =>
+{
+    var fixture = new Fixture(); var levels = new Dictionary<string, int> { ["露西亚"] = 40, ["丽芙"] = 70 };
+    var session = fixture.Open(node => SpeakerVolume.Apply(.5f, levels, node?.Speaker)); session.Play();
+    var audio = AndroidAudioPlayer.Latest!;
+    Check(Math.Abs(audio.Volume - .2f) < .0001f, "首句没有角色×总音量");
+    audio.Complete(); Check(session.Current?.Speaker == "丽芙" && Math.Abs(audio.Volume - .35f) < .0001f, "下一角色沿用上一角色音量");
+    levels["丽芙"] = 0; session.RefreshVolume(); Check(audio.Volume == 0, "当前角色静音未即时应用");
+    Check(session.IsPlaying && audio.Requests.Count == 2, "音量设置擅自重播或暂停"); session.Stop();
+});
+
+string output = Path.GetFullPath(args.FirstOrDefault() ?? "android/Tests/ListeningExperience/results.json");
+Directory.CreateDirectory(Path.GetDirectoryName(output)!);
+File.WriteAllText(output, JsonSerializer.Serialize(new { createdUtc = DateTimeOffset.UtcNow, passed = failures == 0,
+    count = results.Count, failures, tests = results,
+    scope = "直接编译并执行安卓真实 ListeningSession.cs 和共享听书存档。Android Context/Handler/音频/前台服务使用受控替身；验证暂停持久化、显式跳转和真实适配层音量接线，不声称真机声音解码与系统生命周期已验证。" }, Json.Options));
+Console.WriteLine($"ListeningExperience: {results.Count - failures}/{results.Count} passed; report={output}");
+return failures == 0 ? 0 : 1;
+
+sealed class Fixture : IChapterStorage
+{
+    public string Root { get; } = Path.GetFullPath(Path.Combine("android/Tests/ListeningExperience/artifacts", Guid.NewGuid().ToString("N")));
+    readonly Pack pack;
+    readonly ListeningProgressStore store;
+    public Fixture()
+    {
+        Directory.CreateDirectory(Root); File.WriteAllBytes(Path.Combine(Root, "a.wav"), [0]); File.WriteAllBytes(Path.Combine(Root, "b.wav"), [0]);
+        pack = new() { Id = "listening-experience", Root = Root, SchemaVersion = 1,
+            Chapters = [new() { Id = "c", Title = "测试章", Sections = [new() { Id = "s", Title = "第一节", StartId = "a" }] }],
+            Nodes = [new() { Id = "a", SectionId = "s", Speaker = "露西亚", Text = "第一句", Audio = "a.wav", NextId = "b" },
+                new() { Id = "b", SectionId = "s", Speaker = "丽芙", Text = "第二句", Audio = "b.wav", NextId = "end" },
+                new() { Id = "end", SectionId = "s", Kind = "end" }] };
+        pack.Validate(); store = new(Path.Combine(Root, "listening"));
+    }
+    public AndroidSession Open(Func<Node?, float>? volume = null)
+    { var session = new AndroidSession(new(Root), this, () => { }, new(), volume); session.Open(pack.Id, "c"); return session; }
+    public void Seed(long offset, DateTimeOffset? pausedUtc, bool exact = false, DateTimeOffset? updatedUtc = null)
+    {
+        var snapshot = new CoreSession(pack, "c").Capture(offset); snapshot.PausedUtc = pausedUtc;
+        snapshot.ExactResumePosition = exact; if (updatedUtc.HasValue) snapshot.UpdatedUtc = updatedUtc.Value;
+        var document = store.Load(pack.Id); document.ForChapter("c").Resume = snapshot; store.Save(document);
+    }
+    public ListeningSnapshot Saved() => store.Load(pack.Id).ForChapter("c").Resume!;
+    public Pack Load(string packId) => pack;
+    public IReadOnlyList<InstalledPackage> List() => [];
+    public InstalledPackage? Find(string packId) => null;
+    public void CleanAbandonedImports() { }
+    public Task<InstalledPackage> ImportAsync(Stream zipStream, CancellationToken cancellationToken = default, IProgress<PackageImportProgress>? progress = null) => throw new NotSupportedException();
+    public Task<PackageRemovalResult> RemoveAsync(string packId, string expectedRevision) => throw new NotSupportedException();
+    public PackageFolder Browse(string packId, string relativePath = "", string? expectedRevision = null) => throw new NotSupportedException();
+}
